@@ -18,7 +18,6 @@ def local_appdata_path_win32():
                                 wintypes.HANDLE,
                                 wintypes.DWORD, wintypes.LPCWSTR]
 
-
     CSIDL_LOCAL_APPDATA = 28
     path_buf = ctypes.create_unicode_buffer(wintypes.MAX_PATH)
     _ = _SHGetFolderPath(0, CSIDL_LOCAL_APPDATA, 0, 0, path_buf)

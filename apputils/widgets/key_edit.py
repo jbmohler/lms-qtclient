@@ -7,7 +7,7 @@ The KeyEdit provides data sensitive editting for foreign key edits::
 
 from QtShim import QtGui
 from .button_edit import ButtonEdit
-from . import icons #(PySide resource) pylint: disable=unused-import
+from . import icons # noqa: F401
 
 class KeyEdit(ButtonEdit):
     """

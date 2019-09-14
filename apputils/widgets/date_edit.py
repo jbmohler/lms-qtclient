@@ -8,7 +8,7 @@ import datetime
 import fuzzyparsers
 from QtShim import QtCore, QtGui, QtWidgets
 from .button_edit import ButtonEdit
-from . import icons #(PySide resource) pylint: disable=unused-import
+from . import icons # noqa: F401
 
 class DateValidator(QtGui.QValidator):
     def __init__(self, parent=None):

@@ -1,6 +1,6 @@
 from QtShim import QtGui
 from .button_edit import ButtonEdit
-from . import icons #(PySide resource) pylint: disable=unused-import
+from . import icons # noqa: F401
 
 class SearchEdit(ButtonEdit):
     def __init__(self, parent=None):

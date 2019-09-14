@@ -95,7 +95,6 @@ class ManageActivities(QtWidgets.QMainWindow):
         except:
             apputils.exception_message(self, 'There was an error loading {}.'.format(self.TITLE))
 
-
     def save_activities(self):
         try:
             tosend = self.records.duplicate(rows=[r for r in self.records.rows if r.save])

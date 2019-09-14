@@ -16,6 +16,7 @@ def perm_meta_formatter(value):
 
 class RoleActivityMapperRowMixin:
     tracker = None
+
     def get_by_roleaid(self, role_aid):
         # implemented 'sub-scripted' attribute
         roles = {x['roleid']: x for x in self.permissions}
@@ -196,4 +197,3 @@ class RoleActivityMapperTargets(QtWidgets.QMainWindow):
             return
         winlist.unregister(self)
         return super(RoleActivityMapperTargets, self).closeEvent(event)
-

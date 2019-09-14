@@ -1,7 +1,5 @@
 import xml.dom.minidom as xml
-import client
 import client.qt as qt
-import rtlib
 import apputils
 
 URL_BASE = 'api/roscoe'
@@ -51,7 +49,7 @@ def test_roscoe(session):
 
     def apply(bound):
         nonlocal session, dlg
-        client = session.get_client(load_json=False)
+        client = session.raw_client()
         payload = client.post(URL_BASE, data=bound.get_data())
         root = xml.parseString(payload)
         xx = root.toprettyxml()

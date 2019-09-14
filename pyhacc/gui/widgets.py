@@ -1,5 +1,4 @@
 from QtShim import QtCore, QtGui, QtWidgets
-import client
 import valix
 import rtlib
 import apputils

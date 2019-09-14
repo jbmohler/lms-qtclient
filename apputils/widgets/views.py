@@ -213,15 +213,15 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
         doc.setTextWidth(options.rect.width())
 
         options.text = ""
-        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter);
+        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
 
         ctx = QtGui.QAbstractTextDocumentLayout.PaintContext()
 
         # Highlighting text if item is selected
         #if (optionV4.state & QStyle::State_Selected)
-            #ctx.palette.setColor(QPalette::Text, optionV4.palette.color(QPalette::Active, QPalette::HighlightedText));
+        #   ctx.palette.setColor(QPalette::Text, optionV4.palette.color(QPalette::Active, QPalette::HighlightedText))
 
-        textRect = options.rect #style.subElementRect(QtWidgets.QStyle.SE_ItemViewItemText, options,)
+        textRect = options.rect # style.subElementRect(QtWidgets.QStyle.SE_ItemViewItemText, options,)
         if index.flags() & QtCore.Qt.ItemIsUserCheckable:
             textRect = textRect.adjusted(options.decorationSize.width(), 0, 0, 0)
         painter.save()
@@ -233,7 +233,7 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
 
     def _html_sizeHint(self, option, index):
         options = QtGui.QStyleOptionViewItemV4(option)
-        self.initStyleOption(options,index)
+        self.initStyleOption(options, index)
         
         doc = QtGui.QTextDocument()
         doc.setHtml(options.text)

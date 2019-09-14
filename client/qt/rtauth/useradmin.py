@@ -4,9 +4,7 @@ import apputils
 import apputils.models as models
 import apputils.viewmenus as viewmenus
 import apputils.widgets as widgets
-import client
 from client.qt import utils
-from client.qt import winlist
 from client.qt import gridmgr
 from client.qt import bindings
 from client.qt import reporttab

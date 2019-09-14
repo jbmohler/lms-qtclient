@@ -69,7 +69,7 @@ def n_months_earlier(d, n):
     elif n < 16:
         offset = n*30
     else:
-        years, months = n//12, n%12
+        years, months = n // 12, n % 12
         years, months = years - 1, months + 12
         offset = 365*years + months*30
     return the_first(d-datetime.timedelta(offset))

@@ -37,6 +37,7 @@ class SeparatorMenuItem:
 
 class ShellWindow(QtWidgets.QMainWindow):
     ID = 'main-window'
+
     def __init__(self, parent=None):
         super(ShellWindow, self).__init__(parent)
 
@@ -181,8 +182,8 @@ class ShellWindow(QtWidgets.QMainWindow):
                 self.close()
                 return False
         else:
-            l = serverdlgs.RtxLoginDialog(self, self.session, settings_group='Example')
-            if l.exec_() == QtWidgets.QDialog.Accepted:
+            dlg = serverdlgs.RtxLoginDialog(self, self.session, settings_group='Example')
+            if dlg.exec_() == QtWidgets.QDialog.Accepted:
                 pass
             else:
                 self.close()

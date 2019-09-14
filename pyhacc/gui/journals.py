@@ -1,6 +1,4 @@
-import client
 import client.qt as qt
-import rtlib
 
 URL_BASE = 'api/journal/{}'
 

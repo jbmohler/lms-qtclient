@@ -1,22 +1,21 @@
 from QtShim import QtCore, QtWidgets
-import rtlib
 import apputils
 import apputils.viewmenus as viewmenus
 import apputils.widgets as widgets
-import client
 from client.qt import valqt
 from client.qt import gridmgr
 from client.qt import winlist
 
 class UserRoleMapperRowMixin:
     tracker = None
+
     def get_by_roleaid(self, user_aid):
         # implemented 'sub-scripted' attribute
         return user_aid in self.role_list
 
     def set_by_roleaid(self, user_aid, value):
         # implemented 'sub-scripted' attribute
-        if value and not user_aid in self.role_list:
+        if value and user_aid not in self.role_list:
             self.role_list.append(user_aid)
         elif not value and user_aid in self.role_list:
             self.role_list.remove(user_aid)
@@ -147,4 +146,3 @@ class UserRoleMapperTargetsByRole(QtWidgets.QMainWindow):
             return
         winlist.unregister(self)
         return super(UserRoleMapperTargetsByRole, self).closeEvent(event)
-

@@ -1,6 +1,4 @@
-import valix
 import contextlib
-import rtlib
 
 class FieldList(set):
     def intersects(self, iter):
@@ -105,5 +103,3 @@ class Controller:
         if hasattr(self, '_logger_list'):
             for l in self._logger_list:
                 l.dblog(resource)
-
-

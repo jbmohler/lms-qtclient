@@ -68,7 +68,7 @@ def show_link_parented(parent, url):
             break
 
     if not handled:
-        apputils.information(self, 'Invalid URL string:  {}'.format(url))
+        apputils.information(parent, 'Invalid URL string:  {}'.format(url))
 
 def show_link(url):
     from . import winlist

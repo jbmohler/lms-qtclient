@@ -1,12 +1,13 @@
-from .geometry import *
-from .models import *
-from .viewmenus import *
-from .errors import *
-from .messages import *
-from .modwidgets import *
-from .globwidgets import *
-from .backgrounder import *
-from .xplatform import *
+from .geometry import * # noqa: F401
+from .models import * # noqa: F401
+from .viewmenus import * # noqa: F401
+from .errors import * # noqa: F401
+from .messages import * # noqa: F401
+from .modwidgets import * # noqa: F401
+from .globwidgets import * # noqa: F401
+from .backgrounder import * # noqa: F401
+from .xplatform import * # noqa: F401
+from QtShim import QtWidgets
 
 def transient_app():
     app = QtWidgets.QApplication.instance()

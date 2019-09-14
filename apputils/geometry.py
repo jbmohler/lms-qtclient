@@ -5,7 +5,7 @@ import difflib
 from QtShim import QtCore, QtWidgets
 from . import models
 
-GLOBAL_FONT_MULTIPLIER=None
+GLOBAL_FONT_MULTIPLIER = None
 
 def get_font_multiplier():
     global GLOBAL_FONT_MULTIPLIER
@@ -429,4 +429,3 @@ class WindowGeometry(QtCore.QObject):
         if int(settings.value(self.tab_persist_location(tab_index, "reopen-status"), self.TAB_REOPEN_LAST)) == self.TAB_REOPEN_LAST:
             settings.setValue(self.tab_persist_location(tab_index, "to-reopen"), self.tabs[tab_index].tab.currentIndex())
         settings.endGroup()
-

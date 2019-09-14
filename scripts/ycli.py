@@ -4,7 +4,6 @@ import readline
 import argparse
 import urllib.parse
 import getpass
-import requests
 import replicate
 import client as climod
 

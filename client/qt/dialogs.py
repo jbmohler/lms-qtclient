@@ -24,7 +24,7 @@ class ObjectDialog(QtWidgets.QDialog):
         if self._button_row != None:
             return self._button_row
         QDB = QtWidgets.QDialogButtonBox
-        self._button_row = QDB(QDB.Ok|QDB.Cancel)
+        self._button_row = QDB(QDB.Ok | QDB.Cancel)
         self._button_row.accepted.connect(self.accept)
         self._button_row.rejected.connect(self.reject)
         return self._button_row

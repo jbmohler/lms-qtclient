@@ -1,5 +1,4 @@
 from QtShim import QtWidgets
-import client as climod
 import client.qt as qt
 import apputils
 import apputils.widgets as widgets

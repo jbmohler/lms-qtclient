@@ -28,7 +28,6 @@ import apputils
 import apputils.widgets as widgets
 import apputils.models as models
 import apputils.viewmenus as viewmenus
-import client
 from . import utils
 from . import dialogs
 from . import layoututils
@@ -339,7 +338,6 @@ class ReportPreview(QtWidgets.QWidget):
             self.report.description = t.rows[0].description
             self.report.note = t.rows[0].note
             self.note.setText(t.rows[0].note)
-
 
     def liberate_sidebar(self, *args, by_close_button=False):
         if self._sidebar_lock:
