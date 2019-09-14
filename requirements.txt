@@ -1,0 +1,4 @@
+requests
+fuzzyparsers
+xlsxwriter
+PySide2

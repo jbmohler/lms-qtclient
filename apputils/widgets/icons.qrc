@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/apputils/widgets">
+        <file>edit-find-6.ico</file>
+        <file>view-calendar.ico</file>
+        <file>process-stop.png</file>
+    </qresource>
+</RCC>

@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/apputils">
+        <file>rtxapp.ico</file>
+    </qresource>
+</RCC>
