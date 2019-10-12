@@ -29,8 +29,12 @@ def report(cmd, args):
     regex = args[0]
     for report in results.main_table().rows:
         if re.search(regex, report.act_name):
-            print(report)
-            results = client.get(report.url)
+            #print(report)
+            kwargs = {}
+            for pattr, props in report.prompts:
+                if props != None and 'default' in props:
+                    kwargs[pattr] = props['default']
+            results = client.get(report.url, **kwargs)
             api.show_table(results.main_table())
             break
 

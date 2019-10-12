@@ -1,5 +1,6 @@
 import datetime
 from . import formatters
+from . import reportcore
 
 class BasicTypePlugin:
     def polish(self, attr, type_, meta):
@@ -8,6 +9,7 @@ class BasicTypePlugin:
                 meta['formatter'] = lambda v: '\u2713' if v else ''
                 meta['alignment'] = 'hcenter'
                 meta['char_width'] = 6
+                meta['coerce_edit'] = reportcore.parse_bool
             if type_ == 'dictionary':
                 f = lambda v: str(v)
                 meta['formatter'] = formatters.as_xlsx(f)(f)  # apply decorator in ugly way

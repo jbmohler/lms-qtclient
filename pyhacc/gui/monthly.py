@@ -83,23 +83,23 @@ class Exporter(QtWidgets.QDialog):
             apputils.exception_message(self, 'There was an error loading {}.'.format(self.TITLE))
 
     def load_rpt1(self):
-        yield from self.end_report('rpt1')
+        yield from self.end_report('balance-sheet')
 
     def load_rpt2(self):
-        yield from self.end_report('rpt2')
+        yield from self.end_report('expense-income-details')
 
     def load_rpt3(self):
-        yield from self.end_report('rpt3')
+        yield from self.end_report('rexpense-income-6months')
 
     def load_rpt4(self):
-        yield from self.end_report('rpt4')
+        yield from self.end_report('ytd-charitable-giving')
 
     def cmd_export_all(self):
         # get subdir
         exportdir = client.LocalDirectory(tail='MonthlyStatus')
 
         # iterate reports and export
-        for key in ['rpt1', 'rpt2', 'rpt3', 'rpt4']:
+        for key in self.results.keys():
             content = self.results[key]
             fname = exportdir.user_output_filename(key, 'xlsx')
             view = rtlib.server.uview_from_client_table(content.main_table())

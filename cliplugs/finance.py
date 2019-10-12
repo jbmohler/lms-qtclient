@@ -1,8 +1,75 @@
 import os
 import datetime
+import rtlib
 import replicate as api
 
 cli = api.get_global_router()
+
+def get_field(label, default, type_='basic'):
+    prompt = '{} [{}]:  '.format(label, default)
+    value = input(prompt)
+    if value == '':
+        value = default
+    col = rtlib.field('xx', label, type_=type_)
+    value = col.coerce_edit(value)
+    return value
+
+class TranController:
+    def __init__(self, template):
+        self.trans = template.named_table('trans')
+        self.splits = template.named_table('splits')
+
+        self.tranrow = self.trans.rows[0]
+
+    def text_repr(self):
+        lines = []
+        if self.tranrow.trandate != None:
+            lines.append("Date:  {0}".format(self.tranrow.trandate))
+        if self.tranrow.tranref not in [None, ""]:
+            lines.append("Reference:  {0}".format(self.tranrow.tranref))
+        if self.tranrow.payee not in [None, ""]:
+            lines.append("Payee:  {0}".format(self.tranrow.payee))
+        if self.tranrow.memo not in [None, ""]:
+            lines.append("Memo:  {0}".format(self.tranrow.memo))
+        lines.append("-"*(20+1+12+1+12))
+        #for x in self.splits.rows:
+        #    lines.append("{0.account:<20} {0.debit:12.2f} {0.credit:12.2f}".format(x))
+        lines.append("-"*(20+1+12+1+12))
+
+        return '\n'.join(lines)
+
+@cli.command
+def tran_new(cmd, args):
+    date = get_field('transaction date', 'today', type_='date')
+    payee = get_field('payee', '')
+    memo = get_field('memo', '')
+    dracc = get_field('debit account', '', type_='pyhacc_account')
+    dramt = get_field('debit amount', '', type_='currency_usd')
+    cracc = get_field('credit account', '', type_='pyhacc_account')
+    cramt = get_field('credit amount', dramt, type_='currency_usd')
+
+    client = cli.session.std_client()
+
+    template = client.get('api/transaction/new')
+    ctlr = TranController(template)
+
+    ctlr.tranrow.trandate = date
+    ctlr.tranrow.payee = payee
+    ctlr.tranrow.memo = memo
+    with ctlr.splits.adding_row() as r2:
+        r2.account_id = dracc
+        r2.sum = dramt
+    with ctlr.splits.adding_row() as r2:
+        r2.account_id = cracc
+        r2.sum = -cramt
+
+    print(ctlr.text_repr())
+
+    confirm = get_field('commit transaction', 'yes', type_='boolean')
+
+    if confirm:
+        client.put('api/transaction/{}/document', ctlr.tranrow.id,
+                files=ctlr.tran_files())
 
 @cli.command
 def month(cmd, args):

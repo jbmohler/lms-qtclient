@@ -1,5 +1,5 @@
 
-def show_table(table, max_rows=25, max_columns=14, max_colwidth=20):
+def show_table(table, max_rows=50, max_columns=14, max_colwidth=20):
     columns = []
     for c in table.columns:
         if c.hidden:
