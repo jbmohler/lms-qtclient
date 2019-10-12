@@ -1,4 +1,4 @@
-from QtShim import QtWidgets
+from PySide2 import QtWidgets
 import rtlib
 from . import bindings
 from . import utils

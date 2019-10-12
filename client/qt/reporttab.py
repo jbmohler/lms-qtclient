@@ -1,4 +1,4 @@
-from QtShim import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 import rtlib
 import apputils
 import apputils.widgets as widgets

@@ -1,5 +1,5 @@
 import os
-from QtShim import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 def message(parent, text, buttons=None, default=None, details=None, richtext='maybe'):
     QMB = QtWidgets.QMessageBox

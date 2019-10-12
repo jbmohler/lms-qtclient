@@ -1,4 +1,4 @@
-from QtShim import QtGui
+from PySide2 import QtGui
 from .button_edit import ButtonEdit
 from . import icons # noqa: F401
 

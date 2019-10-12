@@ -6,7 +6,7 @@ It also supports null dates which is something QDateEdit does not.
 
 import datetime
 import fuzzyparsers
-from QtShim import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 from .button_edit import ButtonEdit
 from . import icons # noqa: F401
 

@@ -6,7 +6,7 @@ with rows and columns.
 """
 
 import contextlib
-from QtShim import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 import valix
 import apputils
 from . import bindings

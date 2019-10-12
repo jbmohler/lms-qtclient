@@ -1,5 +1,5 @@
 import json
-from QtShim import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 import rtlib
 from . import models
 from . import widgets

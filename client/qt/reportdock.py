@@ -1,5 +1,5 @@
 import itertools
-from QtShim import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
 import apputils.widgets as widgets

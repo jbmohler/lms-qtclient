@@ -1,6 +1,6 @@
 import sys
 import importlib
-from QtShim import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 
 def module_ver(name):
     try:
@@ -24,7 +24,7 @@ def module_ver(name):
 
 
 def about_box(parent, header):
-    modules = ['Python', QtCore.__name__.split('.')[0], 'requests']
+    modules = ['Python', QtCore.__name__.split('.')[0], 'requests', 'xlsxwriter']
     vers = '<br />'.join([module_ver(m) for m in modules])
     name = QtWidgets.QApplication.instance().applicationName()
     QtWidgets.QMessageBox.about(parent, 'About {}'.format(name), """\

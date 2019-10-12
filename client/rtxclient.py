@@ -67,12 +67,12 @@ class RtxSession(requests.Session):
             # already there, all done
             return
 
-        client = RtxClient(self)
+        client = self.std_client()
         params = {'s{}'.format(i): v for i, v in enumerate(not_yet_here)}
-        lists = client.get('api/static_settings', **params)
+        content = client.get('api/static_settings', **params)
 
-        for k, v in lists[0].items():
-            self.settings_map[k] = rtlib.ClientTable(*v)
+        for k, table in content.all_tables():
+            self.settings_map[k] = table
 
     def authorized(self, activity):
         for row in self._capabilities.rows:
@@ -183,7 +183,7 @@ class RtxSession(requests.Session):
 
         self._recent_reports.insert(0, (now, myhash))
 
-        client = RtxClient(self)
+        client = self.std_client()
         try:
             client.post('api/event', logtype=ltype, descr=descr, files=f)
         except:
@@ -395,6 +395,16 @@ class StdPayload:
     @property
     def keys(self):
         return self._pay
+
+    #def has_named_table(self, name):
+    #    if '__main_table__' in self._pay[0] and name == self._pay[0]['__main_table__']:
+    #        return True
+    #    return name in self._pay[0]
+
+    def all_tables(self):
+        for tname in self._pay.keys():
+            if self._pay[tname] != None and len(self._pay[tname]) == 2:
+                yield tname, self.named_table(tname)
 
     def named_table(self, name, mixin=None):
         return rtlib.ClientTable(*self._pay[name], mixin=mixin)

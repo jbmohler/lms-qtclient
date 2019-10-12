@@ -1,5 +1,5 @@
 import contextlib
-from QtShim import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 import apputils
 from . import columnchooser
 import apputils.models as models

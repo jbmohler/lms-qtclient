@@ -7,7 +7,7 @@ from .modwidgets import * # noqa: F401
 from .globwidgets import * # noqa: F401
 from .backgrounder import * # noqa: F401
 from .xplatform import * # noqa: F401
-from QtShim import QtWidgets
+from PySide2 import QtWidgets
 
 def transient_app():
     app = QtWidgets.QApplication.instance()

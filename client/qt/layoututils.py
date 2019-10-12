@@ -1,4 +1,4 @@
-from QtShim import QtWidgets
+from PySide2 import QtWidgets
 
 def hline():
     toto = QtWidgets.QFrame()

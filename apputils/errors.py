@@ -1,7 +1,7 @@
 import sys
 import traceback
 import tempfile
-from QtShim import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 from . import xplatform
 
 def guiexcepthook(type_, value, tb):

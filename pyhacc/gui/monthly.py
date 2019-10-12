@@ -1,5 +1,5 @@
 import datetime
-from QtShim import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 import rtlib
 import rtlib.server
 import apputils

@@ -3,7 +3,7 @@ import decimal
 import itertools
 import valix
 from rtlib import Column, field, ModelMixin
-from QtShim import QtCore, QtGui
+from PySide2 import QtCore, QtGui
 
 def base_columned_model(m1):
     if isinstance(m1, QtCore.QAbstractProxyModel):

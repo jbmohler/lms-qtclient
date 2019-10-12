@@ -1,4 +1,4 @@
-from QtShim import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 import valix
 import rtlib
 import apputils
@@ -285,9 +285,9 @@ class AccountingWidgetsPlugin:
             'pyhacc_account': pyhacc_account_tuple_edit,
             'pyhacc_account.autoid': pyhacc_account_autoid_edit,
             'pyhacc_account.name': pyhacc_account_acc_name_edit,
-            'pyhacc_accounttype.id': pyhacc_static_settings_value_combo(STATIC.account_types),
-            'pyhacc_journal.id': pyhacc_static_settings_value_combo(STATIC.journals)}
-            #'pyhacc_accounttype': pyhacc_static_settings_value_combo(STATIC.account_types, AccountTypeMiniInfo)}
+            'pyhacc_accounttype.id': rtx_static_settings_value_combo(STATIC.account_types),
+            'pyhacc_journal.id': rtx_static_settings_value_combo(STATIC.journals)}
+            #'pyhacc_accounttype': rtx_static_settings_value_combo(STATIC.account_types, AccountTypeMiniInfo)}
 
 
 LOCAL_STATIC_SETTINGS = []
@@ -314,9 +314,11 @@ def load_static_settings(self):
         self._combo.clear()
         items = static_settings(self.STATIC_SETTINGS_NAME, withkey=False)
         if getattr(self, 'all_option', False):
-            self._combo.addItem('All', None)
-        else:
-            self._combo.addItem('', None)
+            self._combo.addItem('- All -', '__all__')
+        if getattr(self, 'blank_option', False):
+            self._combo.addItem('- Blank -', '__blank__')
+        if getattr(self, 'any_option', False):
+            self._combo.addItem('- Any -', '__any__')
         for value in items:
             if value == None:
                 # already added
@@ -334,8 +336,8 @@ class DualComboBoxStatic(base.DualComboBoxBase):
         self._redit.setText(self._combo.currentText())
 
 
-def pyhacc_static_settings_combo(settings_name):
-    def pyhacc_static_settings_factory(parent, all_option=False):
+def rtx_static_settings_combo(settings_name):
+    def rtx_static_settings_factory(parent, all_option=False, blank_option=False, any_option=False):
         Klass = apputils.as_modifiable(DualComboBoxStatic)
         Klass.STATIC_SETTINGS_NAME = settings_name
         Klass.value = DualComboBoxStatic.userrole_value
@@ -343,34 +345,45 @@ def pyhacc_static_settings_combo(settings_name):
         Klass.load_static_settings = load_static_settings
         w = Klass(parent)
         w.all_option = all_option
+        w.blank_option = blank_option
+        w.any_option = any_option
         w.load_static_settings()
         w._combo.currentIndexChanged.connect(lambda *args: w.setWidgetModified(True))
         w._combo.currentIndexChanged.connect(lambda *args: w.setValueApplied())
         return w
-    return pyhacc_static_settings_factory
+    return rtx_static_settings_factory
 
 def load_static_settings_value(self):
     try:
         self._combo.clear()
         items = static_settings(self.STATIC_SETTINGS_NAME, withkey=True)
+        if getattr(self, 'all_option', False):
+            self._combo.addItem('- All -', '__all__')
+        if getattr(self, 'blank_option', False):
+            self._combo.addItem('- Blank -', '__blank__')
+        if getattr(self, 'any_option', False):
+            self._combo.addItem('- Any -', '__any__')
         for shown, value in items:
             self._combo.addItem(shown, value)
     except RuntimeError:
         pass
 
-def pyhacc_static_settings_value_combo(settings_name):
-    def pyhacc_static_settings_value_factory(parent):
+def rtx_static_settings_value_combo(settings_name):
+    def rtx_static_settings_value_factory(parent, all_option=False, blank_option=False, any_option=False):
         Klass = apputils.as_modifiable(DualComboBoxStatic)
         Klass.STATIC_SETTINGS_NAME = settings_name
         Klass.value = DualComboBoxStatic.userrole_value
         Klass.setValue = DualComboBoxStatic.userrole_set_value
         Klass.load_static_settings = load_static_settings_value
         w = Klass(parent)
+        w.all_option = all_option
+        w.blank_option = blank_option
+        w.any_option = any_option
         w.load_static_settings()
         w._combo.currentIndexChanged.connect(lambda *args: w.setWidgetModified(True))
         w._combo.currentIndexChanged.connect(lambda *args: w.setValueApplied())
         return w
-    return pyhacc_static_settings_value_factory
+    return rtx_static_settings_value_factory
 
 def pyhacc_account_tuple_edit(parent):
     Klass = apputils.as_modifiable(AccountEdit)

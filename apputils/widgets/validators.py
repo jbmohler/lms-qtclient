@@ -1,4 +1,4 @@
-from QtShim import QtGui
+from PySide2 import QtGui
 
 class UpperValidator(QtGui.QValidator):
     def validate(self, input_str, pos):

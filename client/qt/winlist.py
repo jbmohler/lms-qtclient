@@ -1,4 +1,4 @@
-from QtShim import QtCore
+from PySide2 import QtCore
 
 def init(main_winid):
     app = QtCore.QCoreApplication.instance()

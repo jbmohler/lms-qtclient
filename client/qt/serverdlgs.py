@@ -1,5 +1,5 @@
 import time
-from QtShim import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 from . import utils
 
 def show_connection_error(parent, message, r):

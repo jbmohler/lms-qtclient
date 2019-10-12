@@ -22,7 +22,7 @@ import datetime
 import functools
 import itertools
 import collections
-from QtShim import QtCore, QtGui, QtWidgets
+from PySide2 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
 import apputils.widgets as widgets

@@ -1,4 +1,4 @@
-from QtShim import QtCore
+from PySide2 import QtCore
 import pytest
 # pylint: disable=import-error
 import rtxsite # pylint: disable=unused-import

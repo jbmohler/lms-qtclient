@@ -2,7 +2,7 @@ import re
 import json
 import contextlib
 import difflib
-from QtShim import QtCore, QtWidgets
+from PySide2 import QtCore, QtWidgets
 from . import models
 
 GLOBAL_FONT_MULTIPLIER = None

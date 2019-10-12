@@ -1,6 +1,6 @@
 import sys
 import traceback
-from QtShim import QtWidgets
+from PySide2 import QtWidgets
 import apputils
 import client
 
