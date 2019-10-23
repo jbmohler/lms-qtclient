@@ -172,11 +172,10 @@ class ShellWindow(QtWidgets.QMainWindow):
         self.menu_help.addAction(self.action_serverdiag)
         self.menu_help.addAction(self.action_exceptions)
 
-    def rtx_login(self):
-        if 'RTX_CREDENTIALS' in os.environ:
-            username, password = os.environ['RTX_CREDENTIALS'].split(':')
+    def rtx_login(self, presession=None):
+        if presession != None:
             try:
-                self.session.authenticate(username, password)
+                self.session.authenticate(presession.username, presession.password)
             except:
                 utils.exception_message(self, 'Error logging in.')
                 self.close()
@@ -365,21 +364,17 @@ def rtx_main_window_embedded(session):
     tray.hide()
     sys.excepthook = excepthook_old
 
-def basic_shell_window(server=None, session=None, document=None):
+def basic_shell_window(presession=None, document=None):
     sys.excepthook = apputils.guiexcepthook
     app = qt_app_init()
-    if session == None:
-        app.session = client.RtxSession(server)
-    else:
-        app.session = session
+    app.session = client.RtxSession(presession.server)
 
     winlist.init(ShellWindow.ID)
 
     f = ShellWindow()
     f.exports_dir = app.exports_dir
     f.session = app.session
-    if session == None:
-        QtCore.QTimer.singleShot(0, f.rtx_login)
+    QtCore.QTimer.singleShot(0, lambda: f.rtx_login(presession))
     f.show()
 
     tray = utils.RtxTrayIcon(app)

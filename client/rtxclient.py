@@ -4,27 +4,33 @@ import json
 import uuid
 import datetime
 import getpass
+import urllib.parse
 import requests
 import rtlib
-import rtxsite
-
-def read_yenotpass():
-    ypfile = os.path.join(os.environ['HOME'], '.yenotpass')
-
-    results = {}
-
-    if os.path.exists(ypfile):
-        with open(ypfile, 'r') as yp:
-            lines = list(yp)
-            results = dict(s.strip().split('=') for s in lines if s.strip() != '')
-
-    return results
 
 class RtxError(Exception):
     pass
 
 class RtxServerError(RtxError):
     pass
+
+def exception_string(request, method):
+    if request.status_code == 401:
+        return 'The request to {} is not authorized.'.format(request.url)
+    return """\
+Server request failed with status code:  {0.status_code}
+URL:  {0.url}
+Method:  {1}""".format(request, method)
+
+def raise_exception_ex(request, method):
+    if request.status_code == 403:
+        t = request.text
+        is_json = len(t) > 0 and t[0] == '[' and t[-1] == ']'
+        if is_json:
+            keys = json.loads(request.text)[0]
+            if 'error-msg' in keys:
+                raise RtxError(keys['error-msg'])
+    raise RtxServerError(exception_string(request, method))
 
 class STATIC:
     @staticmethod
@@ -198,40 +204,6 @@ class RtxSession(requests.Session):
     def json_client(self):
         return RtxClient(self, json.loads)
 
-
-def auto_session():
-    if 'RTX_SERVER' in os.environ:
-        server_url = os.environ['RTX_SERVER']
-    else:
-        server_url = rtxsite.server
-    if 'RTX_CREDENTIALS' in os.environ:
-        username, password = os.environ['RTX_CREDENTIALS'].split(':', 1)
-    else:
-        print('Credentials for {}'.format(server_url))
-        username = input('Username: ')
-        password = getpass.getpass('Password: ')
-
-    session = RtxSession(server_url)
-    session.authenticate(username, password)
-    return session
-
-def exception_string(request, method):
-    if request.status_code == 401:
-        return 'The request to {} is not authorized.'.format(request.url)
-    return """\
-Server request failed with status code:  {0.status_code}
-URL:  {0.url}
-Method:  {1}""".format(request, method)
-
-def raise_exception_ex(request, method):
-    if request.status_code == 403:
-        t = request.text
-        is_json = len(t) > 0 and t[0] == '[' and t[-1] == ']'
-        if is_json:
-            keys = json.loads(request.text)[0]
-            if 'error-msg' in keys:
-                raise RtxError(keys['error-msg'])
-    raise RtxServerError(exception_string(request, method))
 
 class RequestFuture:
     def __init__(self, session):
@@ -419,3 +391,54 @@ class StdPayload:
     def main_columns(self):
         mn = self._pay['__main_table__']
         return self.named_columns(mn)
+
+def read_yenotpass():
+    ypfile = os.path.join(os.path.expanduser('~'), '.yenotpass')
+
+    results = {}
+
+    if os.path.exists(ypfile):
+        with open(ypfile, 'r') as yp:
+            lines = list(yp)
+            results = dict(s.strip().split('=') for s in lines if s.strip() != '')
+
+    return results
+
+class PreSession:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def parse_url(cls, url):
+        self = cls()
+
+        raw = urllib.parse.urlparse(url)
+        nl = raw.netloc
+        username = raw.username
+        password = raw.password
+        raw = raw._replace(netloc=nl.split('@')[1])
+        server = raw.geturl()
+
+        if not server.endswith('/'):
+            server += '/'
+
+        self.server = server
+        self.username = username
+        self.password = password
+
+        return self
+
+def auto_env_url(arg_url=None):
+    url = None
+    if arg_url != None:
+        url = arg_url
+    else:
+        servers = read_yenotpass()
+
+        if 'default' in servers:
+            url = servers['default']
+
+    if url != None:
+        return PreSession.parse_url(url)
+    else:
+        return None

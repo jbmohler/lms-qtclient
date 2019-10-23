@@ -2,7 +2,6 @@ import atexit
 import os
 import readline
 import argparse
-import urllib.parse
 import getpass
 import replicate
 import client as climod
@@ -55,31 +54,19 @@ def loop(session, commands=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Yenot CLI')
-    parser.add_argument('--server', '-s', help='server to connect to')
-    parser.add_argument('--command', '-c', nargs='*', help='command(s) to run and then exit')
+    parser.add_argument('--server', '-s', dest='server_url', 
+            help='base URL on webapp server (e.g. https://rtx.rtlib.com/app)')
+    parser.add_argument('--command', '-c', nargs='*', 
+            help='command(s) to run and then exit')
 
     args = parser.parse_args()
 
-    if args.server != None:
-        server = args.server
-    else:
-        servers = climod.read_yenotpass()
+    presession = climod.auto_env_url(args.server_url)
 
-        if 'default' in servers:
-            url = servers['default']
-
-            raw = urllib.parse.urlparse(url)
-            nl = raw.netloc
-            username = raw.username
-            password = raw.password
-            raw = raw._replace(netloc=nl.split('@')[1])
-            server = raw.geturl()
-        else:
-            server = input('Server Name:  ')
-            username = input('Username:  ')
-            password = getpass.getpass('Password:  ')
-
-    session = climod.RtxSession(server)
+    if presession == None:
+        sys.stderr.write('provide a session in --server or .yenot_pass')
+        parser.print_help()
+        sys.exit(2)
 
     histfile = os.path.join(os.path.expanduser("~"), ".yenot_history")
 
@@ -96,12 +83,13 @@ if __name__ == '__main__':
         readline.append_history_file(new_h_len - prev_h_len, histfile)
     atexit.register(save, h_len, histfile)
 
+    session = climod.RtxSession(presession.server)
     client = session.raw_client()
     client.get('api/monitor')
 
-    print('Connected to {} ...'.format(server))
+    print('Connected to {} ...'.format(session.server_url))
 
-    session.authenticate(username, password)
+    session.authenticate(presession.username, presession.password)
 
     try:
         loop(session, args.command)
