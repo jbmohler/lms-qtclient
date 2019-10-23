@@ -333,7 +333,7 @@ def str_column_coerce(column, value):
     return value
 
 def as_python(columns, to_localtime=True):
-    def coerce(converters, _tuple):
+    def row_coerce(converters, _tuple):
         return tuple(t(v) for t, v in zip(converters, _tuple))
 
     identity = lambda v: v
@@ -356,10 +356,10 @@ def as_python(columns, to_localtime=True):
             return identity
 
     converters = [column_converter(*x) for x in columns]
-    return functools.partial(coerce, converters)
+    return functools.partial(row_coerce, converters)
 
 def as_client(columns, to_localtime=True):
-    def coerce(converters, _tuple):
+    def row_coerce(converters, _tuple):
         return tuple(t(v) for t, v in zip(converters, _tuple))
 
     identity = lambda v: v
@@ -376,4 +376,4 @@ def as_client(columns, to_localtime=True):
             return identity
 
     converters = [column_converter(*x) for x in columns]
-    return functools.partial(coerce, converters)
+    return functools.partial(row_coerce, converters)
