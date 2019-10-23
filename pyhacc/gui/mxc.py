@@ -16,7 +16,6 @@ class ModelRow:
                 not getattr(self, '_init_block', False) and \
                 not getattr(self, '_multiset', False) and \
                 attr not in ('_init_block', '_multiset', '_recurse'):
-            print(value)
             self.controller.fields_changed(self, FieldList([attr]))
 
     def multiset(self, **kwargs):

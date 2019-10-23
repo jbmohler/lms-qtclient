@@ -6,7 +6,7 @@ import apputils.widgets as base
 import apputils.models as models
 import client.qt as qt
 
-AccountMiniInfo = rtlib.fixedrecord('AccountMiniInfo', ['id', 'name'])
+AccountMiniInfo = rtlib.fixedrecord('AccountMiniInfo', ['id', 'acc_name'])
 AccountTypeMiniInfo = rtlib.fixedrecord('AccountTypeMiniInfo', ['id', 'name'])
 
 class STATIC:
@@ -255,7 +255,7 @@ class AccountEdit(IdentifierEdit):
     def exact_object_match(self, objs):
         t = self.text()
         for obj in objs:
-            if obj.account == t:
+            if obj.acc_name == t:
                 return obj
         return None
 
