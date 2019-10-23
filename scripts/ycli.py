@@ -13,6 +13,7 @@ def loop(session, commands=None):
     import cliplugs.ytauth # noqa: F401
     import cliplugs.finance # noqa: F401
     import cliplugs.contacts # noqa: F401
+    import cliplugs.roscoe # noqa: F401
 
     import rtlib
     rtlib.add_type_definition_plugin(rtlib.BasicTypePlugin())

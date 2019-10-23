@@ -49,16 +49,6 @@ class Processor:
             table = payload.main_table()
             self.show_table(table)
             processed = True
-        if cmd == 'roscoe':
-            client = self.session.std_client()
-            payload = client.get('api/roscoe/unprocessed')
-            table = payload.main_table()
-            self.show_table(table)
-            processed = True
-        if cmd == 'roscoe-mark':
-            client = self.session.std_client()
-            client.put('api/roscoe/mark-processed')
-            processed = True
         if cmd == 'balsheet':
             client = self.session.std_client()
             payload = client.get('api/gledger/balance-sheet', date=datetime.date.today())
