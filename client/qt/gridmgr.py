@@ -229,6 +229,8 @@ class GridManager(QtCore.QObject):
                 v = [index.data(models.ObjectRole) for index in sel]
             elif a == 'row':
                 v = self.ctxmenu.active_index.data(models.ObjectRole)
+            else:
+                continue
             kwargs[a] = v
         return f(**kwargs)
 

@@ -100,7 +100,7 @@ class ManageActivities(QtWidgets.QMainWindow):
             tosend = self.records.duplicate(rows=[r for r in self.records.rows if r.save])
             files = {'activities': tosend.as_http_post_file()}
 
-            self.client.put(self.SRC_URL, files=files)
+            self.client.post(self.SRC_URL, files=files)
         except Exception:
             apputils.exception_message(self.window(), 'Error saving {}.'.format(self.TITLE))
             raise

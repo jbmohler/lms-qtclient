@@ -111,7 +111,7 @@ class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
                     if row.user_list == None:
                         row.user_list = []
 
-            columns = [c for c in self.records.columns if c.attr in ['username']]
+            columns = [c for c in self.records.columns if c.attr in ['role_name']]
             for u in self.users.rows:
                 columns.append(apputils.field('user_{}'.format(u.id), u.username, type_='boolean', checkbox=True, editable=True))
             self.model = apputils.ObjectQtModel(columns=columns)
@@ -131,9 +131,9 @@ class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
 
     def save_targets(self):
         try:
-            tosend = self.records.duplicate(rows=self.tracker.modified)
+            tosend = self.records.duplicate(rows=list(self.tracker.modified))
             data = {'users': ','.join(self.user_universe)}
-            files = {'userroles': tosend.as_http_post_file(exclusions=['username'])}
+            files = {'userroles': tosend.as_http_post_file(exclusions=['role_name'])}
 
             self.client.put(self.SRC_URL, data=data, files=files)
         except Exception:
