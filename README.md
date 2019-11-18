@@ -9,4 +9,5 @@ This includes a CLI and qt Gui interface.
 ```bash
 pip install -r requirements.txt
 pip install .
+python build-client.py
 ```
