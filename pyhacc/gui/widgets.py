@@ -283,7 +283,7 @@ class AccountingWidgetsPlugin:
     def widget_map(self):
         return { \
             'pyhacc_account': pyhacc_account_tuple_edit,
-            'pyhacc_account.autoid': pyhacc_account_autoid_edit,
+            'pyhacc_account.id': pyhacc_account_id_edit,
             'pyhacc_account.name': pyhacc_account_acc_name_edit,
             'pyhacc_accounttype.id': rtx_static_settings_value_combo(STATIC.account_types),
             'pyhacc_journal.id': rtx_static_settings_value_combo(STATIC.journals)}
@@ -405,7 +405,7 @@ def pyhacc_account_acc_name_edit(parent):
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     return w
 
-def pyhacc_account_autoid_edit(parent):
+def pyhacc_account_id_edit(parent):
     Klass = apputils.as_modifiable(AccountEdit)
     Klass.value = Klass.get_static_key
     Klass.value2 = Klass.get_value_mini
