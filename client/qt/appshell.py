@@ -249,7 +249,7 @@ class ShellWindow(QtWidgets.QMainWindow):
         if self.foreground_tab(widclass.ID):
             return
 
-        w = widclass(self.session, None)
+        w = widclass(self.session, self.exports_dir)
         self.adopt_tab(w, widclass.ID, widclass.TITLE)
 
     def foreground_tab(self, tab_id):

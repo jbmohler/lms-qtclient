@@ -194,6 +194,8 @@ def client_table_as_model(table, parent, include_data=True, blank_row=False):
     return m
 
 class GridManager(QtCore.QObject):
+    current_row_update = QtCore.Signal()
+
     def __init__(self, grid, parent, fixed_rowset=False):
         QtCore.QObject.__init__(self, parent)
 
@@ -205,6 +207,8 @@ class GridManager(QtCore.QObject):
 
         self.ctxmenu = viewmenus.ContextMenu(self.grid, parent)
         self.ctxmenu.contextActionsUpdate.connect(self.context_actions_update)
+        self.ctxmenu.current_row_update.connect(self.context_actions_update)
+        self.ctxmenu.current_row_update.connect(self.current_row_update.emit)
 
     def add_action(self, act, is_active=None, triggered=None):
         if isinstance(act, str):
@@ -219,16 +223,28 @@ class GridManager(QtCore.QObject):
             if act.is_active != None:
                 act.setEnabled(self.call_core_func(act.is_active))
 
+    def selected_row(self):
+        x = self.ctxmenu.active_index
+        return x.data(models.ObjectRole) if x != None else None
+
+    def selected_rows(self):
+        rowmap = {}
+        for index in self.ctxmenu.selected_indexes():
+            rowmap[index.row()] = index.data(models.ObjectRole)
+        return [obj for _, obj in sorted(rowmap.items(), key=lambda x: x[0])]
+
     def call_core_func(self, f):
         args = inspect.getargspec(f).args
         kwargs = {}
         for a in args:
             v = None
             if a == 'rows':
-                sel = self.ctxmenu.selected_indexes()
-                v = [index.data(models.ObjectRole) for index in sel]
+                v = self.selected_rows()
             elif a == 'row':
-                v = self.ctxmenu.active_index.data(models.ObjectRole)
+                if self.ctxmenu.active_index != None:
+                    v = self.ctxmenu.active_index.data(models.ObjectRole)
+                else:
+                    v = None
             else:
                 continue
             kwargs[a] = v

@@ -139,7 +139,9 @@ class RoleSidebar(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.user_grid = widgets.TableView()
+        self.user_gridmgr = gridmgr.GridManager(self.user_grid, self)
         self.act_grid = widgets.TableView()
+        self.act_gridmgr = gridmgr.GridManager(self.act_grid, self)
 
         self.layout.addWidget(self.user_grid)
         self.layout.addWidget(self.act_grid)
@@ -163,7 +165,7 @@ class RoleSidebar(QtWidgets.QWidget):
 
         with self.geo.grid_reset(self.user_grid):
             self.users = content.main_table()
-            self.user_grid.setModel(gridmgr.client_table_as_model(self.users, self))
+            self.user_gridmgr.set_client_table(self.users)
 
     def load_activities(self):
         try:
@@ -174,7 +176,7 @@ class RoleSidebar(QtWidgets.QWidget):
 
         with self.geo.grid_reset(self.act_grid):
             self.activities = content.main_table()
-            self.act_grid.setModel(gridmgr.client_table_as_model(self.activities, self))
+            self.act_gridmgr.set_client_table(self.activities)
 
 class RoleList(QtWidgets.QWidget):
     ID = 'administrative/roles'
@@ -213,7 +215,7 @@ class RoleList(QtWidgets.QWidget):
 
         self.sidebar.backgrounder = self.backgrounder
         self.sidebar.client = self.client
-        #self.ctxmenu.current_row_update.connect(self.sidebar_update)
+        self.gridmgr.current_row_update.connect(self.sidebar_update)
 
         QDB = QtWidgets.QDialogButtonBox
         self.buttons = QDB(QtCore.Qt.Horizontal)
@@ -226,8 +228,8 @@ class RoleList(QtWidgets.QWidget):
         self.refresh()
 
     def sidebar_update(self):
-        obj = self.ctxmenu.active_index.data(models.ObjectRole) if self.ctxmenu.active_index != None else None
-        self.sidebar.highlight(obj)
+        row = self.gridmgr.selected_row()
+        self.sidebar.highlight(row)
 
     def cmd_add_new_role(self):
         content = self.client.get(self.SRC_INSTANCE_URL, 'new')
@@ -330,7 +332,10 @@ class ActivitySidebar(QtWidgets.QWidget):
         self.layout.addWidget(self.html)
 
     def highlight(self, row):
-        self.backgrounder(self.load_sidebar, self.client, 'api/report/{}/info', row.act_name)
+        if row == None:
+            self.html.setHtml('')
+        else:
+            self.backgrounder(self.load_sidebar, self.client, 'api/report/{}/info', row.act_name)
 
     def load_sidebar(self):
         try:
@@ -383,24 +388,73 @@ class ActivitySidebar(QtWidgets.QWidget):
 
         self.html.page().setLinkDelegationPolicy(QtWebEngineWidgets.QWebEnginePage.DelegateAllLinks)
 
-
-class ActivityList(ReportTabEx):
+class ActivityList(QtWidgets.QWidget):
     ID = 'administrative/activities'
     TITLE = 'Activity List'
     URL_TAIL = 'api/activities/list'
     SRC_INSTANCE_URL = 'api/activity/{}'
 
-    def init_view(self):
-        self.filter_gizmo = QtWidgets.QHBoxLayout()
-        self.filter_edit = widgets.SearchEdit()
-        self.filter_edit.editingFinished.connect(self.refilter_list)
-        self.filter_gizmo.addWidget(self.filter_edit)
-        self.layout.insertLayout(0, self.filter_gizmo)
+    def __init__(self, session, exports_dir, parent=None):
+        super(ActivityList, self).__init__(parent)
+
+        self.setObjectName(self.ID)
+        self.setWindowTitle(self.TITLE)
+        self.exports_dir = exports_dir
+        self.client = session.std_client()
+
+        self.backgrounder = apputils.Backgrounder(self)
+
+        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+
+        self.grid = widgets.TableView()
+        self.grid.setObjectName('content')
+        self.grid.setSortingEnabled(True)
+        self.gridmgr = gridmgr.GridManager(self.grid, self)
+        self.gridmgr.add_action('Add &New Activity', triggered=self.cmd_addnew_activity)
+        self.gridmgr.add_action('&Edit Activity', triggered=self.cmd_edit_activity)
+        self.splitter.addWidget(self.grid)
 
         self.sidebar = ActivitySidebar()
         self.splitter.addWidget(self.sidebar)
 
-        self.geo = apputils.WindowGeometry(self, splitters=[self.splitter])
+        self.layout = QtWidgets.QVBoxLayout(self)
+
+        self.filter_gizmo = QtWidgets.QHBoxLayout()
+        self.filter_edit = widgets.SearchEdit()
+        self.filter_edit.editingFinished.connect(self.refilter_list)
+        self.filter_gizmo.addWidget(self.filter_edit)
+        self.layout.addLayout(self.filter_gizmo)
+        self.layout.addWidget(self.splitter)
+
+        self.sidebar.backgrounder = self.backgrounder
+        self.sidebar.client = self.client
+        self.gridmgr.current_row_update.connect(self.sidebar_update)
+
+        QDB = QtWidgets.QDialogButtonBox
+        self.buttons = QDB(QtCore.Qt.Horizontal)
+        self.buttons.addButton('&Refresh', QDB.ApplyRole).clicked.connect(self.refresh)
+        self.buttons.addButton('&Export', QDB.ApplyRole).clicked.connect(self.export)
+        self.layout.addWidget(self.buttons)
+
+        self.geo = apputils.WindowGeometry(self, size=False, position=False, grids=[self.grid])
+
+        self.refresh()
+
+    def sidebar_update(self):
+        row = self.gridmgr.selected_row()
+        self.sidebar.highlight(row)
+
+    def cmd_addnew_activity(self):
+        activity = rtlib.ClientTable([('name', None), ('description', None), ('note', None)], [])
+        activity.rows.append(activity.DataRow('', '', ''))
+        edit_activity_dlg(self, activity)
+
+    def cmd_edit_activity(self):
+        row = self.ctxmenu.active_index.data(models.ObjectRole)
+
+        content = self.client.get(self.SRC_INSTANCE_URL, row.id)
+        t = content.main_table()
+        edit_activity_dlg(self, t)
 
     def refilter_list(self):
         self.model.setFilterFixedString(self.filter_edit.text())
@@ -411,36 +465,38 @@ class ActivityList(ReportTabEx):
         m2.setSourceModel(model)
         m2.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         m2.setFilterKeyColumn(0)
+        m2.columns = model.columns
         return m2
 
-    def init_view2(self):
-        self.action_new_activity = QtWidgets.QAction('Add &New Activity', self)
-        self.action_new_activity.triggered.connect(self.addnew_activity)
-        self.ctxmenu.add_action(self.action_new_activity)
+    def load(self):
+        self.setEnabled(False)
+        try:
+            content = yield
+            self.records = content.main_table()
+            self.headers = content.keys['headers']
 
-        self.action_edit_activity = QtWidgets.QAction('&Edit Activity', self)
-        self.action_edit_activity.triggered.connect(self.edit_activity)
-        self.ctxmenu.add_action(self.action_edit_activity)
+            with self.geo.grid_reset(self.grid):
+                # TODO:  make an elegant way to filter on a GridManager
+                m = gridmgr.client_table_as_model(self.records, self)
+                self.model = self.filterable_model(m)
+                self.grid.setModel(self.model)
+                self._core_model.set_rows(self.records.rows)
+                self.gridmgr.table = self.records
+                self.gridmgr._post_model_action()
+        except:
+            apputils.exception_message(self, 'There was an error loading the {}.'.format(self.TITLE))
+        finally:
+            self.setEnabled(True)
 
-        self.sidebar.backgrounder = self.backgrounder
-        self.sidebar.client = self.client
-        self.ctxmenu.current_row_update.connect(self.sidebar_update)
+    def refresh(self):
+        self.backgrounder(self.load, self.client.get, self.URL_TAIL)
 
-    def sidebar_update(self):
-        obj = self.ctxmenu.active_index.data(models.ObjectRole) if self.ctxmenu.active_index != None else None
-        self.sidebar.highlight(obj)
+    def export(self, options=None):
+        fname = self.exports_dir.user_output_filename(self.TITLE, 'xlsx')
 
-    def addnew_activity(self):
-        activity = rtlib.ClientTable([('name', None), ('description', None), ('note', None)], [])
-        activity.rows.append(activity.DataRow('', '', ''))
-        edit_activity_dlg(self, activity)
-
-    def edit_activity(self):
-        row = self.ctxmenu.active_index.data(models.ObjectRole)
-
-        content = self.client.get(self.SRC_INSTANCE_URL, row.id)
-        t = content.main_table()
-        edit_activity_dlg(self, t)
+        if fname != None:
+            rtlib.server.export_view(fname, self.grid, self.headers, options=options)
+            utils.xlsx_start_file(self.window, fname)
 
 def edit_activity_dlg(parentwin, table):
     w = QtWidgets.QDialog(parentwin.window())
