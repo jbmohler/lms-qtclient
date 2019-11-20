@@ -253,7 +253,12 @@ class GridManager(QtCore.QObject):
     def _post_model_action(self):
         self.ctxmenu.update_model()
         self.ctxmenu.reset_action_list()
+        # add column dynamic items
         apply_column_url_views(self.ctxmenu, self.grid.model())
+        # add client-row-relateds
+        # TODO: support this
+        # apply_client_row_relateds(self.ctxmenu, self.run.content)
+        #self.my_actions = apply_client_relateds(self.power_menu, self.run.content)
         if not self.fixed_rowset:
             self.ctxmenu.add_action(self.delete_action)
         for act in self._core_actions:

@@ -28,3 +28,7 @@ class RtAuthPlugs:
                 ('ClientURLMenuItem', ('&Database Connections', 'rtauth:administrative/dbconnections', 'api_database_connections')),
                 ('ClientURLMenuItem', ('Active Database &Locks', 'rtauth:administrative/dblocks', 'api_database_locks'))]
         yield ('&Administrative', admin_schematic)
+
+    def load_sidebar(self, state, name):
+        if name == 'get_api_users_list':
+            return useradmin.UserListSidebar(None, state)

@@ -37,6 +37,59 @@ class SessionList(ReportTabEx):
     TITLE = 'Active Session List'
     URL_TAIL = 'api/sessions/active'
 
+class UserListSidebar(QtCore.QObject):
+    SRC_INSTANCE_URL = 'api/user/{}'
+    refresh = QtCore.Signal()
+
+    def __init__(self, parent, state):
+        super(UserListSidebar, self).__init__(parent)
+        self.client = state.session.std_client()
+        self.exports_dir = state.exports_dir
+        self.added = False
+
+    def init_grid_menu(self, gridmgr):
+        self.gridmgr = gridmgr
+
+        if not self.added:
+            self.added = True
+            self.gridmgr.add_action('&Add User', triggered=self.cmd_add_user)
+            self.gridmgr.add_action('&Set Roles', triggered=self.cmd_set_roles)
+            self.gridmgr.add_action('&Edit User', triggered=self.cmd_edit_user)
+            self.gridmgr.add_action('&Delete User', triggered=self.cmd_delete_user)
+
+    def window(self):
+        return self.gridmgr.grid.window()
+
+    def cmd_add_user(self):
+        user = rtlib.ClientTable([('full_name', None), ('username', None), ('password', None), ('password2', None), ('descr', None)], [])
+        with user.adding_row() as r2:
+            pass
+        if edit_user_dlg(self, user, editrec=False):
+            self.refresh.emit()
+
+    def cmd_edit_user(self, row):
+        content = self.client.get(self.SRC_INSTANCE_URL, row.id)
+        user = content.main_table()
+        if edit_user_dlg(self, user, editrec=True):
+            self.refresh.emit()
+
+    def cmd_set_roles(self, rows):
+        users = [o.id for o in rows]
+
+        w = UserRoleMapperTargetsByUser(self.client.session, self.exports_dir, None, users)
+        w.show()
+        # TODO: should show call be modal?
+        #self.refresh.emit()
+
+    def cmd_delete_user(self, row):
+        if 'Yes' == apputils.message(self.window(), 'Are you sure that you wish to delete the user {}?'.format(row.username), buttons=['Yes', 'No']):
+            try:
+                self.client.delete(self.SRC_INSTANCE_URL, row.id)
+                self.refresh.emit()
+            except:
+                utils.exception_message(self.window(), 'The user could not be deleted.')
+
+
 class UserList(QtWidgets.QWidget):
     ID = 'administrative/users'
     TITLE = 'User List'

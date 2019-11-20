@@ -203,13 +203,17 @@ class ReportPreview(QtWidgets.QWidget):
         self.grid.setSelectionMode(self.grid.ExtendedSelection)
         self.grid.setSortingEnabled(True)
 
+        self.gridmgr = gridmgr.GridManager(self.grid, self)
+        self.gridmgr.ctxmenu.triggerReload.connect(self.launch_report)
+        self.gridmgr.ctxmenu.statisticsUpdate.connect(self.stat_update)
+
         self.layout.addWidget(self.sidebar_split)
         self.sidebar_split.addWidget(self.grid)
 
         self._sidebar_lock = False
         self.sidebar_wrapper = None
         self.sidebar = rtapp_report_sidebar(self.report.name)
-        if self.sidebar != None:
+        if self.sidebar != None and isinstance(self.sidebar, QtWidgets.QWidget):
             self.sidebar_split.addWidget(self.sidebar)
             self.sidebar_split.setStretchFactor(0, 5)
             self.sidebar_split.setStretchFactor(1, 1)
@@ -222,6 +226,8 @@ class ReportPreview(QtWidgets.QWidget):
 
             if hasattr(self.sidebar, 'toggle_liberated'):
                 self.sidebar.toggle_liberated.connect(self.liberate_sidebar)
+        if hasattr(self.sidebar, 'refresh'):
+            self.sidebar.refresh.connect(self.launch_report)
 
         self.prompt_form = dialogs.InternalLabelFormLayout()
         if len(self.report.prompts.optional_attrs) > 0:
@@ -323,10 +329,6 @@ class ReportPreview(QtWidgets.QWidget):
 
         self.export_button.setEnabled(False)
         self.launcher = None
-
-        self.ctxmenu = viewmenus.ContextMenu(self.grid, self)
-        self.ctxmenu.triggerReload.connect(self.launch_report)
-        self.ctxmenu.statisticsUpdate.connect(self.stat_update)
 
         self.geo = apputils.WindowGeometry(self, size=False, position=False, name=self.settings_key(), splitters=[self.sidebar_split])
 
@@ -548,9 +550,6 @@ class ReportPreview(QtWidgets.QWidget):
 
         self.grid.setModel(self.model)
 
-        if self.sidebar != None and hasattr(self.sidebar, 'set_report_keys'):
-            self.sidebar.set_report_keys(self.run.content.keys, self.run.prompt_values)
-
         self.selmodel = self.grid.selectionModel()
         self.selmodel.currentRowChanged.connect(self.update_report_line_selection)
 
@@ -571,19 +570,21 @@ class ReportPreview(QtWidgets.QWidget):
 
         apputils.read_grid_geometry(self.grid, self.settings_key())
 
-        self.ctxmenu.update_model()
-        self.ctxmenu.reset_action_list()
-        # add column dynamic items
-        gridmgr.apply_column_url_views(self.ctxmenu, self.model)
+        if self.sidebar != None and hasattr(self.sidebar, 'set_report_keys'):
+            self.sidebar.set_report_keys(self.run.content.keys, self.run.prompt_values)
+        if self.sidebar != None and hasattr(self.sidebar, 'init_grid_menu'):
+            self.sidebar.init_grid_menu(self.gridmgr)
+
+        self.gridmgr._post_model_action()
         # add client-row-relateds
-        gridmgr.apply_client_row_relateds(self.ctxmenu, self.run.content)
+        gridmgr.apply_client_row_relateds(self.gridmgr.ctxmenu, self.run.content)
         self.my_actions = gridmgr.apply_client_relateds(self.power_menu, self.run.content)
 
     def settings_key(self):
         return 'reports/{}'.format(self.report.url.replace('/', '_'))
 
     def update_report_line_selection(self, current, previous):
-        if self.sidebar != None:
+        if self.sidebar != None and hasattr(self.sidebar, 'highlight'):
             row = current.data(models.ObjectRole)
             self.sidebar.highlight(row)
 
