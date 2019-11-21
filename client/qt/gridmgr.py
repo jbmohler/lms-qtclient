@@ -46,10 +46,12 @@ def get_menus():
             yield (menuname, items)
 
 def url_params(url):
-    values = dict(url.queryItems())
+    values = urllib.parse.parse_qs(url.query())
+    #dict(url.queryItems())
     # TODO figure out correct +-decoding
-    values = {k: v.replace('+', ' ') for k, v in values.items()}
-    values = {k: urllib.parse.unquote(v) for k, v in values.items()}
+    #values = {k: v.replace('+', ' ') for k, v in values.items()}
+    #values = {k: urllib.parse.unquote(v) for k, v in values.items()}
+    values = {k: v[0] for k, v in values.items()}
     return values
 
 def show_link_parented(parent, url):

@@ -10,14 +10,17 @@ from . import tranreports
 
 class AccountingExtensions:
     def show_link_parented(self, state, parent, url):
-        print(url, url.scheme())
         if url.scheme() != 'pyhacc':
             return False
 
         if url.path() == 'accounts/new':
             edit_account(state.session, 'new')
+        elif url.path() == 'accounts':
+            edit_account(state.session, url.parameters()['key'])
         elif url.path() == 'journals/new':
             edit_journal(state.session, 'new')
+        elif url.path() == 'journals':
+            edit_journal(state.session, url.parameters()['key'])
         elif url.path() == 'accounttypes/new':
             edit_account_type(state.session, 'new')
         elif url.path() == 'transactions/new':

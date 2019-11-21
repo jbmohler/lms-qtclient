@@ -173,14 +173,15 @@ class ShellWindow(QtWidgets.QMainWindow):
         self.menu_help.addAction(self.action_exceptions)
 
     def rtx_login(self, presession=None):
+        login = False
         if presession != None:
             try:
                 self.session.authenticate(presession.username, presession.password)
+                login = True
             except:
-                utils.exception_message(self, 'Error logging in.')
-                self.close()
-                return False
-        else:
+                pass
+
+        if not login:
             dlg = serverdlgs.RtxLoginDialog(self, self.session, settings_group='Example')
             if dlg.exec_() == QtWidgets.QDialog.Accepted:
                 pass

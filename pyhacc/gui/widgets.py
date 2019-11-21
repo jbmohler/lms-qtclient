@@ -279,6 +279,10 @@ class AccountingWidgetsPlugin:
         if type_ == 'pyhacc_account':
             meta['formatter'] = lambda x: x.acc_name
             meta['coerce_edit'] = lambda x: x
+        if type_ == 'pyhacc_account.name':
+            meta['url_factory'] = lambda *args: 'pyhacc:accounts?key={}'.format(args[1])
+        if type_ == 'pyhacc_journal.name':
+            meta['url_factory'] = lambda *args: 'pyhacc:journals?key={}'.format(args[1])
 
     def widget_map(self):
         return { \
