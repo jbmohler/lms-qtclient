@@ -35,15 +35,15 @@ from . import gridmgr
 from . import icons
 
 
-def rtapp_report_sidebar(reportname):
+def rtapp_report_sidebar(sbkey):
     app = QtCore.QCoreApplication.instance()
     if hasattr(app, 'report_sidebar'):
-        return app.report_sidebar(reportname, app.session, app.exports_dir)
+        return app.report_sidebar(sbkey, app.session, app.exports_dir)
 
-def rtapp_report_export(reportname):
+def rtapp_report_export(expkey):
     app = QtCore.QCoreApplication.instance()
     if hasattr(app, 'report_export'):
-        return app.report_export(reportname, app.session, app.exports_dir)
+        return app.report_export(expkey, app.session, app.exports_dir)
 
 class SidebarInterface:
     def __init__(self, session, exports_dir, parent=None):
@@ -584,9 +584,13 @@ class ReportPreview(QtWidgets.QWidget):
     def settings_key(self):
         return 'reports/{}'.format(self.report.url.replace('/', '_'))
 
-    def update_report_line_selection(self, current, previous):
+    def update_report_line_selection(self):
         if self.sidebar != None and hasattr(self.sidebar, 'highlight'):
             row = current.data(models.ObjectRole)
+            if row != None:
+                # remake row from the row with the appointed info
+                params = {k: getattr(row, v) for k, v in self.report.sidebars[0]['on_highlight_row'].items()}
+                row = rtlib.inline_object(**params)
             self.sidebar.highlight(row)
 
     def closeEvent(self, event):
