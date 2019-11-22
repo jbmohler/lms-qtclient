@@ -6,6 +6,7 @@ import apputils.widgets as widgets
 import apputils.models as models
 import apputils.viewmenus as viewmenus
 from . import utils
+from . import icons
 
 class RoleReportHeader:
     def __init__(self, role, inners):

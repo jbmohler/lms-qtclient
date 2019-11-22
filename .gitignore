@@ -4,3 +4,4 @@ __pycache__
 venv
 apputils/rtxassets.py
 apputils/widgets/icons.py
+client/qt/icons.py

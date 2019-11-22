@@ -32,6 +32,7 @@ from . import utils
 from . import dialogs
 from . import layoututils
 from . import gridmgr
+from . import icons
 
 
 def rtapp_report_sidebar(reportname):

@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/clientshell">
+        <file alias='view-refresh.png'>assets/view-refresh.png</file>
+        <file alias='static-spin.png'>assets/static-spin.png</file>
+        <file alias='liberate.png'>assets/liberate.png</file>
+        <file alias='advance.png'>assets/advance.png</file>
+        <file alias='univ-lookup.png'>assets/univ-lookup.png</file>
+        <file alias='maplogo.png'>assets/maplogo.png</file>
+        <file alias='play.png'>assets/play.png</file>
+        <file alias='edit.png'>assets/edit.png</file>
+        <file alias='delete.png'>assets/delete.png</file>
+    </qresource>
+</RCC>

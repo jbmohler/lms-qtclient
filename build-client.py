@@ -16,13 +16,14 @@ RCC = get_qrc_compiler()
 PY3 = sys.version > '3'
 
 ROOTED = [
-        (r'apputils\rtxassets.qrc', 'rtxassets.py'),
-        (r'apputils\widgets\icons.qrc', 'icons.py')]
+        ('apputils/rtxassets.qrc', 'rtxassets.py'),
+        ('apputils/widgets/icons.qrc', 'icons.py'),
+        ('client/qt/icons.qrc', 'icons.py')]
 
-ROOTTUPLE = [p[0].rsplit('\\', 1)+[p[1]] for p in ROOTED]
+ROOTTUPLE = [p[0].rsplit('/', 1)+[p[1]] for p in ROOTED]
 
 for R in ROOTTUPLE:
-    path = R[0].replace('\\', '/')
+    path = R[0].replace('/', os.path.sep)
     qrc_file = os.path.join(path, R[1])
     py_file = os.path.join(path, R[2])
     print(R)
