@@ -97,7 +97,7 @@ class FormEntryDialog(ObjectDialog):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.buttons = self.button_row()
         self.label = QtWidgets.QLabel(text)
-        self.form = QtWidgets.QFormLayout()
+        self.form = InternalLabelFormLayout()
         self.layout.addWidget(self.label)
         self.layout.addLayout(self.form)
         self.layout.addWidget(self.buttons)

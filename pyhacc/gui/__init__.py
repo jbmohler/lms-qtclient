@@ -1,5 +1,6 @@
 from .accounts import *
 from .journals import *
+from .accounttypes import *
 from .transactions import *
 from .widgets import *
 
@@ -23,6 +24,8 @@ class AccountingExtensions:
             edit_journal(state.session, url.parameters()['key'])
         elif url.path() == 'accounttypes/new':
             edit_account_type(state.session, 'new')
+        elif url.path() == 'accounttypes':
+            edit_account_type(state.session, url.parameters()['key'])
         elif url.path() == 'transactions/new':
             edit_transaction(state.session, 'new')
         elif url.path() == 'transactions/recent':
