@@ -14,8 +14,8 @@ def guiexcepthook(type_, value, tb):
     >>> sys.excepthook = apputils.guiexcepthook
     """
     try:
-        f = open(tempfile.mktemp(prefix='qtalchemy-error-', suffix='.txt'), "w")
-        traceback.print_exception(type_, value, tb, limit=None, file=f)
+        with open(tempfile.mktemp(prefix='rtxqt-error-', suffix='.txt'), "w") as f:
+            traceback.print_exception(type_, value, tb, limit=None, file=f)
 
         xplatform.xdg_open(f.name)
     except:

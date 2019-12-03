@@ -8,6 +8,7 @@ from .roscoe import *
 
 from . import monthly
 from . import tranreports
+from . import calendar
 
 class AccountingExtensions:
     def show_link_parented(self, state, parent, url):
@@ -31,6 +32,9 @@ class AccountingExtensions:
         elif url.path() == 'transactions/recent':
             view = view_recent_transactions(self, state.session)
             parent.adopt_tab(view, 'tran_recent', 'Recent Transactions')
+        elif url.path() == 'transactions/calendar':
+            view = calendar.TransactionCalendar(parent, state.session)
+            parent.adopt_tab(view, 'tran_calendar', 'Calendar')
         elif url.path() == 'reporting/monthly-status':
             win = monthly.Exporter(state)
             win.show()
@@ -50,6 +54,7 @@ class AccountingExtensions:
         tran_menu_schematic = [
                 ('ClientURLMenuItem', ('New &Transaction', 'pyhacc:transactions/new', 'get_api_transaction_new')),
                 ('ClientURLMenuItem', ('&Recent Transactions', 'pyhacc:transactions/recent', 'get_api_transactions_list')),
+                ('ClientURLMenuItem', ('&Calendar Transactions', 'pyhacc:transactions/calendar', 'api_transactions_recent_header')),
                 ('SeparatorMenuItem', ()),
                 ('ClientURLMenuItem', ('Monthly &Status...', 'pyhacc:reporting/monthly-status', 'api_gledger_balance_sheet'))]
         yield ('&Transactions', tran_menu_schematic)

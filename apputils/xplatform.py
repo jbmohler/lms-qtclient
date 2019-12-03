@@ -30,6 +30,8 @@ def xdg_open(file):
             import win32api
             win32api.ShellExecute(0, None, file, None, None, 1)
         except ImportError as e:
-            os.system('start {0}'.format(file))
+            xx = os.system('start {0}'.format(file))
+            if xx != 0:
+                raise RuntimeError('could not launch file')
     else:
         os.system('xdg-open "{0}"'.format(file.replace(';', r'\;').replace('&', r'\&')))
