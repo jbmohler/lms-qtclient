@@ -20,6 +20,70 @@ def change_pin(cmd, args):
 def reports(cmd, args):
     client = cli.session.std_client()
     results = client.get('api/user/logged-in/reports')
+
+    table = results.main_table()
+    #api.show_table(table)
+
+    if len(args) > 0:
+        regex = args[0]
+        table.rows = [row for row in table.rows if re.search(regex,
+            row.description, flags=re.IGNORECASE)]
+
+    roles = set([(row.role, row.role_sort) for row in table.rows])
+    table.rows.sort(key=lambda x: (x.role_sort, x.description))
+
+    rcodes = []
+    repcodes = []
+
+    def code1(used, name):
+        for c in sorted(name):
+            if c == ' ':
+                continue
+            if c.lower() not in used:
+                used.append(c.lower())
+                return c.lower()
+        raise NotImplementedError('no code found')
+
+    def code3(used, name, prefix):
+        uppers = ''.join([c for c in name if 'A' <= c <= 'Z'])
+        if len(uppers) >= 2:
+            candidate = (prefix+uppers[:2]).lower()
+            if candidate not in used:
+                used.append(candidate)
+                return candidate
+
+        for c, d in zip(name[:-1], name[1:]):
+            candidate = (prefix+c+d).lower()
+            if candidate not in used:
+                used.append(candidate)
+                return candidate
+        raise NotImplementedError('no code found')
+
+    for role, rs in sorted(roles, key=lambda x: x[1]):
+        code = code1(rcodes, role)
+        print('{} {}'.format(code, role))
+
+        for row in table.rows:
+            if row.role == role:
+                icode = code3(repcodes, row.description, code)
+                row.code = icode
+                print('   {} {}'.format(icode, row.description))
+
+    while True:
+        rcode = input('report (code):  ')
+        for row in table.rows:
+            if rcode == row.code:
+                _run_report(row)
+                return
+
+def _run_report(report):
+    client = cli.session.std_client()
+    #print(report)
+    kwargs = {}
+    for pattr, props in report.prompts:
+        if props != None and 'default' in props:
+            kwargs[pattr] = props['default']
+    results = client.get(report.url, **kwargs)
     api.show_table(results.main_table())
 
 @cli.command
@@ -29,13 +93,7 @@ def report(cmd, args):
     regex = args[0]
     for report in results.main_table().rows:
         if re.search(regex, report.act_name):
-            #print(report)
-            kwargs = {}
-            for pattr, props in report.prompts:
-                if props != None and 'default' in props:
-                    kwargs[pattr] = props['default']
-            results = client.get(report.url, **kwargs)
-            api.show_table(results.main_table())
+            _run_report(report)
             break
 
 @cli.command
