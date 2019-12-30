@@ -29,6 +29,8 @@ class AccountingExtensions:
             edit_account_type(state.session, url.parameters()['key'])
         elif url.path() == 'transactions/new':
             edit_transaction(state.session, 'new')
+        elif url.path() == 'transactions':
+            edit_transaction(state.session, url.parameters()['key'])
         elif url.path() == 'transactions/recent':
             view = view_recent_transactions(self, state.session)
             parent.adopt_tab(view, 'tran_recent', 'Recent Transactions')

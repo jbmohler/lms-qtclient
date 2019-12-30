@@ -285,6 +285,8 @@ class AccountingWidgetsPlugin:
             meta['url_factory'] = lambda *args: 'pyhacc:journals?key={}'.format(args[1])
         if type_ == 'pyhacc_accounttype.name':
             meta['url_factory'] = lambda *args: 'pyhacc:accounttypes?key={}'.format(args[1])
+        if type_ == 'pyhacc_transaction.surrogate':
+            meta['url_factory'] = lambda *args: 'pyhacc:transactions?key={}'.format(args[0])
 
     def widget_map(self):
         return { \

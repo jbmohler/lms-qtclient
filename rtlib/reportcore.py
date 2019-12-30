@@ -67,13 +67,18 @@ class ColumnAction:
         return self.scope == 'global' or column.represents
 
     def interpolated_label(self, column):
-        return self.label.format(header=column.label)
+        h = column.label
+        if column.row_url_label != None:
+            h = column.row_url_label
+        return self.label.format(header=h)
 
 
 class Column:
     def __init__(self, attr, label, checkbox=False, check_attr=None, 
                             editable=False, alignment='left', formatter=None, 
-                            coerce_edit=None, url_factory=None, url_key=None, url_new_window=False, 
+                            coerce_edit=None, 
+                            url_factory=None, url_key=None, url_new_window=False, 
+                            row_url_label=None,
                             max_length=None, is_numeric=False,
                             char_width=None,
                             represents=False, primary_key=False, hidden=False,
@@ -117,6 +122,7 @@ class Column:
         if add_actions != None:
             actions = list(actions) + add_actions
         self.actions = list(actions)
+        self.row_url_label = row_url_label
         self.url_factory = url_factory
         self.url_key = url_key
         self.url_new_window = url_new_window

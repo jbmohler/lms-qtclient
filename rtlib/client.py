@@ -95,9 +95,6 @@ class ClientTable:
 
         # initialize pkey for deletion
         pkey = [col[0] for col in columns if col[1] != None and col[1].get('primary_key', False)]
-        if len(pkey) == 0 and 'autoid' in self.DataRow.__slots__:
-            # TODO:  remove this is concession to reality
-            pkey = ['autoid']
         self.pkey = pkey
 
         self.columns = reportcore.parse_columns(columns)

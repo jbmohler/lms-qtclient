@@ -98,12 +98,16 @@ def callable_handler(col, ctxmenu, callback, reloads):
 
 def callable_should_appear(index, column):
     row = index.data(models.ObjectRole)
+    if column.row_url_label != None:
+        return True
     if hasattr(row.__class__, 'model_columns'):
         return column.attr in row.__class__.model_columns
     return True
 
 def callable_is_enabled(index, column):
     row = index.data(models.ObjectRole)
+    if column.row_url_label != None:
+        return True
     if hasattr(row.__class__, 'model_columns'):
         thecol = row.__class__.model_columns.get(column.attr)
     else:
@@ -117,7 +121,8 @@ def callable_is_enabled(index, column):
     return getattr(row, checkattr, None) != None
 
 def apply_column_url_views(ctxmenu, model, no_default=False):
-    for col in model.columns:
+    collist = model.columns_full if hasattr(model, 'columns_full') else model.columns
+    for col in collist:
         for action_defn in col.actions:
             if action_defn.matches_scope(col):
                 action = None
@@ -187,6 +192,7 @@ def apply_client_relateds(ctxmenu, content):
 
 def client_table_as_model(table, parent, include_data=True, blank_row=False):
     m = models.ObjectQtModel(table.columns, parent=parent)
+    m.columns_full = table.columns_full
     if include_data:
         if blank_row:
             xx = table.DataRow(*tuple((None,)*len(table.DataRow.__slots__)))

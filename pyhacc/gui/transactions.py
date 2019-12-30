@@ -10,8 +10,12 @@ URL_BASE2 = 'api/transactions/list'
 
 class SplitsTable(mxc.ModelRow):
     def _rtlib_init_(self):
-        self._debit = self.sum if self.sum > 0 else None
-        self._credit = self.sum if self.sum < 0 else None
+        if self.sum == None:
+            self._debit = None
+            self._credit = None
+        else:
+            self._debit = self.sum if self.sum > 0 else None
+            self._credit = -self.sum if self.sum < 0 else None
 
     @property
     def account(self):
@@ -65,7 +69,8 @@ class TransactionCore:
     def http_files(self):
         return {\
                 'trans': self.trantable.as_http_post_file(),
-                'splits': self.splittable.as_http_post_file(inclusions=['account_id', 'sum'])}
+                'splits':
+                self.splittable.as_http_post_file(inclusions=['account_id', 'sum', 'sid'])}
 
     def ascii_repr(self):
         lines = []
@@ -204,6 +209,8 @@ def view_recent_transactions(parent, session):
     view = QtWidgets.QWidget()
     layout = QtWidgets.QVBoxLayout(view)
     grid = widgets.TableView()
+    grid.setSortingEnabled(True)
+    grid.verticalHeader().hide()
     gridmgr = qt.GridManager(grid, view)
     layout.addWidget(grid)
 
