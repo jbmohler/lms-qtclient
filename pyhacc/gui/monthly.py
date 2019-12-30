@@ -17,7 +17,7 @@ class Exporter(QtWidgets.QDialog):
     RPT1_BALANCE_SHEET = 'api/gledger/balance-sheet'
     RPT2_DETAIL_PL = 'api/gledger/detailed-pl'
     RPT3_INTERVAL_PL = 'api/gledger/interval-p-and-l'
-    RPT4_GIVING_SUMMARY = 'api/transactions/list'
+    RPT4_GIVING_SUMMARY = 'api/transactions/account-summary'
 
     def __init__(self, state, parent=None):
         super(Exporter, self).__init__(parent)
@@ -98,10 +98,12 @@ class Exporter(QtWidgets.QDialog):
         # get subdir
         exportdir = client.LocalDirectory(tail='MonthlyStatus')
 
+        defdate = self.date_edit.value()
         # iterate reports and export
         for key in self.results.keys():
             content = self.results[key]
-            fname = exportdir.user_output_filename(key, 'xlsx')
+            # fname = exportdir.user_output_filename(key, 'xlsx')
+            fname = exportdir.join('{}-{:%b%d}.xlsx'.format(key, defdate))
             view = rtlib.server.uview_from_client_table(content.main_table())
             rform = content.keys.get('report-formats', [])
             if len(rform) > 0:

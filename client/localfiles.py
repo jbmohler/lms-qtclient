@@ -64,3 +64,6 @@ class LocalDirectory:
         for candidate in self._candidates(base, extension):
             if not os.path.exists(candidate):
                 return candidate
+
+    def join(self, tail):
+        return os.path.join(self.dirname, tail)
