@@ -324,6 +324,7 @@ def qt_app_init():
     app.exports_dir = client.LocalDirectory(appname='RtxShell', tail='Exports')
 
     import pyhacc.gui as pg
+    import contacts.gui as cg
     import client.qt.rtauth as rtauth
 
     rtlib.add_type_definition_plugin(pg.AccountingWidgetsPlugin())
@@ -331,6 +332,7 @@ def qt_app_init():
     rtlib.add_type_definition_plugin(apputils.BasicWidgetsPlugin())
 
     gridmgr.add_extension_plug(pg.AccountingExtensions())
+    gridmgr.add_extension_plug(cg.ContactExtensions())
     gridmgr.add_extension_plug(rtauth.RtAuthPlugs())
 
     app.report_sidebar = gridmgr.search_sidebar
