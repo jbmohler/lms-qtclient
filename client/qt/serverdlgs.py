@@ -19,7 +19,7 @@ class ServerDiagnostics(QtWidgets.QDialog):
         self.setWindowTitle('Server Diagnostics')
         self.setMinimumSize(350, 150)
         self.session = session
-        self.client = session.get_client()
+        self.client = session.raw_client()
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.form = QtWidgets.QFormLayout()

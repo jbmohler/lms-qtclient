@@ -1,11 +1,11 @@
 from .accounts import *
 from .journals import *
 from .accounttypes import *
-from .transactions import *
 from .widgets import *
 
 from .roscoe import *
 
+from . import transactions
 from . import monthly
 from . import tranreports
 from . import calendar
@@ -28,13 +28,17 @@ class AccountingExtensions:
         elif url.path() == 'accounttypes':
             edit_account_type(state.session, url.parameters()['key'])
         elif url.path() == 'transactions/new':
-            edit_transaction(state.session, 'new')
+            transactions.edit_transaction(state.session, 'new')
         elif url.path() == 'transactions':
-            edit_transaction(state.session, url.parameters()['key'])
+            transactions.edit_transaction(state.session, url.parameters()['key'])
         elif url.path() == 'transactions/recent':
-            view = view_recent_transactions(self, state.session)
+            if parent.foreground_tab('tran_recent'):
+                return True
+            view = transactions.view_recent_transactions(self, state.session)
             parent.adopt_tab(view, 'tran_recent', 'Recent Transactions')
         elif url.path() == 'transactions/calendar':
+            if parent.foreground_tab('tran_calendar'):
+                return True
             view = calendar.TransactionCalendar(parent, state.session)
             parent.adopt_tab(view, 'tran_calendar', 'Calendar')
         elif url.path() == 'reporting/monthly-status':

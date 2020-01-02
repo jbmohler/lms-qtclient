@@ -6,6 +6,8 @@ class ContactExtensions:
             return False
 
         if url.path() == 'contacts/list':
+            if parent.foreground_tab('contact_search'):
+                return True
             view = search.list_widget(parent, state.session)
             parent.adopt_tab(view, 'contact_search', 'Contacts')
         return True
