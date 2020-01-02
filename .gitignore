@@ -2,6 +2,7 @@ __pycache__
 *.swp
 *.egg-info
 venv
+build
 apputils/rtxassets.py
 apputils/widgets/icons.py
 client/qt/icons.py

@@ -1,0 +1,151 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<%
+
+import itertools
+import re
+
+MICRO_MANAGED = ['lmssuite.exe']
+
+# Utility functions for the rest of the templates
+def tabn(v, tabs):
+	lines = v.split('\n')
+	return ('\n'+'\t'*tabs).join(lines)
+
+def tab6(v):
+	return tabn(v, 6)
+
+def tab3(v):
+	return tabn(v, 3)
+
+def first_mismatch(l1, l2):
+	for index, pair in enumerate(itertools.zip_longest(l1, l2)):
+		if pair[0] != pair[1]:
+			return index
+	return None
+
+def dirid(segs):
+	return 'dir_'+re.sub(r'[\\.-]', '_', '_'.join(segs))
+
+def dirname(segs):
+	return segs[-1]
+
+def render_components(basedir):
+	strings = []
+	indent = 0
+	prior_dir = [basedir]
+	for comp in components(basedir):
+		if comp.fname in MICRO_MANAGED:
+			continue
+
+		dirsegs = comp.dirname.split('\\')
+		assert dirsegs[0] in ('binary', ), str(dirsegs)
+		if prior_dir != dirsegs:
+			fm = first_mismatch(prior_dir, dirsegs)
+			for i in range(len(prior_dir) - fm):
+				indent -= 1
+				strings.append("{}</Directory>".format('\t'*indent))
+			for i in range(len(dirsegs) - fm):
+				dsegs = dirsegs[:fm+i+1]
+				strings.append("{}<Directory Id='{}' Name='{}'>".format('\t'*indent, dirid(dsegs), dirname(dsegs)))
+				indent += 1
+			prior_dir = dirsegs
+		s = """{1}<Component Id='{0.compid}'>
+{1}	<File Id='{0.fileid}' Name='{0.fname}' Source='{0.source}' KeyPath='yes' />
+{1}</Component>""".format(comp, '\t'*indent)
+		strings.append(s)
+
+	dirsegs = [basedir]
+	if prior_dir != dirsegs:
+		fm = first_mismatch(prior_dir, dirsegs)
+		for i in range(len(prior_dir) - fm):
+			indent -= 1
+			strings.append("{}</Directory>".format('\t'*indent))
+	return '\n'.join(strings)
+
+def render_component_refs():
+	strings = []
+	for comp in components():
+		if comp.fname in MICRO_MANAGED:
+			continue
+		strings.append("<ComponentRef Id='{0.compid}' />".format(comp))
+	return '\n'.join(strings)
+
+%>
+<!-- See http://www.nichesoftware.co.nz/2008/09/12/upgradable-msi-installations-with-wix.html -->
+<?define UpgradeCode="abe3bf26-2d08-11ea-86b3-68f7285bdab1"?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+	<Product Name='lmsSuite' Id='*' UpgradeCode='$(var.UpgradeCode)'
+		Language='1033' Codepage='1252' Version='${LMS.VERSION}' Manufacturer='Mohler'>
+
+		<Package Id='*' Keywords='Installer' 
+			Description='lmsSuite ${LMS.VERSION} Installer'
+			Manufacturer='Mohler'
+			InstallScope='perMachine'
+			Platform='x64'
+			InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+		<Property Id='ARPPRODUCTICON' Value='ico_lmsSuite.exe' />
+
+		<InstallExecuteSequence>
+			<RemoveExistingProducts Before='InstallInitialize' /> 
+		</InstallExecuteSequence>
+
+		<Upgrade Id='$(var.UpgradeCode)'>
+			<UpgradeVersion Minimum='0.5.0.0' Maximum='${LMS.VERSION}' 
+				Property='PREVIOUSVERSIONSINSTALLED' IncludeMinimum='yes' IncludeMaximum='yes' />
+		</Upgrade> 
+
+		<Media Id='1' Cabinet='lmssuite.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1' />
+		<Property Id='DiskPrompt' Value='lmsSuite ${LMS.VERSION} Installation [1]' />
+
+		<Directory Id='TARGETDIR' Name='SourceDir'>
+			<Directory Id='ProgramFiles64Folder' Name='PFiles'>
+				<Directory Id='INSTALLDIR' Name='lmsSuite'>
+					<Component Id='URLProtocol'>
+						<RegistryKey Root='HKCR' Key='lmssuite'>
+							<RegistryValue Type='string' Name='URL Protocol' Value=''/>
+							<RegistryValue Type='string' Value='URL:lmssuite'/>
+							<RegistryKey Key='DefaultIcon'>
+								<RegistryValue Type='string' Value='[INSTALLDIR_binary]lmssuite.exe,1' />
+							</RegistryKey>
+							<RegistryKey Key='shell\open\command'>
+								<RegistryValue Type='string' Value='&quot;[INSTALLDIR_binary]lmssuite.exe&quot; -d &quot;%1&quot;' />
+							</RegistryKey>
+						</RegistryKey>
+					</Component>
+
+					<Directory Id='INSTALLDIR_binary' Name='binary'>
+						<Component Id='MainExecutable'>
+							<File Id='lmssuite_exe' Name='lmssuite.exe' Source='binary\lmssuite.exe' KeyPath='yes'>
+								<Shortcut Id='startmenuLMSSuiteExe' Directory='ProgramMenuDir' Name='LMSSuite'
+									WorkingDirectory='INSTALLDIR' Icon='ico_lmssuite.exe' IconIndex='0' Advertise='yes' />
+								<Shortcut Id='desktopLMSSuiteExe' Directory='DesktopFolder' Name='LMSSuite'
+									WorkingDirectory='INSTALLDIR' Icon='ico_lmssuite.exe' IconIndex='0' Advertise='yes' />
+							</File>
+						</Component>
+
+						${render_components('binary') | tab6}
+					</Directory>
+				</Directory>
+			</Directory>
+
+			<Directory Id='ProgramMenuFolder' Name='Programs'>
+				<Directory Id='ProgramMenuDir' Name='lmsSuite ${LMS.VERSION}'>
+					<Component Id='ProgramMenuDir'>
+						<RemoveFolder Id='ProgramMenuDir' On='uninstall' />
+						<RegistryValue Root='HKCU' Key='Software\Mohler\lmsSuite' Type='string' Value='' KeyPath='yes' />
+					</Component>
+				</Directory>
+			</Directory>
+
+			<Directory Id='DesktopFolder' Name='Desktop' />
+		</Directory>
+
+		<Feature Id='Complete' Level='1'>
+			<ComponentRef Id='URLProtocol' />
+			<ComponentRef Id='MainExecutable' />
+			${render_component_refs() | tab3}
+			<ComponentRef Id='ProgramMenuDir' />
+		</Feature>
+		<Icon Id='ico_lmssuite.exe' SourceFile='binary\lmssuite.exe' />
+	</Product>
+</Wix>

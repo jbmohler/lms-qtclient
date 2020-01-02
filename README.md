@@ -11,3 +11,7 @@ pip install -r requirements.txt
 pip install .
 python build-client.py
 ```
+
+### there is also a package builder for a windows installer ###
+
+It requires installing the Python module mako and WiX the .msi builder.
