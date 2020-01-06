@@ -18,6 +18,7 @@ PY3 = sys.version > '3'
 ROOTED = [
         ('apputils/rtxassets.qrc', 'rtxassets.py'),
         ('apputils/widgets/icons.qrc', 'icons.py'),
+        ('contacts/gui/icons.qrc', 'icons.py'),
         ('client/qt/icons.qrc', 'icons.py')]
 
 ROOTTUPLE = [p[0].rsplit('/', 1)+[p[1]] for p in ROOTED]

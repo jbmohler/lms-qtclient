@@ -5,4 +5,5 @@ venv
 build
 apputils/rtxassets.py
 apputils/widgets/icons.py
+contacts/gui/icons.py
 client/qt/icons.py

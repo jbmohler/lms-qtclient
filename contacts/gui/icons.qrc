@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/contacts">
+        <file alias="default-new.ico">application-form-add.ico</file>
+        <file alias="default-new.png">application-form-add.png</file>
+        <file alias="default-delete.ico">application-form-delete.ico</file>
+        <file alias="default-delete.png">application-form-delete.png</file>
+        <file alias="default-edit.ico">application-form-edit.ico</file>
+        <file alias="default-edit.png">application-form-edit.png</file>
+        <file alias="bit-delete.png">edit-delete-6.png</file>
+    </qresource>
+</RCC>

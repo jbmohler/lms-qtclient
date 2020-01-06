@@ -1,7 +1,9 @@
+import urllib.parse
 from PySide2 import QtCore, QtWidgets
 import client.qt as qt
 import apputils
 import apputils.widgets as widgets
+from . import icons
 
 
 class PersonaMixin:
@@ -15,25 +17,36 @@ class PersonaMixin:
 class BitMixin:
     @property
     def html_view(self):
+        edurl = 'local:bit/edit'
+        dturl = 'local:bit/delete'
+        x = [
+            '<a href="{}"><img src="{}"></a>'.format(edurl, 'qrc:/contacts/default-edit.png'),
+            '<a href="{}"><img src="{}"></a>'.format(dturl, 'qrc:/contacts/bit-delete.png'),
+            '<p>{}</p>'.format(self.html_chunk())]
+        return "<tr><td>{}{}</td><td>{}</td></tr>".format(x[0], x[1], x[2])
+
+    def html_chunk(self):
         bd = self.bit_data
         if self.bit_type == 'street_addresses':
             addr3 = [
-                    bd['city'] if bd['city'] not in ['', None] else None,
-                    bd['state'] if bd['state'] not in ['', None] else None,
-                    bd['zip'] if bd['zip'] not in ['', None] else None]
+                    bd['city'] if bd['city'] not in ['', None] else '',
+                    bd['state'] if bd['state'] not in ['', None] else '',
+                    bd['zip'] if bd['zip'] not in ['', None] else '']
 
             addresses = [
                     bd['address1'] if bd['address1'] not in ['', None] else None,
                     bd['address2'] if bd['address2'] not in ['', None] else None,
                     ' '.join(addr3),
                     bd['country'] if bd['country'] not in ['', None] else None]
-            x = '\n'.join([x for x in addresses if x != None])
+            x = '<br />'.join([x for x in addresses if x != None])
         elif self.bit_type == 'urls':
             lines = []
-            lines.append(('URL', bd['url']))
+            xurl = '<a href="{0}">{0}</a>'.format(bd['url'])
+            lines.append(('URL', xurl))
             if bd['username'] not in ['', None] or bd['password'] not in ['', None]:
                 lines.append(('Username', bd['username']))
-                lines.append(('Password', bd['password']))
+                localurl = 'local:bit/copy-password?password={}'.format(urllib.parse.quote(bd['password']))
+                lines.append(('Password', '<a href="{}">Copy Password</a>'.format(localurl)))
             x = '<br />'.join(['{}: {}'.format(*x) for x in lines])
         elif self.bit_type == 'phone_numbers':
             x = bd['number']
@@ -86,7 +99,17 @@ class ContactView(QtWidgets.QWidget):
         self.clear()
 
     def action_triggered(self, url):
-        print(url)
+        if url.scheme() == 'local':
+            if url.path() == 'bit/copy-password':
+                values = qt.url_params(url)
+                app = QtCore.QCoreApplication.instance()
+                app.clipboard().setText(values['password'])
+            if url.path() == 'bit/edit':
+                apputils.message(self, 'TO BE IMPLEMENTED -- edit this bit')
+            if url.path() == 'bit/delete':
+                apputils.message(self, 'TO BE IMPLEMENTED -- delete this bit')
+        else:
+            apputils.xdg_open(url.toString())
 
     def clear(self):
         self.view.setHtml("""
@@ -111,10 +134,14 @@ class ContactView(QtWidgets.QWidget):
 
         chunks = []
         chunks.append('<h1>{}</h1>'.format(persona.full_name))
-        chunks.append(persona.memo)
+        if persona.memo != None:
+            chunks.append(persona.memo.replace('\n', '<br />'))
+
+        tablerows = []
         for b in bits.rows:
-            chunks.append(b.bit_type)
-            chunks.append(b.html_view)
+            #chunks.append(b.bit_type)
+            tablerows.append(b.html_view)
+        chunks.append('<table cellpadding="4">'+'\n'.join(tablerows)+'</table>')
 
         self.view.setHtml("""
 <html>
@@ -122,7 +149,7 @@ class ContactView(QtWidgets.QWidget):
 {}
 </body>
 </html>
-""".format("<br />".join(chunks)))
+""".format("".join(['\n'.join(['<p>', c, '</p>', '']) for c in chunks])))
 
 
 class ContactsList(QtWidgets.QWidget):
@@ -141,6 +168,7 @@ class ContactsList(QtWidgets.QWidget):
 
         self.search_edit = apputils.construct('search')
         self.layout.addWidget(self.search_edit)
+        self.setFocusProxy(self.search_edit)
 
         self.sublay = qt.RevealedSplitter(QtCore.Qt.Horizontal)
 
