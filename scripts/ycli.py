@@ -1,5 +1,6 @@
 import atexit
 import os
+import sys
 import readline
 import argparse
 import getpass
@@ -65,7 +66,7 @@ if __name__ == '__main__':
     presession = climod.auto_env_url(args.server_url)
 
     if presession == None:
-        sys.stderr.write('provide a session in --server or .yenot_pass')
+        sys.stderr.write('provide a session in --server or .yenot_pass\n')
         parser.print_help()
         sys.exit(2)
 
@@ -90,7 +91,14 @@ if __name__ == '__main__':
 
     print('Connected to {} ...'.format(session.server_url))
 
-    session.authenticate(presession.username, presession.password)
+    if presession.username is None or presession.password is None:
+        username = input('username [{}]: '.format(presession.username))
+        password = getpass.getpass('password: ')
+    else:
+        username = presession.username
+        password = presession.password
+
+    session.authenticate(username, password)
 
     try:
         loop(session, args.command)

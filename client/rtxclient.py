@@ -3,7 +3,6 @@ import time
 import json
 import uuid
 import datetime
-import getpass
 import urllib.parse
 import requests
 import rtlib
