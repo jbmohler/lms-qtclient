@@ -1,7 +1,30 @@
+import os
+import subprocess
 import textwrap
+import curtsies
 import replicate as api
+import apputils
 
 cli = api.get_global_router()
+
+class KeyTerm(Exception):
+    pass
+
+def keywatcher(shortcuts):
+    with curtsies.Input(keynames='curtsies') as input_generator:
+        for e in curtsies.Input():
+            if e in shortcuts:
+                shortcuts[e]()
+
+def copy_clip(s):
+    if os.environ.get('DISPLAY', '') != '':
+        p = subprocess.Popen(['xclip', '-sel', 'clip'], stdin=subprocess.PIPE)
+        p.communicate(input=s.encode('ascii'))
+    else:
+        print('>>>{}<<<'.format(s))
+
+def open_browser(u):
+    apputils.xdg_open(u)
 
 @cli.command
 def contact(cmd, args):
@@ -26,7 +49,18 @@ def contact(cmd, args):
     if len(table.rows) == 1:
         content = client.get('api/persona/{}', table.rows[0].id)
 
-        print(persona_to_text(content))
+        def stop():
+            raise KeyTerm('exit loop')
+
+        shortcuts = {
+                '<Ctrl-d>': stop,
+                '<Ctrl-j>': stop}
+        print(persona_to_text(content, shortcuts))
+        try:
+            print('press enter to continue')
+            keywatcher(shortcuts)
+        except KeyTerm:
+            pass
 
 def wraptext(paragraph):
     concat = []
@@ -46,7 +80,7 @@ def bit_wrap(bit, actual):
         concat.append(wraptext(bit.memo))
     return '\n'.join(concat+[''])
 
-def persona_to_text(content):
+def persona_to_text(content, shortcuts):
     per = content.named_table('persona')
     bits = content.named_table('bits')
 
@@ -63,11 +97,14 @@ def persona_to_text(content):
         if bit.bit_type == 'urls':
             lines = []
             if bit.bit_data['url'] not in [None, '']:
-                lines.append('url:  {}'.format(bit.bit_data['url']))
+                lines.append('url:  {} (view u)'.format(bit.bit_data['url']))
+                shortcuts['u'] = lambda x=bit.bit_data['url']: open_browser(x)
             if bit.bit_data['username'] not in [None, '']:
-                lines.append('username:  {}'.format(bit.bit_data['username']))
+                lines.append('username:  {} (copy b)'.format(bit.bit_data['username']))
+                shortcuts['b'] = lambda x=bit.bit_data['username']: copy_clip(x)
             if bit.bit_data['password'] not in [None, '']:
-                lines.append('password:  {}'.format(bit.bit_data['password']))
+                lines.append('password:  {} (copy c)'.format('** hidden **'))
+                shortcuts['c'] = lambda x=bit.bit_data['password']: copy_clip(x)
             data = '\n'.join(lines)
         if bit.bit_type == 'street_addresses':
             lines = []
