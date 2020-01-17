@@ -12,6 +12,10 @@ and something else for everything else.
 
 import os
 import sys
+import platform
+
+def is_wsl():
+    return "microsoft" in platform.uname()[3].lower()
 
 def is_windows():
     """
@@ -33,5 +37,7 @@ def xdg_open(file):
             xx = os.system('start {0}'.format(file))
             if xx != 0:
                 raise RuntimeError('could not launch file')
+    elif is_wsl():
+        os.system('powershell.exe /c start "{0}"'.format(file.replace(';', r'\;').replace('&', r'\&')))
     else:
         os.system('xdg-open "{0}"'.format(file.replace(';', r'\;').replace('&', r'\&')))

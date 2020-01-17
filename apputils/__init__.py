@@ -6,7 +6,6 @@ from .messages import * # noqa: F401
 from .modwidgets import * # noqa: F401
 from .globwidgets import * # noqa: F401
 from .backgrounder import * # noqa: F401
-from .xplatform import * # noqa: F401
 from PySide2 import QtWidgets
 
 def transient_app():

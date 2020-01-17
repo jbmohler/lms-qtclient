@@ -3,7 +3,7 @@ import subprocess
 import textwrap
 import curtsies
 import replicate as api
-import apputils
+import cliutils
 
 cli = api.get_global_router()
 
@@ -17,14 +17,17 @@ def keywatcher(shortcuts):
                 shortcuts[e]()
 
 def copy_clip(s):
-    if os.environ.get('DISPLAY', '') != '':
+    if cliutils.is_wsl():
+        p = subprocess.Popen(['clip.exe'], stdin=subprocess.PIPE)
+        p.communicate(input=s.encode('ascii'))
+    elif os.environ.get('DISPLAY', '') != '':
         p = subprocess.Popen(['xclip', '-sel', 'clip'], stdin=subprocess.PIPE)
         p.communicate(input=s.encode('ascii'))
     else:
         print('>>>{}<<<'.format(s))
 
 def open_browser(u):
-    apputils.xdg_open(u)
+    cliutils.xdg_open(u)
 
 @cli.command
 def contact(cmd, args):

@@ -93,6 +93,8 @@ if __name__ == '__main__':
 
     if presession.username is None or presession.password is None:
         username = input('username [{}]: '.format(presession.username))
+        if username == '':
+            username = presession.username
         password = getpass.getpass('password: ')
     else:
         username = presession.username
