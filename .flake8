@@ -1,0 +1,27 @@
+[flake8]
+ignore =\
+	E501, #  line too long
+	E301,E302,E305,E306, #  expected
+	E722, # bare except
+	E126, #  continuation line
+	E711, #  comparison to None should be 'if cond is not None:'
+	E711, #  comparison to None should be 'if cond is None:'
+	W291, #  trailing whitespace
+	E265, #  block comment should start with '# '
+	E261, #  at least two spaces before inline comment
+	E127,E128, #  continuation line
+	F403, #  star import used; unable to detect undefined names
+	E502, #  the backslash is redundant between brackets
+	F401, #  module imported but unused
+	E731, #  do not assign a lambda expression, use a def
+	W293, #  blank line contains whitespace
+	F841, #  local  variable is assigned to but never used
+	E251, #  unexpected spaces around keyword / parameter equals
+	E226, #  missing whitespace
+	E225, #  missing whitespace
+	E262, #  inline comment should start with '# '
+	E712, #  comparison to False should be 'if cond is not False:' or 'if cond:'
+	W391, #  blank line at end of file
+	E116, #  unexpected indentation (comment)
+	E266, #  too many leading '#' for block comment
+	E303 #  too many blank lines (2)

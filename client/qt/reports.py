@@ -584,7 +584,7 @@ class ReportPreview(QtWidgets.QWidget):
     def settings_key(self):
         return 'reports/{}'.format(self.report.url.replace('/', '_'))
 
-    def update_report_line_selection(self):
+    def update_report_line_selection(self, current, previous):
         if self.sidebar != None and hasattr(self.sidebar, 'highlight'):
             row = current.data(models.ObjectRole)
             if row != None:

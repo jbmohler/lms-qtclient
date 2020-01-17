@@ -18,11 +18,3 @@ class TransactionController(api.Controller):
 class ClientTransactionController(TransactionController):
     def fetch_account_info(self, acc_id):
         pass
-
-
-class TransactionData:
-    def __init__(self, payload):
-        content = client.StdPayload(payload)
-
-        self.trans = content.named_table('transaction')
-        self.splits = content.named_table('splits')

@@ -9,8 +9,6 @@ class RtAuthPlugs:
         if url.path() in useradmin.SIMPLE_LIST_MAP:
             widclass = useradmin.SIMPLE_LIST_MAP[url.path()]
             parent.create_or_adopt_tab(widclass)
-        elif url.path() == 'endpoints/list-surrounding-error':
-            list_surrounding(state, parent, url.parameters()['event_id'])
         elif url.path() == 'activities/register':
             w = activities.ManageActivities(state.session, state.exports_dir, parent=parent, unregistered=True)
             w.show()

@@ -159,10 +159,8 @@ def main():
         os.unlink(x)
 
     shutil.copyfile(requests.certs.where(), os.path.join(outroot, 'binary', 'cacert.pem'))
-    if sys.version_info[:2] >= (3, 6):
-        shutil.copyfile(os.path.join(root, 'pkgscripts', 'redist', 'vcruntime140.dll'), os.path.join(outroot, 'binary', 'vcruntime140.dll'))
-    else:
-        shutil.copytree(os.path.join(PySide.__path__[0], 'openssl'), os.path.join(outroot, 'binary', 'lib', 'openssl'))
+    shutil.copytree(os.path.join(PySide2.__path__[0], 'openssl'), os.path.join(outroot, 'binary', 'lib', 'openssl'))
+    shutil.copyfile(os.path.join(root, 'pkgscripts', 'redist', 'vcruntime140.dll'), os.path.join(outroot, 'binary', 'vcruntime140.dll'))
     for mexe in GENERATED_EXE:
         shutil.copyfile(os.path.join(root, 'pkgscripts', 'app.config'), os.path.join(outroot, 'binary', '{}.config'.format(mexe)))
 

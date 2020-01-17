@@ -62,9 +62,6 @@ class IdentifierEdit(base.KeyEdit):
     def construct_popup_model(self):
         raise NotImplementedError('override this method to build the model for the self.popup_list')
 
-    def set_value_from_object(self, obj):
-        raise NotImplementedError('override this method to set text and static primary key')
-
     def std_url_lookup(self):
         if self._static_key != None:
             url = self.LOOKUP_URL_CONSTRUCTION.format(self._static_key)
