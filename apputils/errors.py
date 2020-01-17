@@ -2,7 +2,7 @@ import sys
 import traceback
 import tempfile
 from PySide2 import QtCore, QtWidgets
-from . import xplatform
+import cliutils
 
 def guiexcepthook(type_, value, tb):
     """
@@ -17,7 +17,7 @@ def guiexcepthook(type_, value, tb):
         with open(tempfile.mktemp(prefix='rtxqt-error-', suffix='.txt'), "w") as f:
             traceback.print_exception(type_, value, tb, limit=None, file=f)
 
-        xplatform.xdg_open(f.name)
+        cliutils.xdg_open(f.name)
     except:
         traceback.print_exception(type_, value, tb, limit=None, file=sys.stderr)
 
@@ -62,7 +62,7 @@ class ExceptionLogger(QtCore.QObject):
             self.error_event.emit(des, None)
 
     def show(self):
-        xplatform.xdg_open(self._logname)
+        cliutils.xdg_open(self._logname)
 
 def exception_message(parent, message):
     # TODO:  Constructing error messages for the user seems to be an

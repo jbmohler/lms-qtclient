@@ -1,6 +1,7 @@
 import sys
 import traceback
 from PySide2 import QtWidgets
+import cliutils
 import apputils
 import client
 
@@ -22,7 +23,7 @@ class RtxTrayIcon(QtWidgets.QSystemTrayIcon):
         app.excepter.show()
 
 def xlsx_start_file(parent, fname):
-    apputils.xdg_open(fname)
+    cliutils.xdg_open(fname)
     apputils.message(parent, 'Data export completed successfully.  See document in Excel.')
 
 

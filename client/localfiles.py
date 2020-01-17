@@ -49,8 +49,8 @@ class LocalDirectory:
             os.makedirs(self.dirname)
 
     def show_browser(self):
-        import apputils
-        apputils.xdg_open(self.dirname)
+        import cliutils
+        cliutils.xdg_open(self.dirname)
 
     def _candidates(self, base, extension):
         yield os.path.join(self.dirname, '{}.{}'.format(base, extension))

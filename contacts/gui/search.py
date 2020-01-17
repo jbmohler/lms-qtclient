@@ -1,6 +1,7 @@
 import urllib.parse
 from PySide2 import QtCore, QtWidgets
 import client.qt as qt
+import cliutils
 import apputils
 import apputils.widgets as widgets
 from . import icons
@@ -17,8 +18,8 @@ class PersonaMixin:
 class BitMixin:
     @property
     def html_view(self):
-        edurl = 'local:bit/edit'
-        dturl = 'local:bit/delete'
+        edurl = 'local:bit/edit?id={}&type={}'.format(self.id, self.bit_type)
+        dturl = 'local:bit/delete?id={}&type={}'.format(self.id, self.bit_type)
         x = [
             '<a href="{}"><img src="{}"></a>'.format(edurl, 'qrc:/contacts/default-edit.png'),
             '<a href="{}"><img src="{}"></a>'.format(dturl, 'qrc:/contacts/bit-delete.png'),
@@ -41,7 +42,7 @@ class BitMixin:
             x = '<br />'.join([x for x in addresses if x != None])
         elif self.bit_type == 'urls':
             lines = []
-            xurl = '<a href="{0}">{0}</a>'.format(bd['url'])
+            xurl = '<a href="{0}">{0}</a>'.format(bd['url']) if bd['url'] not in ['', None] else ' -- '
             lines.append(('URL', xurl))
             if bd['username'] not in ['', None] or bd['password'] not in ['', None]:
                 lines.append(('Username', bd['username']))
@@ -59,21 +60,32 @@ class BitMixin:
         else:
             return '{}\n(memo)'.format(x)
 
+    def delete_message(self):
+        msg = 'Are you sure that you want to delete this contact data?'
+        return msg
 
-class BitUrlView(QtWidgets.QDialog):
+class BasicBitView(QtWidgets.QDialog):
+    def __init__(self, parent):
+        super(BasicBitView, self).__init__(parent)
+
+        self.layout = QtWidget.QVBoxLayout()
+
+class BitUrlView(BasicBitView):
     pass
 
-class BitPhoneView(QtWidgets.QDialog):
+class BitPhoneView(BasicBitView):
     pass
 
-class BitEmailView(QtWidgets.QDialog):
+class BitEmailView(BasicBitView):
     pass
 
-class BitStreetView(QtWidgets.QDialog):
+class BitStreetView(BasicBitView):
     pass
+
 
 class ContactHeadView(QtWidgets.QDialog):
     pass
+
 
 class ContactView(QtWidgets.QWidget):
     TITLE = 'Contact'
@@ -92,6 +104,7 @@ class ContactView(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.view = QtWidgets.QTextBrowser()
+        self.view.setStyleSheet("QTextEdit { font-size: 14px }")
         self.view.setOpenLinks(False)
         self.view.anchorClicked.connect(self.action_triggered)
         self.layout.addWidget(self.view)
@@ -100,16 +113,34 @@ class ContactView(QtWidgets.QWidget):
 
     def action_triggered(self, url):
         if url.scheme() == 'local':
+            values = qt.url_params(url)
             if url.path() == 'bit/copy-password':
-                values = qt.url_params(url)
                 app = QtCore.QCoreApplication.instance()
                 app.clipboard().setText(values['password'])
             if url.path() == 'bit/edit':
-                apputils.message(self, 'TO BE IMPLEMENTED -- edit this bit')
+                bits = {(x.bit_type, x.id): x for x in self.bits}
+                bb = bits[(values['type'], values['id'])]
+
+                dlgclass = {
+                        'street_address': BitStreetView,
+                        'phone_number': BitPhoneView,
+                        'url': BitUrlView,
+                        'email_address': BitEmailView}
+
+                dlg = dlgclass(self)
+
+                if dlg.Accepted == dlg.exec_():
+                    self.reload()
             if url.path() == 'bit/delete':
-                apputils.message(self, 'TO BE IMPLEMENTED -- delete this bit')
+                bits = {(x.bit_type, x.id): x for x in self.bits}
+                bb = bits[(values['type'], values['id'])]
+                msg = bb.delete_message()
+                if 'Yes' == apputils.message(self, msg, buttons=['Yes', 'No']):
+                    with apputils.animator(self):
+                        self.client.delete('api/persona/{}/{}/{}'.format(self.persona.id, bb.bit_type, bb.id))
+                        self.reload()
         else:
-            apputils.xdg_open(url.toString())
+            cliutils.xdg_open(url.toString())
 
     def clear(self):
         self.view.setHtml("""
@@ -124,21 +155,25 @@ class ContactView(QtWidgets.QWidget):
         if row == None:
             self.clear()
             return
-        self.backgrounder(self.load_view, self.client.get, self.URL_PERSONA, row.id)
+        self.loadrow = row
+        self.reload()
+
+    def reload(self):
+        self.backgrounder(self.load_view, self.client.get, self.URL_PERSONA, self.loadrow.id)
 
     def load_view(self):
         content = yield apputils.AnimateWait(self)
 
-        persona = content.named_table('persona', mixin=PersonaMixin).rows[0]
-        bits = content.named_table('bits', mixin=BitMixin)
+        self.persona = content.named_table('persona', mixin=PersonaMixin).rows[0]
+        self.bits = content.named_table('bits', mixin=BitMixin)
 
         chunks = []
-        chunks.append('<h1>{}</h1>'.format(persona.full_name))
-        if persona.memo != None:
-            chunks.append(persona.memo.replace('\n', '<br />'))
+        chunks.append('<h1>{}</h1>'.format(self.persona.full_name))
+        if self.persona.memo != None:
+            chunks.append(self.persona.memo.replace('\n', '<br />'))
 
         tablerows = []
-        for b in bits.rows:
+        for b in self.bits.rows:
             #chunks.append(b.bit_type)
             tablerows.append(b.html_view)
         chunks.append('<table cellpadding="4">'+'\n'.join(tablerows)+'</table>')
