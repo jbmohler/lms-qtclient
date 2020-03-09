@@ -21,13 +21,40 @@ class CLI_Commander:
             print(x.name)
 
     def command(self, f):
-        self.routes.append(CLI_Route(f.__name__, f))
+        rtname = self._normalize(f.__name__)
+        self.routes.append(CLI_Route(rtname, f))
 
-    def execute(self, cmd, args):
+    @staticmethod
+    def _normalize(cmd):
+        return cmd.lower().replace('-', '_')
+
+    def matched_routes(self, cmd):
+        cmd2 = self._normalize(cmd)
+        exact, approx = None, []
+
         for rt in self.routes:
             if rt.name == cmd:
-                rt.f(cmd, args)
-                return True
+                exact = rt
+            elif rt.name.startswith(cmd):
+                approx.append((rt, 'approx'))
+
+        return exact, approx
+
+    def execute(self, cmd, args):
+        exact, approx = self.matched_routes(cmd)
+
+        rt = None
+        if exact != None:
+            rt = exact
+        if exact == None and len(approx) == 1:
+            rt = approx[0][1]
+
+        if rt != None:
+            rt.f(cmd, args)
+            return True
+        elif len(approx) > 0:
+            lines = ['Candidates:'] + [rt.name for rt, _ in approx]
+            print('\n\t'.join(lines))
         return False
 
 GLOBAL_ROUTER = None
