@@ -108,9 +108,9 @@ class Exporter(QtWidgets.QDialog):
             rform = content.keys.get('report-formats', [])
             if len(rform) > 0:
                 export = rtapp_report_export(rform[0])
-                export.export(fname, view, content)
+                export.export(fname, view, content, hyperlinks=False)
             else:
-                rtlib.server.export_view(fname, view, content.keys['headers'])
+                rtlib.server.export_view(fname, view, content.keys['headers'], hyperlinks=False)
 
         # show subdir
         exportdir.show_browser()

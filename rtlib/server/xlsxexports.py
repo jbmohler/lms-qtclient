@@ -93,7 +93,8 @@ class TableBoundingBox:
     def rows(self):
         return [b.row for b in self.bound_rows]
 
-def export_view(fname, view, headers=None, options=None, sort_key=None, max_url=EXCEL_MAX_URLS, group_end_callback=None):
+def export_view(fname, view, headers=None, options=None, sort_key=None,
+        max_url=EXCEL_MAX_URLS, group_end_callback=None, hyperlinks=True):
     """
     Export a grid to an excel xlsx file with column order and widths matching
     the passed view.
@@ -178,12 +179,13 @@ def export_view(fname, view, headers=None, options=None, sort_key=None, max_url=
     allowed_columns = max_url // filtered
     columns_to_link = []
     # cleverly choose columns to show links for
-    for col in columns:
-        if col.represents and col.url_factory != None and len(columns_to_link) < allowed_columns:
-            columns_to_link.append(col.attr)
-    for col in columns:
-        if not col.represents and col.url_factory != None and len(columns_to_link) < allowed_columns:
-            columns_to_link.append(col.attr)
+    if hyperlinks:
+        for col in columns:
+            if col.represents and col.url_factory != None and len(columns_to_link) < allowed_columns:
+                columns_to_link.append(col.attr)
+        for col in columns:
+            if not col.represents and col.url_factory != None and len(columns_to_link) < allowed_columns:
+                columns_to_link.append(col.attr)
 
     box = TableBoundingBox()
     for index, col in enumerate(columns):
@@ -232,8 +234,9 @@ def export_view(fname, view, headers=None, options=None, sort_key=None, max_url=
                 fmtfunc = col.formatter.as_xlsx
                 v = fmtfunc(v)
             link = None
-            if col.attr in columns_to_link:# and link_count < EXCEL_HARD_MAX:
-                link = rtlib.column_url(col, row_in)
+            if hyperlinks:
+                if col.attr in columns_to_link:# and link_count < EXCEL_HARD_MAX:
+                    link = rtlib.column_url(col, row_in)
             if col.checkbox:
                 worksheet.write_boolean(grid_top+index2+offset, grid_left+index, v)
             elif link != None:
