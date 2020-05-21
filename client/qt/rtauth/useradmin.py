@@ -400,11 +400,11 @@ class ActivitySidebar(QtWidgets.QWidget):
         acttable = content.main_table()
         activity = acttable.rows[0]
 
-        if 'prompts' not in content[0]:
+        if activity.prompts is None:
             reportgunk = ''
         else:
-            gui_url = 'rtx:report/{}?prompt1=value1'.format(content[0]['name'])
-            self.prompts = rtlib.PromptList(content[0]['prompts'])
+            gui_url = 'rtx:report/{}?prompt1=value1'.format(activity.act_name)
+            self.prompts = rtlib.PromptList(activity.prompts)
 
             cols = ['label', 'attr', 'type_']
             table = rtlib.ClientTable([(c, None) for c in cols], [])
@@ -439,7 +439,7 @@ class ActivitySidebar(QtWidgets.QWidget):
 </html>""".format(activity.description, reportgunk, activity.note)
         self.html.setHtml(html)
 
-        self.html.page().setLinkDelegationPolicy(QtWebEngineWidgets.QWebEnginePage.DelegateAllLinks)
+        #self.html.page().setLinkDelegationPolicy(QtWebEngineWidgets.QWebEnginePage.DelegateAllLinks)
 
 class ActivityList(QtWidgets.QWidget):
     ID = 'administrative/activities'

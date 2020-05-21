@@ -19,7 +19,7 @@ class ServerDiagnostics(QtWidgets.QDialog):
         self.setWindowTitle('Server Diagnostics')
         self.setMinimumSize(350, 150)
         self.session = session
-        self.client = session.raw_client()
+        self.client = session.std_client()
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.form = QtWidgets.QFormLayout()
@@ -63,8 +63,8 @@ class ServerDiagnostics(QtWidgets.QDialog):
     def load_version(self):
         try:
             payload = self.client.get('api/info')
-            self.version_edit.setText(payload['version'])
-            self.sql_version_edit.setText(payload['sql_version'])
+            self.version_edit.setText(payload.keys['version'])
+            self.sql_version_edit.setText(payload.keys['sql_version'])
         except:
             utils.exception_message(self, 'Error getting server info')
 
