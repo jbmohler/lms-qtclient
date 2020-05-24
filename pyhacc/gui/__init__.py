@@ -9,6 +9,7 @@ from . import transactions
 from . import monthly
 from . import tranreports
 from . import calendar
+from . import reconcile
 
 class AccountingExtensions:
     def show_link_parented(self, state, parent, url):
@@ -27,6 +28,8 @@ class AccountingExtensions:
             edit_account_type(state.session, 'new')
         elif url.path() == 'accounttypes':
             edit_account_type(state.session, url.parameters()['key'])
+        elif url.path() == 'reconcile':
+            reconcile.rec_window(state.session, **url.parameters())
         elif url.path() == 'transactions/new':
             transactions.edit_transaction(state.session, 'new')
         elif url.path() == 'transactions':

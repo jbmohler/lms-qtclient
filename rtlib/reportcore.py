@@ -257,7 +257,7 @@ class PromptList:
 def type_included(type_):
     if type_ == None:
         return True
-    elif type_ in ['fido_primary_key', 'fido_x_data', 'text_color']:
+    elif type_ in ['__meta__', 'text_color']:
         return False
     elif '.' in type_ and type_.split('.', 1)[1] in ('autoid', 'surrogate'):
         return False

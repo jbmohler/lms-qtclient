@@ -1,6 +1,7 @@
 __pycache__
 *.swp
 *.egg-info
+.vscode
 venv
 build
 apputils/rtxassets.py
