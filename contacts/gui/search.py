@@ -55,6 +55,8 @@ class BitMixin:
             x = bd['email']
         else:
             x = str(self.bit_data)
+        if self.name not in ['', None]:
+            x = "<b>{}: </b>".format(self.name) + x
         if self.memo in ['', None]:
             return x
         else:
@@ -68,16 +70,76 @@ class BasicBitView(QtWidgets.QDialog):
     def __init__(self, parent):
         super(BasicBitView, self).__init__(parent)
 
-        self.layout = QtWidget.QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
+
+        self.binder = qt.Binder(self)
+
+        self.form = self.prepare_form_body(self.binder)
+
+        self.buttons = QtWidgets.QDialogButtonBox()
+
+        self.buttons.addButton(self.buttons.Ok)
+        self.buttons.addButton(self.buttons.Cancel)
+
+        self.layout.addLayout(self.form)
+        self.layout.addWidget(self.buttons)
+
+
+    def load(self, table, row):
+        self.binder.bind(row, table.columns)
+
 
 class BitUrlView(BasicBitView):
-    pass
+    def prepare_form_body(self, sb):
+        sb = self.binder
+        sb.construct('name', 'basic')
+        sb.construct('is_primary', 'boolean', label='Primary')
+        sb.construct('url', 'basic')
+        sb.construct('username', 'basic')
+        sb.construct('password', 'basic')
+        sb.construct('memo', 'multiline')
+
+        form = QtWidgets.QFormLayout()
+        form.addRow('Name', sb.widgets['name'])
+        form.addRow(None, sb.widgets['is_primary'])
+        form.addRow('URL', sb.widgets['url'])
+        form.addRow('Username', sb.widgets['username'])
+        form.addRow('Password', sb.widgets['password'])
+        form.addRow('Memo', sb.widgets['memo'])
+
+        return form
 
 class BitPhoneView(BasicBitView):
-    pass
+    def prepare_form_body(self, sb):
+        sb = self.binder
+        sb.construct('name', 'basic')
+        sb.construct('is_primary', 'boolean', label='Primary')
+        sb.construct('number', 'basic')
+        sb.construct('memo', 'multiline')
+
+        form = QtWidgets.QFormLayout()
+        form.addRow('Name', sb.widgets['name'])
+        form.addRow(None, sb.widgets['is_primary'])
+        form.addRow('Phone No', sb.widgets['number'])
+        form.addRow('Memo', sb.widgets['memo'])
+
+        return form
 
 class BitEmailView(BasicBitView):
-    pass
+    def prepare_form_body(self, sb):
+        sb = self.binder
+        sb.construct('name', 'basic')
+        sb.construct('is_primary', 'boolean', label='Primary')
+        sb.construct('email', 'basic')
+        sb.construct('memo', 'multiline')
+
+        form = QtWidgets.QFormLayout()
+        form.addRow('Name', sb.widgets['name'])
+        form.addRow(None, sb.widgets['is_primary'])
+        form.addRow('E-Mail', sb.widgets['email'])
+        form.addRow('Memo', sb.widgets['memo'])
+
+        return form
 
 class BitStreetView(BasicBitView):
     pass
@@ -118,22 +180,24 @@ class ContactView(QtWidgets.QWidget):
                 app = QtCore.QCoreApplication.instance()
                 app.clipboard().setText(values['password'])
             if url.path() == 'bit/edit':
-                bits = {(x.bit_type, x.id): x for x in self.bits}
-                bb = bits[(values['type'], values['id'])]
+                bitmap = {(x.bit_type, x.id): x for x in self.bits.rows}
+                bb = bitmap[(values['type'], values['id'])]
 
                 dlgclass = {
-                        'street_address': BitStreetView,
-                        'phone_number': BitPhoneView,
-                        'url': BitUrlView,
-                        'email_address': BitEmailView}
+                        'street_addresses': BitStreetView,
+                        'phone_numbers': BitPhoneView,
+                        'urls': BitUrlView,
+                        'email_addresses': BitEmailView}
 
-                dlg = dlgclass(self)
+                dlg = dlgclass[values['type']](self)
+                print(bb)
+                dlg.load(self.bits, bb)
 
                 if dlg.Accepted == dlg.exec_():
                     self.reload()
             if url.path() == 'bit/delete':
-                bits = {(x.bit_type, x.id): x for x in self.bits}
-                bb = bits[(values['type'], values['id'])]
+                bitmap = {(x.bit_type, x.id): x for x in self.bits.rows}
+                bb = bitmap[(values['type'], values['id'])]
                 msg = bb.delete_message()
                 if 'Yes' == apputils.message(self, msg, buttons=['Yes', 'No']):
                     with apputils.animator(self):
