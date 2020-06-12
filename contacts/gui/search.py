@@ -67,10 +67,17 @@ class BitMixin:
         return msg
 
 class BasicBitView(QtWidgets.QDialog):
+    ID = 'persona-bit-editor'
+    TITLE = 'Contact Bit'
+
     def __init__(self, parent):
         super(BasicBitView, self).__init__(parent)
 
-        self.layout = QtWidgets.QVBoxLayout()
+        self.setWindowTitle(self.TITLE)
+        self.setObjectName(self.ID)
+
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.backgrounder = apputils.Backgrounder(self)
 
         self.binder = qt.Binder(self)
 
@@ -78,15 +85,34 @@ class BasicBitView(QtWidgets.QDialog):
 
         self.buttons = QtWidgets.QDialogButtonBox()
 
-        self.buttons.addButton(self.buttons.Ok)
-        self.buttons.addButton(self.buttons.Cancel)
+        self.buttons.addButton(self.buttons.Ok).clicked.connect(self.accept)
+        self.buttons.addButton(self.buttons.Cancel).clicked.connect(self.reject)
 
         self.layout.addLayout(self.form)
         self.layout.addWidget(self.buttons)
 
+    def load(self, client, bb):
+        self.client = client
 
-    def load(self, table, row):
-        self.binder.bind(row, table.columns)
+        self.backgrounder(self._load, self.client.get, "api/persona/{}/bit/{}",
+                            bb.persona_id, bb.id, bit_type=bb.bit_type)
+
+    def _load(self):
+        content = yield apputils.AnimateWait(self)
+
+        self.bits = content.main_table()
+        self.editrow = self.bits.rows[0]
+        self.binder.bind(self.editrow, self.bits.columns)
+
+    def accept(self):
+        self.binder.save(self.editrow)
+
+        with apputils.animator(self) as p:
+            p.background(self.client.put, "api/persona/{}/bit/{}",
+                            self.editrow.persona_id, self.editrow.persona_id,
+                            files={"bit": self.bits.as_http_post_file()})
+
+        return super(BasicBitView, self).accept()
 
 
 class BitUrlView(BasicBitView):
@@ -190,8 +216,7 @@ class ContactView(QtWidgets.QWidget):
                         'email_addresses': BitEmailView}
 
                 dlg = dlgclass[values['type']](self)
-                print(bb)
-                dlg.load(self.bits, bb)
+                dlg.load(self.client, bb)
 
                 if dlg.Accepted == dlg.exec_():
                     self.reload()
