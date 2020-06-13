@@ -2,6 +2,15 @@ import re
 import itertools
 import rtlib.server as rtserve
 
+def group_header_profit(wbhelper, worksheet, bounding_box, first_row, header_index):
+    merge = '{}:{}'.format(
+            bounding_box.columns[0].cell(header_index),
+            bounding_box.columns[-1].cell(header_index),
+    )
+    worksheet.merge_range(merge, first_row.atype_name, wbhelper.group_header)
+
+    return 1
+
 def group_footer_profit(wbhelper, worksheet, bounding_box, footer_index):
     i1 = bounding_box.row_index_start
     i2 = bounding_box.row_index_end
@@ -30,6 +39,8 @@ class AccountTypeGrouped:
                     headers=content.keys['headers'],
                     options={'row_group': 'atype_name'}, 
                     sort_key='(atype_sort, jrn_name, acc_name)',
+                    suppress_grouped_column=True,
+                    group_start_callback=group_header_profit,
                     group_end_callback=group_footer_profit,
                     hyperlinks=hyperlinks)
 

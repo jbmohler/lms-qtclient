@@ -37,6 +37,11 @@ class WorkbookHelpers:
         self.boldwrap_format = workbook.add_format({\
                         'bold': True,
                         'text_wrap': True})
+        self.group_header = workbook.add_format({\
+                        'align': 'center',
+                        'bold': True,
+                        'font_size': 14,
+                        'bottom': 2})
         self.url_format = workbook.add_format({\
                         'font_color': 'blue',
                         'underline': 1})
@@ -94,7 +99,7 @@ class TableBoundingBox:
         return [b.row for b in self.bound_rows]
 
 def export_view(fname, view, headers=None, options=None, sort_key=None,
-        max_url=EXCEL_MAX_URLS, group_end_callback=None, hyperlinks=True):
+        max_url=EXCEL_MAX_URLS, suppress_grouped_column=False, group_start_callback=None, group_end_callback=None, hyperlinks=True):
     """
     Export a grid to an excel xlsx file with column order and widths matching
     the passed view.
@@ -119,6 +124,8 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
 
     if headers == None:
         headers = []
+    if options == None:
+        options = {}
 
     model = view.model()
     if hasattr(view, 'header'):
@@ -131,6 +138,8 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
         columns = [c for c in model.columns]
     if hasattr(model, 'exportcolumns'):
         columns = [c for c in columns if c.attr in model.exportcolumns]
+    if suppress_grouped_column and 'row_group' in options:
+        columns = [c for c in columns if c.attr != options['row_group']]
 
     def print_headers(row):
         for index, head in enumerate(headers):
@@ -149,18 +158,16 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
         for index, header in enumerate(columns):
             worksheet.write(row, grid_left+index, header.label, wbhelper.boldwrap_format)
 
-    print_column_headers(grid_top)
-
     pagebreaks = []
     group_expr = None
     page_break_groups = False
     row_filter_expr = None
-    if options != None and 'hpagebreak' in options:
+    if 'hpagebreak' in options:
         group_expr = evaluator.PreparedEvaluator(options['hpagebreak'])
         page_break_groups = True
-    if options != None and 'row_group' in options:
+    if 'row_group' in options:
         group_expr = evaluator.PreparedEvaluator(options['row_group'])
-    if options != None and 'row_filter' in options:
+    if 'row_filter' in options:
         row_filter_expr = evaluator.PreparedEvaluator(options['row_filter'])
 
     if row_filter_expr != None:
@@ -193,7 +200,7 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
         box.columns.append(BBColumn(gridindex, xlutil.xl_col_to_name(gridindex), col.attr))
 
     link_count = 0
-    offset = 1
+    offset = 0
     prior = None
     for index2, row_in in enumerate(filtered_rows):
         if group_expr != None:
@@ -201,6 +208,12 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
             if prior == None:
                 prior = thisrow
                 row_group = [BBRow(grid_top+index2+offset, row_in)]
+
+                if group_start_callback != None:
+                    rows_used = group_start_callback(wbhelper, worksheet, box, row_in, grid_top+index2+offset)
+                    offset += rows_used
+                print_column_headers(grid_top+index2+offset)
+                offset += 1
             elif thisrow != prior:
                 if group_end_callback != None:
                     box.bound_rows = row_group
@@ -214,12 +227,20 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
                 if page_break_groups:
                     print_headers(grid_top+index2+offset)
                     offset += len(headers) + 1
+
+                if group_start_callback != None:
+                    rows_used = group_start_callback(wbhelper, worksheet, box, row_in, grid_top+index2+offset)
+                    offset += rows_used
                 print_column_headers(grid_top+index2+offset)
                 offset += 1
 
                 row_group = [BBRow(grid_top+index2+offset, row_in)]
             else:
                 row_group.append(BBRow(grid_top+index2+offset, row_in))
+        elif index2 == 0:
+            # only print this the first time around
+            print_column_headers(grid_top+index2+offset)
+            offset += 1
 
         for index, col in enumerate(columns):
             v = getattr(row_in, col.attr)
