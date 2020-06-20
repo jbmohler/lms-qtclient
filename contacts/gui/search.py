@@ -88,8 +88,13 @@ class BasicBitView(QtWidgets.QDialog):
         self.buttons.addButton(self.buttons.Ok).clicked.connect(self.accept)
         self.buttons.addButton(self.buttons.Cancel).clicked.connect(self.reject)
 
+        self.add_buttons()
+
         self.layout.addLayout(self.form)
         self.layout.addWidget(self.buttons)
+
+    def add_buttons(self):
+        pass
 
     def load(self, client, bb):
         self.client = client
@@ -134,6 +139,38 @@ class BitUrlView(BasicBitView):
         form.addRow('Memo', sb.widgets['memo'])
 
         return form
+
+    def add_buttons(self):
+        self.buttons.addButton("Generate", self.buttons.ActionRole).clicked.connect(self.gen_new_password)
+
+    def gen_new_password(self):
+        dlg = QtWidgets.QDialog()
+
+        dlg.layout = QtWidgets.QVBoxLayout(dlg)
+
+        modes = ["pronounciable", "words", "random", "alphanumeric"]
+
+        dlg.mode_edit = apputils.construct("options", options=[(m.title(), m) for m in modes])
+        dlg.bits_edit = apputils.construct("integer")
+        dlg.bits_edit.setValue(50)
+
+        dlg.form = QtWidgets.QFormLayout()
+        dlg.form.addRow('Mode', dlg.mode_edit)
+        dlg.form.addRow('Bits', dlg.bits_edit)
+
+        dlg.buttons = QtWidgets.QDialogButtonBox()
+
+        dlg.buttons.addButton(dlg.buttons.Ok).clicked.connect(dlg.accept)
+        dlg.buttons.addButton(dlg.buttons.Cancel).clicked.connect(dlg.reject)
+
+        dlg.layout.addLayout(dlg.form)
+        dlg.layout.addWidget(dlg.buttons)
+
+        if dlg.exec_() == dlg.Accepted:
+            with apputils.animator(self) as p:
+                content = p.background(self.client.get, "api/password/generate", mode=dlg.mode_edit.value(), bits=dlg.bits_edit.value())
+
+            apputils.information(self, content.keys["password"])
 
 class BitPhoneView(BasicBitView):
     def prepare_form_body(self, sb):
