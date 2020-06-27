@@ -297,6 +297,8 @@ class ContactView(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
+        self.btn_new = self.buttons.addButton("New",
+                self.buttons.ActionRole).clicked.connect(self.cmd_new_persona)
         self.btn_edit = self.buttons.addButton("Edit",
                 self.buttons.ActionRole).clicked.connect(self.cmd_edit_persona)
         self.btn_newbit = self.buttons.addButton("New Bit", self.buttons.ActionRole)
