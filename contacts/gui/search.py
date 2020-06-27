@@ -1,3 +1,4 @@
+import functools
 import urllib.parse
 from PySide2 import QtCore, QtWidgets
 import client.qt as qt
@@ -101,6 +102,12 @@ class BasicBitView(QtWidgets.QDialog):
 
         self.backgrounder(self._load, self.client.get, "api/persona/{}/bit/{}",
                             bb.persona_id, bb.id, bit_type=bb.bit_type)
+
+    def load_new(self, client, per, bit_type):
+        self.client = client
+
+        self.backgrounder(self._load, self.client.get, "api/persona/{}/bit/new",
+                            per.id, bit_type=bit_type)
 
     def _load(self):
         content = yield apputils.AnimateWait(self)
@@ -208,8 +215,69 @@ class BitStreetView(BasicBitView):
     pass
 
 
-class ContactHeadView(QtWidgets.QDialog):
-    pass
+class EditPersona(QtWidgets.QDialog):
+    TITLE = 'Persona Edit View'
+    ID = 'dlg-edit-persona'
+
+    def __init__(self, parent):
+        super(EditPersona, self).__init__(parent)
+
+        self.setWindowTitle(self.TITLE)
+        self.setObjectName(self.ID)
+
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.backgrounder = apputils.Backgrounder(self)
+
+        self.binder = qt.Binder(self)
+
+        sb = self.binder
+        sb.construct('title', 'basic')
+        sb.construct('f_name', 'basic')
+        sb.construct('l_name', 'basic')
+        sb.construct('memo', 'multiline')
+        sb.construct('birthday', 'date')
+
+        self.form = QtWidgets.QFormLayout()
+        self.form.addRow('Title', sb.widgets['title'])
+        self.form.addRow('First Name', sb.widgets['f_name'])
+        self.form.addRow('Last Name', sb.widgets['l_name'])
+        self.form.addRow('Memo', sb.widgets['memo'])
+        self.form.addRow('Birthday', sb.widgets['birthday'])
+
+        self.buttons = QtWidgets.QDialogButtonBox()
+        self.buttons.addButton(self.buttons.Ok).clicked.connect(self.accept)
+        self.buttons.addButton(self.buttons.Cancel).clicked.connect(self.reject)
+
+        self.layout.addLayout(self.form)
+        self.layout.addWidget(self.buttons)
+
+    def load(self, client, persona):
+        self.client = client
+
+        self.backgrounder(self._load, self.client.get, "api/persona/{}",
+                            persona.id)
+
+    def load_new(self, client):
+        self.client = client
+
+        self.backgrounder(self._load, self.client.get, "api/persona/new")
+
+    def _load(self):
+        content = yield apputils.AnimateWait(self)
+
+        self.persona = content.main_table()
+        self.editrow = self.persona.rows[0]
+        self.binder.bind(self.editrow, self.persona.columns)
+
+    def accept(self):
+        self.binder.save(self.editrow)
+
+        with apputils.animator(self) as p:
+            p.background(self.client.put, "api/persona/{}",
+                            self.editrow.id,
+                            files={"persona": self.persona.as_http_post_file()})
+
+        return super(EditPersona, self).accept()
 
 
 class ContactView(QtWidgets.QWidget):
@@ -228,6 +296,23 @@ class ContactView(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
 
+        self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
+        self.btn_edit = self.buttons.addButton("Edit",
+                self.buttons.ActionRole).clicked.connect(self.cmd_edit_persona)
+        self.btn_newbit = self.buttons.addButton("New Bit", self.buttons.ActionRole)
+        self.bitmenu = QtWidgets.QMenu()
+        self.bitmenu.addAction("URL/Login...").triggered.connect(functools.partial(self.cmd_newbit,
+            "urls"))
+        self.bitmenu.addAction("E-Mail...").triggered.connect(functools.partial(self.cmd_newbit,
+            "email_addresses"))
+        self.bitmenu.addAction("Phone...").triggered.connect(functools.partial(self.cmd_newbit,
+            "phone_numbers"))
+        self.bitmenu.addAction("Street Address...").triggered.connect(functools.partial(self.cmd_newbit,
+            "street_addresses"))
+        self.btn_newbit.setMenu(self.bitmenu)
+
+        self.layout.addWidget(self.buttons)
+
         self.view = QtWidgets.QTextBrowser()
         self.view.setStyleSheet("QTextEdit { font-size: 14px }")
         self.view.setOpenLinks(False)
@@ -235,6 +320,33 @@ class ContactView(QtWidgets.QWidget):
         self.layout.addWidget(self.view)
 
         self.clear()
+
+    def cmd_new_persona(self, bittype):
+        dlg = EditPersona(self)
+        dlg.load_new(self.client)
+
+        if dlg.Accepted == dlg.exec_():
+            self.reload()
+
+    def cmd_edit_persona(self, bittype):
+        dlg = EditPersona(self)
+        dlg.load(self.client, self.persona)
+
+        if dlg.Accepted == dlg.exec_():
+            self.reload()
+
+    def cmd_newbit(self, bittype):
+        dlgclass = {
+                'street_addresses': BitStreetView,
+                'phone_numbers': BitPhoneView,
+                'urls': BitUrlView,
+                'email_addresses': BitEmailView}
+
+        dlg = dlgclass[bittype](self)
+        dlg.load_new(self.client, self.persona, bittype)
+
+        if dlg.Accepted == dlg.exec_():
+            self.reload()
 
     def action_triggered(self, url):
         if url.scheme() == 'local':
