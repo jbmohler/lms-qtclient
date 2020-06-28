@@ -325,6 +325,7 @@ def qt_app_init():
 
     import pyhacc.gui as pg
     import contacts.gui as cg
+    import databits.gui as dbg
     import client.qt.rtauth as rtauth
 
     rtlib.add_type_definition_plugin(pg.AccountingWidgetsPlugin())
@@ -333,6 +334,7 @@ def qt_app_init():
 
     gridmgr.add_extension_plug(pg.AccountingExtensions())
     gridmgr.add_extension_plug(cg.ContactExtensions())
+    gridmgr.add_extension_plug(dbg.DataBitExtensions())
     gridmgr.add_extension_plug(rtauth.RtAuthPlugs())
 
     app.report_sidebar = gridmgr.search_sidebar
