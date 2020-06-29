@@ -1,3 +1,4 @@
+import datetime
 from PySide2 import QtWidgets
 import client.qt as qt
 import apputils
@@ -207,6 +208,7 @@ def edit_transaction(session, tranid='new'):
 
 def view_recent_transactions(parent, session):
     view = QtWidgets.QWidget()
+    view.setObjectName('recent-transactions')
     layout = QtWidgets.QVBoxLayout(view)
     grid = widgets.TableView()
     grid.setSortingEnabled(True)
@@ -218,11 +220,17 @@ def view_recent_transactions(parent, session):
         content = yield apputils.AnimateWait(view)
         view.table = content.main_table()
 
-        gridmgr.set_client_table(view.table)
+        with view.geo.grid_reset(grid):
+            gridmgr.set_client_table(view.table)
+
+    d1 = datetime.date.today() - datetime.timedelta(60)
+    d2 = datetime.date.today() + datetime.timedelta(365)
+
+    view.geo = apputils.WindowGeometry(view, position=False, size=False, grids=[grid])
 
     backgrounder = apputils.Backgrounder(view)
     client = session.std_client()
-    backgrounder(loader, client.get, URL_BASE2, date1='2019-01-01', date2='2019-12-31')
+    backgrounder(loader, client.get, URL_BASE2, date1=d1, date2=d2)
 
     return view
 

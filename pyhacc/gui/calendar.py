@@ -7,28 +7,33 @@ from client.qt import gridmgr
 
 class CalendarAdaptor(QtCore.QObject):
     customContextMenuRequested = QtCore.Signal(object)
-    doubleClicked = QtCore.Signal()
+    doubleClicked = QtCore.Signal(object)
 
     # selectionModel
     currentRowChanged = QtCore.Signal()
     selectionChanged = QtCore.Signal()
 
     class _Index:
-        def __init__(s, obj):
+        def __init__(s, obj, attr):
             s.obj = obj
+            s.attr = attr
         def isValid(s):
             return s.obj != None
         def data(s, role):
-            if role != models.ObjectRole:
-                raise NotImplementedError('incomplete shim')
-            return s.obj
+            if role == models.ObjectRole:
+                return s.obj
+            elif role == models.ColumnAttributeRole:
+                return s.attr
+            else:
+                raise NotImplementedError(f'incomplete shim: role={role}')
 
-    def __init__(self, parent, calendar):
+    def __init__(self, parent, calendar, attr):
         super(CalendarAdaptor, self).__init__(parent)
 
+        self.attr = attr
         self.calendar = calendar
         self.calendar.customContextMenuRequested.connect(self.customContextMenuRequested.emit)
-        self.calendar.doubleClicked.connect(self.doubleClicked.emit)
+        self.calendar.doubleClickCalendarEvent.connect(self.translate_double_click)
 
     def setContextMenuPolicy(self, *args):
         self.calendar.setContextMenuPolicy(*args)
@@ -39,6 +44,9 @@ class CalendarAdaptor(QtCore.QObject):
     def addAction(self, action):
         self.calendar.addAction(action)
 
+    def translate_double_click(self, obj):
+        self.doubleClicked.emit(self._Index(obj, self.attr))
+
     def setModel(self, m):
         self._model = m
         self._model.rowsInserted.connect(self.reset_data)
@@ -48,12 +56,12 @@ class CalendarAdaptor(QtCore.QObject):
         return self._model
 
     def indexAt(self, point):
-        return self._Index(self.calendar.itemAt(point))
+        return self._Index(self.calendar.itemAt(point), self.attr)
 
     def selectedIndexes(self):
         index = self.calendar.currentIndex()
         objects = index.internalPointer().entryList(index)
-        return [self._Index(entry) for entry in objects]
+        return [self._Index(entry, self.attr) for entry in objects]
 
     def selectionModel(self):
         return self
@@ -84,7 +92,7 @@ class TransactionCalendar(QtWidgets.QWidget):
         self.lay = QtWidgets.QVBoxLayout(self)
         self.calnav = qtviews.CalendarTopNav()
         self.calendar = qtviews.CalendarView()
-        self.caladapt = CalendarAdaptor(self, self.calendar)
+        self.caladapt = CalendarAdaptor(self, self.calendar, "tid")
         self.gridmgr = gridmgr.GridManager(self.caladapt, self)
 
         self.lay.addWidget(self.calnav)
