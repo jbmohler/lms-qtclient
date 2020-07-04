@@ -10,11 +10,22 @@ cli = api.get_global_router()
 @cli.command
 def change_pin(cmd, args):
     client = cli.session.std_client()
-    pw = getpass.getpass('confirm password:')
-    pin = getpass.getpass('new pin:')
-    phno = input('SMS target:')
+    pw = getpass.getpass('confirm password: ')
+    pin = getpass.getpass('new pin: ')
+    phno = input('SMS target: ')
     data = {'oldpass': pw, 'newpin': pin, 'target_2fa': json.dumps({'sms': phno})}
     client.post('api/user/me/change-pin', data=data)
+
+@cli.command
+def change_password(cmd, args):
+    client = cli.session.std_client()
+    pw = getpass.getpass('confirm old password: ')
+    pass1 = getpass.getpass('new password: ')
+    pass2 = getpass.getpass('new password (confirm): ')
+    if pass1 != pass2:
+        raise api.UserError('two passwords do not match')
+    data = {'oldpass': pw, 'newpass': pass1}
+    client.post('api/user/me/change-password', data=data)
 
 @cli.command
 def reports(cmd, args):

@@ -33,9 +33,9 @@ class CLI_Commander:
         exact, approx = None, []
 
         for rt in self.routes:
-            if rt.name == cmd:
+            if rt.name == cmd2:
                 exact = rt
-            elif rt.name.startswith(cmd):
+            elif rt.name.startswith(cmd2):
                 approx.append((rt, 'approx'))
 
         return exact, approx
