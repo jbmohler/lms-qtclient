@@ -190,10 +190,6 @@ class ShellWindow(QtWidgets.QMainWindow):
                 return False
         self.post_login()
 
-    def handle_deferred_urls(self):
-        for url in self.deferred_urls:
-            self.handle_url(url)
-
     def handle_url(self, url):
         gridmgr.show_link_parented(self, QtCore.QUrl(url))
 
@@ -273,6 +269,7 @@ class ShellWindow(QtWidgets.QMainWindow):
 
         newindex = self.central.addTab(widget, tab_title)
         self.central.setCurrentIndex(newindex)
+        widget.setFocus()
 
     def disown_tab(self, widget):
         # nothing to do, let it just go out of scope

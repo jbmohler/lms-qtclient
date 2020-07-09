@@ -535,6 +535,8 @@ class ContactsList(QtWidgets.QWidget):
         self.load_timer.timeout.connect(self.search_now)
         self.search_edit.applyValue.connect(self.load_timer.ui_start)
 
+        self.geo = apputils.WindowGeometry(self, size=False, position=False, grids=[self.grid])
+
     def search_now(self):
         self.backgrounder(
             self.load_data,
@@ -547,7 +549,8 @@ class ContactsList(QtWidgets.QWidget):
         content = yield apputils.AnimateWait(self)
         self.table = content.main_table()
 
-        self.gridmgr.set_client_table(self.table)
+        with self.geo.grid_reset(self.grid):
+            self.gridmgr.set_client_table(self.table)
 
 
 def list_widget(parent, session):
