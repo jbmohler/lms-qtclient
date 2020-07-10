@@ -3,6 +3,7 @@ import sys
 import argparse
 import client as climod
 import client.qt as cqt
+import localconfig
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Rtx Client Application')
@@ -20,4 +21,5 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(2)
 
-    cqt.basic_shell_window(presession, document=args.document)
+    app = localconfig.qt_app_init(cqt.gridmgr)
+    cqt.basic_shell_window(app, presession, document=args.document)

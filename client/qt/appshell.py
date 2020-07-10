@@ -312,63 +312,8 @@ class ShellWindow(QtWidgets.QMainWindow):
     def close_all(self):
         winlist.close_all()
 
-def qt_app_init():
-    app = QtWidgets.QApplication([])
-    app.setOrganizationDomain('rtxlib.com')
-    app.setOrganizationName('RTX Library Authors')
-    app.setApplicationName('RTX Application Shell')
-    app.icon = QtGui.QIcon(':/apputils/rtxapp.ico')
-    app.exports_dir = client.LocalDirectory(appname='RtxShell', tail='Exports')
-
-    import pyhacc.gui as pg
-    import contacts.gui as cg
-    import databits.gui as dbg
-    import client.qt.rtauth as rtauth
-
-    rtlib.add_type_definition_plugin(pg.AccountingWidgetsPlugin())
-    rtlib.add_type_definition_plugin(rtlib.BasicTypePlugin())
-    rtlib.add_type_definition_plugin(apputils.BasicWidgetsPlugin())
-
-    gridmgr.add_extension_plug(pg.AccountingExtensions())
-    gridmgr.add_extension_plug(cg.ContactExtensions())
-    gridmgr.add_extension_plug(dbg.DataBitExtensions())
-    gridmgr.add_extension_plug(rtauth.RtAuthPlugs())
-
-    app.report_sidebar = gridmgr.search_sidebar
-    app.report_export = gridmgr.search_export
-
-    return app
-
-def rtx_main_window_embedded(session):
-    winlist.init(ShellWindow.ID)
-
-    app = QtCore.QCoreApplication.instance()
-    app.session = session
-
-    f = ShellWindow()
-    f.exports_dir = app.exports_dir
-    f.session = app.session
-    QtCore.QTimer.singleShot(0, f.post_login)
-    f.show()
-
-    tray = utils.RtxTrayIcon(app)
-    tray.show()
-
-    excepthook_old = sys.excepthook
-
-    # ratchet up the error handling
-    app.excepter = apputils.ExceptionLogger(app)
-    app.excepter.error_event.connect(tray.error_event)
-    sys.excepthook = app.excepter.excepthook
-
-    app.exec_()
-
-    tray.hide()
-    sys.excepthook = excepthook_old
-
-def basic_shell_window(presession=None, document=None):
+def basic_shell_window(app, presession=None, document=None):
     sys.excepthook = apputils.guiexcepthook
-    app = qt_app_init()
     app.session = client.RtxSession(presession.server)
 
     winlist.init(ShellWindow.ID)
