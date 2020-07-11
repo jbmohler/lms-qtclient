@@ -8,3 +8,4 @@ apputils/rtxassets.py
 apputils/widgets/icons.py
 contacts/gui/icons.py
 client/qt/icons.py
+lmssystem/lmsicons.py

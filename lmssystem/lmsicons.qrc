@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/lms">
+        <file alias="jlm_initials.png">jlm_initials.png</file>
+        <file alias="jlm_initials.ico">jlm_initials/favicon.ico</file>
+        <file alias="lms_basic.ico">lms_basic.ico</file>
+        <file alias="lms_basic.png">lms_basic.png</file>
+    </qresource>
+</RCC>

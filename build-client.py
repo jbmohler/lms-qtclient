@@ -16,6 +16,7 @@ RCC = get_qrc_compiler()
 PY3 = sys.version > '3'
 
 ROOTED = [
+        ('lmssystem/lmsicons.qrc', 'lmsicons.py'),
         ('apputils/rtxassets.qrc', 'rtxassets.py'),
         ('apputils/widgets/icons.qrc', 'icons.py'),
         ('contacts/gui/icons.qrc', 'icons.py'),

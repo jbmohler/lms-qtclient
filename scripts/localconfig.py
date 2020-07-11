@@ -7,12 +7,13 @@ def qt_app_init(plugpoint):
     import rtlib
     import apputils
     import client as climod
+    import lmssystem.lmsicons
 
     app = QtWidgets.QApplication([])
     app.setOrganizationDomain('lms.kiwistrawberry.us')
     app.setOrganizationName('Mohler')
     app.setApplicationName('lms Data Suite')
-    app.icon = QtGui.QIcon(':/apputils/rtxapp.ico')
+    app.icon = QtGui.QIcon(':/lms/jlm_initials.ico')
     app.exports_dir = climod.LocalDirectory(appname='lmsDataSuite', tail='Exports')
 
     import pyhacc.gui as pg
