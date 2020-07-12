@@ -33,7 +33,20 @@ class SeparatorMenuItem:
         act = QtWidgets.QAction(parent)
         act.setSeparator(True)
         return act
-    
+
+
+class DocumentThread(QtCore.QObject):
+    open_document = QtCore.Signal(object)
+
+    def __init__(self, mainwin):
+        super(DocumentThread, self).__init__()
+        self._mainwin = mainwin
+
+    def open(self, obj):
+        self._mainwin.activateWindow()
+        self._mainwin.raise_()
+        self.open_document.emit(obj)
+
 
 class ShellWindow(QtWidgets.QMainWindow):
     ID = 'main-window'
@@ -190,6 +203,21 @@ class ShellWindow(QtWidgets.QMainWindow):
                 return False
         self.post_login()
 
+    def start_doc_server(self):
+        import client.cmdserver_unix as cmdserver
+
+        cmdserver.launch_document_server(self.receiver)
+
+    def close_doc_server(self):
+        import client.cmdserver_unix as cmdserver
+
+        cmdserver.close_document_server()
+
+    def receiver(self):
+        self.doc_server = DocumentThread(self)
+        self.doc_server.open_document.connect(self.handle_url)
+        return self.doc_server
+
     def handle_url(self, url):
         gridmgr.show_link_parented(self, QtCore.QUrl(url))
 
@@ -307,6 +335,7 @@ class ShellWindow(QtWidgets.QMainWindow):
             widget = self.central.widget(index)
             widget.close()
         winlist.unregister(self)
+        self.close_doc_server()
         return super(ShellWindow, self).closeEvent(event)
 
     def close_all(self):
@@ -322,6 +351,7 @@ def basic_shell_window(app, presession=None, document=None):
     f.exports_dir = app.exports_dir
     f.session = app.session
     QtCore.QTimer.singleShot(0, lambda: f.rtx_login(presession))
+    QtCore.QTimer.singleShot(0, lambda: f.start_doc_server())
     f.show()
 
     tray = utils.RtxTrayIcon(app)
