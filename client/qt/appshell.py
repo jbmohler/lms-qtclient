@@ -1,5 +1,6 @@
 import os
 import sys
+import platform
 import collections
 from PySide2 import QtCore, QtGui, QtWidgets
 import rtlib
@@ -204,11 +205,17 @@ class ShellWindow(QtWidgets.QMainWindow):
         self.post_login()
 
     def start_doc_server(self):
+        if platform.system() == "Windows":
+            return
+
         import client.cmdserver_unix as cmdserver
 
         cmdserver.launch_document_server(self.receiver)
 
     def close_doc_server(self):
+        if platform.system() == "Windows":
+            return
+
         import client.cmdserver_unix as cmdserver
 
         cmdserver.close_document_server()

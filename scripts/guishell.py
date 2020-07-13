@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import sys
+import platform
 import argparse
 import client as climod
 import client.qt as cqt
 import localconfig
-import client.cmdserver_unix as cmdserver
+if platform.system() != "Windows":
+    import client.cmdserver_unix as cmdserver
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Rtx Client Application')
@@ -18,13 +20,14 @@ if __name__ == '__main__':
     presession = climod.auto_env_url(args.server_url)
 
     if presession == None:
-        sys.stderr.write('provide a session in --server or .yenot_pass')
+        sys.stderr.write('provide a session in --server or ~/.yenotpass')
         parser.print_help()
         sys.exit(2)
 
     launch = True
-    if cmdserver.is_server_running():
-        launch = not cmdserver.request_document(args.document)
+    if platform.system() != "Windows":
+        if cmdserver.is_server_running():
+            launch = not cmdserver.request_document(args.document)
 
     if launch:
         app = localconfig.qt_app_init(cqt.gridmgr)

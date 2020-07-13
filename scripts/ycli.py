@@ -63,7 +63,7 @@ if __name__ == '__main__':
     presession = climod.auto_env_url(args.server_url)
 
     if presession == None:
-        sys.stderr.write('provide a session in --server or .yenot_pass\n')
+        sys.stderr.write('provide a session in --server or ~/.yenotpass\n')
         parser.print_help()
         sys.exit(2)
 
