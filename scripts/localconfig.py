@@ -16,6 +16,13 @@ def qt_app_init(plugpoint):
     app.icon = QtGui.QIcon(':/lms/jlm_initials.ico')
     app.exports_dir = climod.LocalDirectory(appname='lmsDataSuite', tail='Exports')
 
+    import platform
+    if platform.system() == "Windows":
+        # This is needed to display the app icon on the taskbar on Windows 7
+        import ctypes
+        myappid = f'{app.organizationDomain()}.1.0.0' # arbitrary string
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
     import pyhacc.gui as pg
     import contacts.gui as cg
     import databits.gui as dbg
