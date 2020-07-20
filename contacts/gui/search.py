@@ -432,8 +432,8 @@ class ContactView(QtWidgets.QWidget):
                 if "Yes" == apputils.message(self, msg, buttons=["Yes", "No"]):
                     with apputils.animator(self):
                         self.client.delete(
-                            "api/persona/{}/{}/{}".format(
-                                self.persona.id, bb.bit_type, bb.id
+                            "api/persona/{}/bit/{}".format(
+                                self.persona.id, bb.id
                             )
                         )
                         self.reload()
