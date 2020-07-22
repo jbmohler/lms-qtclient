@@ -502,9 +502,7 @@ class ActivityList(QtWidgets.QWidget):
         activity.rows.append(activity.DataRow('', '', ''))
         edit_activity_dlg(self, activity)
 
-    def cmd_edit_activity(self):
-        row = self.ctxmenu.active_index.data(models.ObjectRole)
-
+    def cmd_edit_activity(self, row):
         content = self.client.get(self.SRC_INSTANCE_URL, row.id)
         t = content.main_table()
         edit_activity_dlg(self, t)
@@ -568,7 +566,7 @@ def edit_activity_dlg(parentwin, table):
     def save():
         files = {'activities': table.as_http_post_file()}
         try:
-            parentwin.client.put('api/activities', files=files)
+            parentwin.client.post('api/activities', files=files)
             w.accept()
         except:
             utils.exception_message(w, 'There was an error adding the activity.')
