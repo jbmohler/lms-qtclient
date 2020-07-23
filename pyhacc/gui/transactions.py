@@ -110,7 +110,9 @@ class TransactionCore:
             lines.append("Memo:  {0}".format(self.tranrow.memo))
         lines.append("-"*(20+1+12+1+12))
         for x in self.splittable.rows:
-            lines.append("{0.account:<20} {0.debit:12.2f} {0.credit:12.2f}".format(x))
+            debstr = " "*12 if x.debit == None else "{0:12.2f}".format(x.debit)
+            credstr = " "*12 if x.credit == None else "{0:12.2f}".format(x.credit)
+            lines.append("{0.account.acc_name:<20} {1} {2}".format(x, debstr, credstr))
         lines.append("-"*(20+1+12+1+12))
 
         return '\n'.join(lines)
@@ -183,11 +185,16 @@ class TransactionEditor(qt.ObjectDialog):
         self.action_reverse.triggered.connect(lambda: self.data.cmd_reverse())
         self.addAction(self.action_reverse)
 
+        self.action_copyplain = QtWidgets.QAction("Copy as Plain Text", self)
+        self.action_copyplain.triggered.connect(self.cmd_copyplain)
+        self.addAction(self.action_copyplain)
+
         btns = self.button_row()
         btn_menu = btns.addButton("&More", btns.ActionRole)
         self.menu_more = QtWidgets.QMenu()
         self.menu_more.addAction(self.action_balance)
         self.menu_more.addAction(self.action_reverse)
+        self.menu_more.addAction(self.action_copyplain)
         btn_menu.setMenu(self.menu_more)
 
         self.geo = apputils.WindowGeometry(self, position=False, tabs=[self.tab], splitters=[self.splitme])
@@ -204,6 +211,9 @@ class TransactionEditor(qt.ObjectDialog):
                     self.data.splittable.DataRow.model_columns['jrn_name']]
             self.trans_grid.setModel(apputils.ObjectQtModel(columns, []))
             self.trans_gridmgr.set_client_table_no_model(self.data.splittable)
+
+    def cmd_copyplain(self):
+        QtWidgets.QApplication.clipboard().setText(self.data.ascii_repr())
 
     def writeback(self):
         pass
