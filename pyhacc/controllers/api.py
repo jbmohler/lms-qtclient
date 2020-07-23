@@ -1,5 +1,8 @@
 
 class Controller:
+    def preset_group(self, **kwargs):
+        pass
+
     def values_preset(self):
         pass
 

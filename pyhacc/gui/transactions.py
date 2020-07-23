@@ -1,5 +1,5 @@
 import datetime
-from PySide2 import QtWidgets
+from PySide2 import QtCore, QtWidgets
 import client.qt as qt
 import apputils
 import apputils.widgets as widgets
@@ -17,6 +17,10 @@ class SplitsTable(mxc.ModelRow):
         else:
             self._debit = self.sum if self.sum > 0 else None
             self._credit = -self.sum if self.sum < 0 else None
+
+    def _init_flipper_(self):
+        self._debit = None
+        self._credit = None
 
     @property
     def account(self):
@@ -66,6 +70,27 @@ class TransactionCore:
         self.splittable = content.named_table('splits', mixin=SplitsTable)
         self.splittable.DataRow.controller = controller
         return self
+
+    def cmd_balance(self, split):
+        if split == None:
+            return
+        balance = 0
+        for row in self.splittable.rows:
+            if row is not split:
+                balance -= row.sum
+        kwargs = {
+                'debit': balance if balance >= 0. else None,
+                'credit': -balance if balance < 0. else None,
+        }
+        split.multiset(**kwargs)
+
+    def cmd_reverse(self):
+        for row in self.splittable.rows:
+            kwargs = {
+                    'debit': row.credit,
+                    'credit': row.debit,
+            }
+            row.multiset(**kwargs)
 
     def http_files(self):
         return {\
@@ -147,6 +172,24 @@ class TransactionEditor(qt.ObjectDialog):
         self.layout.addWidget(self.tab)
         self.layout.addWidget(self.button_row())
 
+        self.action_balance = QtWidgets.QAction("&Balance on Current Line", self)
+        self.action_balance.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_B)
+        self.action_balance.triggered.connect(lambda:
+                self.data.cmd_balance(self.trans_gridmgr.selected_row()))
+        self.addAction(self.action_balance)
+
+        self.action_reverse = QtWidgets.QAction("&Reverse Transaction", self)
+        self.action_reverse.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_R)
+        self.action_reverse.triggered.connect(lambda: self.data.cmd_reverse())
+        self.addAction(self.action_reverse)
+
+        btns = self.button_row()
+        btn_menu = btns.addButton("&More", btns.ActionRole)
+        self.menu_more = QtWidgets.QMenu()
+        self.menu_more.addAction(self.action_balance)
+        self.menu_more.addAction(self.action_reverse)
+        btn_menu.setMenu(self.menu_more)
+
         self.geo = apputils.WindowGeometry(self, position=False, tabs=[self.tab], splitters=[self.splitme])
 
     def bind(self, trancore):
@@ -165,6 +208,9 @@ class TransactionEditor(qt.ObjectDialog):
     def writeback(self):
         pass
 
+    def preset_group(self, obj, kwargs):
+        pass
+
     def fields_changed(self, row, fields):
         if self.tracker.load_lockout:
             return
@@ -181,6 +227,7 @@ class TransactionEditor(qt.ObjectDialog):
                 self.data.splittable.rows.append(row)
             for attr in fields:
                 model.append_change_value(row, attr)
+            model.object_changed(row)
 
 
 def edit_transaction(session, tranid='new'):
