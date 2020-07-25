@@ -428,6 +428,15 @@ class PreSession:
 
         return self
 
+    def create_session(self):
+        session = RtxSession(self.server)
+        session.authenticate(self.username, self.password)
+        return session
+
+def auto_session(arg_url=None):
+    pre = auto_env_url(arg_url)
+    return pre.create_session()
+
 def auto_env_url(arg_url=None):
     url = None
     if arg_url != None:

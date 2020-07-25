@@ -558,7 +558,7 @@ def edit_activity_dlg(parentwin, table):
     form = QtWidgets.QFormLayout()
     form.addRow('&Activity Name:', w.bind.construct('act_name', 'basic'))
     form.addRow('&Description', w.bind.construct('description', 'basic'))
-    form.addRow('&Note', w.bind.construct('note', 'memo'))
+    form.addRow('&Note', w.bind.construct('note', 'multiline'))
 
     if hasattr(table.rows[0], 'id'):
         w.bind.widgets['act_name'].setReadOnly(True)
