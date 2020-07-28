@@ -259,6 +259,53 @@ class BitStreetView(BasicBitView):
     pass
 
 
+class EntityTaggerMixin:
+    def _rtlib_init_(self):
+        self.subtags = []
+
+    @property
+    def is_tagged(self):
+        return self.id in self.ambient_persona.active_tag_list()
+
+    @is_tagged.setter
+    def is_tagged(self, v):
+        if v:
+            self.ambient_persona.add_tag(self)
+        else:
+            self.ambient_persona.remove_tag(self)
+
+
+class EntityEditMixin:
+    def _rtlib_init_(self):
+        self.tags_add = []
+        self.tags_remove = []
+
+    def active_tag_list(self):
+        orig_tags = [] if self.tag_ids == None else self.tag_ids
+
+        return set(orig_tags).difference(self.tags_remove).union(self.tags_add)
+
+    def add_tag(self, tag):
+        orig_tags = [] if self.tag_ids == None else self.tag_ids
+
+        try:
+            self.tags_remove.remove(tag.id)
+        except ValueError:
+            pass
+        if tag.id not in orig_tags:
+            self.tags_add.append(tag.id)
+
+    def remove_tag(self, tag):
+        orig_tags = [] if self.tag_ids == None else self.tag_ids
+
+        try:
+            self.tags_add.remove(tag.id)
+        except ValueError:
+            pass
+        if tag.id in orig_tags:
+            self.tags_remove.append(tag.id)
+
+
 class EditPersona(QtWidgets.QDialog):
     TITLE = "Persona Edit View"
     ID = "dlg-edit-persona"
@@ -281,18 +328,38 @@ class EditPersona(QtWidgets.QDialog):
         sb.construct("memo", "multiline")
         sb.construct("birthday", "date")
 
-        self.form = QtWidgets.QFormLayout()
-        self.form.addRow("Title", sb.widgets["title"])
-        self.form.addRow("First Name", sb.widgets["f_name"])
-        self.form.addRow("Last Name", sb.widgets["l_name"])
-        self.form.addRow("Memo", sb.widgets["memo"])
-        self.form.addRow("Birthday", sb.widgets["birthday"])
+        self.tabs = QtWidgets.QTabWidget()
+
+        self.tab_main_info = QtWidgets.QWidget()
+        m4 = QtWidgets.QFormLayout(self.tab_main_info)
+        m4.addRow("Title", sb.widgets["title"])
+        m4.addRow("First Name", sb.widgets["f_name"])
+        m4.addRow("Last Name", sb.widgets["l_name"])
+        m4.addRow("Memo", sb.widgets["memo"])
+        self.tab_main_info.main_form = m4
+
+        self.tab_aux_info = QtWidgets.QWidget()
+        m4 = QtWidgets.QFormLayout(self.tab_aux_info)
+        m4.addRow("Birthday", sb.widgets["birthday"])
+        self.tab_aux_info.main_form = m4
+
+        self.tab_tags_info = QtWidgets.QWidget()
+        m4 = QtWidgets.QVBoxLayout(self.tab_tags_info)
+        self.tags_grid = widgets.TreeView()
+        self.tags_grid.header().hide()
+        self.tags_gridmgr = qt.GridManager(self.tags_grid, self)
+        m4.addWidget(self.tags_grid)
+        self.tab_tags_info.main_form = m4
+
+        self.tabs.addTab(self.tab_main_info, "Contact")
+        self.tabs.addTab(self.tab_tags_info, "Tags")
+        self.tabs.addTab(self.tab_aux_info, "Extra")
 
         self.buttons = QtWidgets.QDialogButtonBox()
         self.buttons.addButton(self.buttons.Ok).clicked.connect(self.accept)
         self.buttons.addButton(self.buttons.Cancel).clicked.connect(self.reject)
 
-        self.layout.addLayout(self.form)
+        self.layout.addWidget(self.tabs)
         self.layout.addWidget(self.buttons)
 
     def load(self, client, persona):
@@ -308,8 +375,33 @@ class EditPersona(QtWidgets.QDialog):
     def _load(self):
         content = yield apputils.AnimateWait(self)
 
-        self.persona = content.main_table()
+        class ThisPersonaMixin(EntityTaggerMixin):
+            pass
+
+        self.persona = content.main_table(mixin=EntityEditMixin)
         self.editrow = self.persona.rows[0]
+
+        ThisPersonaMixin.ambient_persona = self.editrow
+
+        # TODO cache this
+        tags = self.client.get("api/tags/list")
+        self.tagstable = tags.main_table(mixin=ThisPersonaMixin)
+
+        self.tagmap = {tag.id: tag for tag in self.tagstable.rows}
+
+        for row in self.tagstable.rows:
+            if row.parent_id != None:
+                parent = self.tagmap[row.parent_id]
+                parent.subtags.append(row)
+
+        columns = [
+                apputils.field('name', 'Name', check_attr="is_tagged")]
+
+        self.tags_model = apputils.ObjectQtModel(columns, descendant_attr="subtags")
+
+        self.tags_grid.setModel(self.tags_model)
+        self.tags_model.set_rows([tag for tag in self.tagstable.rows if tag.parent_id == None])
+
         self.binder.bind(self.editrow, self.persona.columns)
 
     def accept(self):
@@ -320,7 +412,10 @@ class EditPersona(QtWidgets.QDialog):
                 self.client.put,
                 "api/persona/{}",
                 self.editrow.id,
-                files={"persona": self.persona.as_http_post_file()},
+                files={
+                    "persona": self.persona.as_http_post_file(exclusions=['entity_name', 'tag_ids']),
+                    "tagdeltas": self.persona.as_http_post_file(inclusions=['tags_add', 'tags_remove']),
+                }
             )
 
         return super(EditPersona, self).accept()
