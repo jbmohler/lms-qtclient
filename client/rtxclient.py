@@ -414,7 +414,7 @@ class PreSession:
         raw = urllib.parse.urlparse(url)
         nl = raw.netloc
         username = raw.username
-        password = raw.password
+        password = urllib.parse.unquote(raw.password)
         if nl.find('@') >= 0:
             raw = raw._replace(netloc=nl.split('@')[1])
         server = raw.geturl()

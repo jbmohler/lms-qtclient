@@ -86,7 +86,7 @@ if __name__ == '__main__':
     client = session.raw_client()
     client.get('api/monitor')
 
-    print('Connected to {} ...'.format(session.server_url))
+    print('Connected to {} ...'.format(session.server_url), file=sys.stderr)
 
     if presession.username is None or presession.password is None:
         username = input('username [{}]: '.format(presession.username))
