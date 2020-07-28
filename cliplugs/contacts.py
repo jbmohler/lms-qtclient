@@ -58,12 +58,37 @@ def contact(cmd, args):
         shortcuts = {
                 '<Ctrl-d>': stop,
                 '<Ctrl-j>': stop}
-        print(persona_to_text(content, shortcuts))
+        print(persona_to_text(content, shortcuts=shortcuts))
         try:
             print('press enter to continue')
             keywatcher(shortcuts)
         except KeyTerm:
             pass
+
+@cli.command
+def generate_security_answers(cmd, args):
+    client = cli.session.std_client()
+
+    bits = 50
+    if len(args) > 0:
+        bits = int(args[0])
+
+    print("For each security question entered a random word answer will be generated.")
+
+    index = 1
+    while True:
+        q1 = input("Q{}: ".format(index))
+        if q1 == "":
+            break
+
+        content = client.get('api/password/generate', mode='words', bits=bits)
+
+        a1 = content.keys['password']
+
+        print("A{}: {}".format(index, a1))
+
+        index += 1
+
 
 def wraptext(paragraph):
     concat = []
