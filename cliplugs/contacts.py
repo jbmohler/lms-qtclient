@@ -108,31 +108,45 @@ def bit_wrap(bit, actual):
         concat.append(wraptext(bit.memo))
     return '\n'.join(concat+[''])
 
-def persona_to_text(content, shortcuts):
-    per = content.named_table('persona')
+def persona_to_text(content, static=False, shortcuts=None, tagtable=None):
+    if static and shortcuts:
+        raise NotImplementedError("no shortcuts given for static output")
+    if not static and not shortcuts:
+        raise NotImplementedError("shortcuts required if not static")
+
+    per = content.named_table('persona').rows[0]
     bits = content.named_table('bits')
 
     chunks = []
-    head = "{0.l_name} {0.f_name}".format(per.rows[0])
-    chunks.append(head)
-    if per.rows[0].memo not in ['', None]:
-        chunks.append(wraptext(per.rows[0].memo))
+    chunks.append(per.entity_name)
+    if per.memo not in ['', None]:
+        chunks.append(wraptext(per.memo))
     chunks.append('')
 
     for bit in bits.rows:
         if bit.bit_type == 'email_addresses':
             data = 'e-mail:  {}'.format(bit.bit_data['email'])
+        if bit.bit_type == 'phone_numbers':
+            data = 'phone:  {}'.format(bit.bit_data['number'])
         if bit.bit_type == 'urls':
             lines = []
-            if bit.bit_data['url'] not in [None, '']:
-                lines.append('url:  {} (view u)'.format(bit.bit_data['url']))
-                shortcuts['u'] = lambda x=bit.bit_data['url']: open_browser(x)
-            if bit.bit_data['username'] not in [None, '']:
-                lines.append('username:  {} (copy b)'.format(bit.bit_data['username']))
-                shortcuts['b'] = lambda x=bit.bit_data['username']: copy_clip(x)
-            if bit.bit_data['password'] not in [None, '']:
-                lines.append('password:  {} (copy c)'.format('** hidden **'))
-                shortcuts['c'] = lambda x=bit.bit_data['password']: copy_clip(x)
+            if static:
+                if bit.bit_data['url'] not in [None, '']:
+                    lines.append('url:  {}'.format(bit.bit_data['url']))
+                if bit.bit_data['username'] not in [None, '']:
+                    lines.append('username:  {}'.format(bit.bit_data['username']))
+                if bit.bit_data['password'] not in [None, '']:
+                    lines.append('password:  {}'.format(bit.bit_data['password']))
+            else:
+                if bit.bit_data['url'] not in [None, '']:
+                    lines.append('url:  {} (view u)'.format(bit.bit_data['url']))
+                    shortcuts['u'] = lambda x=bit.bit_data['url']: open_browser(x)
+                if bit.bit_data['username'] not in [None, '']:
+                    lines.append('username:  {} (copy b)'.format(bit.bit_data['username']))
+                    shortcuts['b'] = lambda x=bit.bit_data['username']: copy_clip(x)
+                if bit.bit_data['password'] not in [None, '']:
+                    lines.append('password:  {} (copy c)'.format('** hidden **'))
+                    shortcuts['c'] = lambda x=bit.bit_data['password']: copy_clip(x)
             data = '\n'.join(lines)
         if bit.bit_type == 'street_addresses':
             lines = []
@@ -146,7 +160,29 @@ def persona_to_text(content, shortcuts):
             if bit.bit_data['country'] not in [None, '']:
                 lines.append(bit.bit_data['country'])
             data = '\n'.join(lines)
-        if bit.bit_type == 'phone_numbers':
-            data = 'phone:  {}'.format(bit.bit_data['number'])
         chunks.append(bit_wrap(bit, data))
+
+    if tagtable:
+        for tag in tagtable.rows:
+            if tag.id in per.tag_ids:
+                chunks.append(tag.path_name)
+
     return '\n'.join(chunks)
+
+@cli.command
+def dump_tagged_contacts(cmd, args):
+    client = cli.session.std_client()
+
+    tagname, = args
+
+    tags = client.get('api/tags/list')
+
+    tag_id = [tag.id for tag in tags.main_table().rows if tag.name == tagname][0]
+
+    personas = client.get('api/personas/list', tag_id=tag_id)
+
+    for persona in personas.main_table().rows:
+        content = client.get('api/persona/{}', persona.id)
+
+        print(persona_to_text(content, static=True, tagtable=tags.main_table()))
+        print("\n#=-=#=-=#=-=#=-=#=-=#=-=#=-=#=-=#\n")
