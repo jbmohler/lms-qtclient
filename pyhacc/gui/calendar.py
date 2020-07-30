@@ -81,10 +81,12 @@ class CalendarAdaptor(QtCore.QObject):
 
 class TransactionCalendar(QtWidgets.QWidget):
     ID = 'transaction-calendar'
+    TITLE = 'Transaction Calendar'
 
     def __init__(self, parent, session):
         super(TransactionCalendar, self).__init__(parent)
 
+        self.setWindowTitle(self.TITLE)
         self.setObjectName(self.ID)
         self.backgrounder = apputils.Backgrounder(self)
         self.client = session.std_client()

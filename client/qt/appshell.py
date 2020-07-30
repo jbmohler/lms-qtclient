@@ -1,6 +1,7 @@
 import os
 import sys
 import platform
+import functools
 import collections
 from PySide2 import QtCore, QtGui, QtWidgets
 import rtlib
@@ -297,7 +298,7 @@ class ShellWindow(QtWidgets.QMainWindow):
         widget._shell_tab_title = tab_title
         widget._shell_fg_action = QtWidgets.QAction(self)
         widget._shell_fg_action._shell_tab_id = shell_id
-        widget._shell_fg_action.triggered.connect(lambda w=widget._shell_tab_id: self.foreground_tab(w))
+        widget._shell_fg_action.triggered.connect(functools.partial(self.foreground_tab, shell_id))
 
         if static:
             self.statics.append(widget)

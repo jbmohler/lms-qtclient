@@ -265,6 +265,7 @@ def edit_transaction(session, tranid='new'):
 
 def view_recent_transactions(parent, session):
     view = QtWidgets.QWidget()
+    view.setWindowTitle('Recent Transactions')
     view.setObjectName('recent-transactions')
     layout = QtWidgets.QVBoxLayout(view)
     grid = widgets.TableView()
