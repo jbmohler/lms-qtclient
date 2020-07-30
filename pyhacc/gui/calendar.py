@@ -3,7 +3,9 @@ from PySide2 import QtCore, QtGui, QtWidgets
 import qtviews
 import apputils
 import apputils.models as models
-from client.qt import gridmgr
+import apputils.widgets as widgets
+import client.qt as qt
+
 
 class CalendarAdaptor(QtCore.QObject):
     customContextMenuRequested = QtCore.Signal(object)
@@ -17,22 +19,26 @@ class CalendarAdaptor(QtCore.QObject):
         def __init__(s, obj, attr):
             s.obj = obj
             s.attr = attr
+
         def isValid(s):
             return s.obj != None
+
         def data(s, role):
             if role == models.ObjectRole:
                 return s.obj
             elif role == models.ColumnAttributeRole:
                 return s.attr
             else:
-                raise NotImplementedError(f'incomplete shim: role={role}')
+                raise NotImplementedError(f"incomplete shim: role={role}")
 
     def __init__(self, parent, calendar, attr):
         super(CalendarAdaptor, self).__init__(parent)
 
         self.attr = attr
         self.calendar = calendar
-        self.calendar.customContextMenuRequested.connect(self.customContextMenuRequested.emit)
+        self.calendar.customContextMenuRequested.connect(
+            self.customContextMenuRequested.emit
+        )
         self.calendar.doubleClickCalendarEvent.connect(self.translate_double_click)
 
     def setContextMenuPolicy(self, *args):
@@ -67,21 +73,26 @@ class CalendarAdaptor(QtCore.QObject):
         return self
 
     def reset_data(self, *args):
-        self.calendar.setEventList(self._model.rows, 
-            startDate = lambda x: x.trandate,
-            endDate = lambda x: x.trandate,
-            text = lambda x: x.memo,
-            bkColor = lambda x: QtGui.QColor(0, 0, 128))
+        self.calendar.setEventList(
+            self._model.rows,
+            startDate=lambda x: x.trandate,
+            endDate=lambda x: x.trandate,
+            text=lambda x: x.memo,
+            bkColor=lambda x: QtGui.QColor(0, 0, 128),
+        )
 
     @property
     def grid(self):
         class __:
             pass
+
         return __()
 
+
 class TransactionCalendar(QtWidgets.QWidget):
-    ID = 'transaction-calendar'
-    TITLE = 'Transaction Calendar'
+    ID = "transaction-calendar"
+    TITLE = "Transaction Calendar"
+    URL = "api/transactions/list"
 
     def __init__(self, parent, session):
         super(TransactionCalendar, self).__init__(parent)
@@ -91,20 +102,20 @@ class TransactionCalendar(QtWidgets.QWidget):
         self.backgrounder = apputils.Backgrounder(self)
         self.client = session.std_client()
 
-        self.lay = QtWidgets.QVBoxLayout(self)
+        self.mainlayout = QtWidgets.QVBoxLayout(self)
         self.calnav = qtviews.CalendarTopNav()
         self.calendar = qtviews.CalendarView()
         self.caladapt = CalendarAdaptor(self, self.calendar, "tid")
-        self.gridmgr = gridmgr.GridManager(self.caladapt, self)
+        self.gridmgr = qt.GridManager(self.caladapt, self)
 
-        self.lay.addWidget(self.calnav)
-        self.lay.addWidget(self.calendar)
+        self.mainlayout.addWidget(self.calnav)
+        self.mainlayout.addWidget(self.calendar)
 
         self.calnav.relativeMove.connect(self.load_rel)
         self.calnav.absoluteMove.connect(self.load_abs)
 
         initdate = datetime.date.today() - datetime.timedelta(days=28)
-        initdate = initdate - datetime.timedelta(days=(initdate.weekday()+1))
+        initdate = initdate - datetime.timedelta(days=(initdate.weekday() + 1))
         self.load_abs(initdate)
 
     def load_rel(self, index):
@@ -116,12 +127,70 @@ class TransactionCalendar(QtWidgets.QWidget):
     def load_abs(self, date):
         self.current_date = date
         self.calendar.setDateRange(date, 6, dayHeight=4)
-        self.backgrounder(self.load_entry_data, self.client.get,
-                'api/transactions/list', date1=date-datetime.timedelta(days=7), date2=date+datetime.timedelta(days=56))
+        self.backgrounder(
+            self.load_tranlist,
+            self.client.get,
+            self.URL,
+            date1=date - datetime.timedelta(days=7),
+            date2=date + datetime.timedelta(days=56),
+        )
 
-    def load_entry_data(self):
+    def load_tranlist(self):
         content = yield apputils.AnimateWait(self)
-
         self.table = content.main_table()
 
         self.gridmgr.set_client_table(self.table)
+
+
+class TransactionRecent(QtWidgets.QWidget):
+    ID = "transaction-calendar"
+    TITLE = "Transaction Recent"
+    URL = "api/transactions/list"
+
+    def __init__(self, parent, session):
+        super(TransactionRecent, self).__init__(parent)
+
+        self.setWindowTitle(self.TITLE)
+        self.setObjectName(self.ID)
+        self.backgrounder = apputils.Backgrounder(self)
+        self.client = session.std_client()
+
+        self.search_edit = apputils.construct("search")
+        self.setFocusProxy(self.search_edit)
+
+        self.mainlayout = QtWidgets.QVBoxLayout(self)
+        self.grid = widgets.TableView()
+        self.grid.setSortingEnabled(True)
+        self.grid.verticalHeader().hide()
+        self.gridmgr = qt.GridManager(self.grid, self)
+
+        self.mainlayout.addWidget(self.search_edit)
+        self.mainlayout.addWidget(self.grid)
+
+        self.load_timer = qt.StdActionPause()
+        self.load_timer.timeout.connect(self.initial_load)
+        self.search_edit.applyValue.connect(self.load_timer.ui_start)
+
+        self.geo = apputils.WindowGeometry(
+            self, position=False, size=False, grids=[self.grid]
+        )
+
+        self.initial_load()
+
+    def load_tranlist(self):
+        content = yield apputils.AnimateWait(self)
+        self.table = content.main_table()
+
+        with self.geo.grid_reset(self.grid):
+            self.gridmgr.set_client_table(self.table)
+
+    def initial_load(self):
+        kwargs = {}
+
+        if self.search_edit.value():
+            kwargs["fragment"] = self.search_edit.value()
+        else:
+            kwargs["date1"] = datetime.date.today() - datetime.timedelta(60)
+            kwargs["date2"] = datetime.date.today() + datetime.timedelta(365)
+
+        self.backgrounder(self.load_tranlist, self.client.get, self.URL, **kwargs)

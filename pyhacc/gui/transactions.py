@@ -7,7 +7,6 @@ from . import widgets as pywid
 from . import mxc
 
 URL_BASE = 'api/transaction/{}'
-URL_BASE2 = 'api/transactions/list'
 
 class SplitsTable(mxc.ModelRow):
     def _rtlib_init_(self):
@@ -263,34 +262,5 @@ def edit_transaction(session, tranid='new'):
     dlg.applychanges = apply
     dlg.exec_()
 
-def view_recent_transactions(parent, session):
-    view = QtWidgets.QWidget()
-    view.setWindowTitle('Recent Transactions')
-    view.setObjectName('recent-transactions')
-    layout = QtWidgets.QVBoxLayout(view)
-    grid = widgets.TableView()
-    grid.setSortingEnabled(True)
-    grid.verticalHeader().hide()
-    gridmgr = qt.GridManager(grid, view)
-    layout.addWidget(grid)
 
-    def loader():
-        content = yield apputils.AnimateWait(view)
-        view.table = content.main_table()
-
-        with view.geo.grid_reset(grid):
-            gridmgr.set_client_table(view.table)
-
-    d1 = datetime.date.today() - datetime.timedelta(60)
-    d2 = datetime.date.today() + datetime.timedelta(365)
-
-    view.geo = apputils.WindowGeometry(view, position=False, size=False, grids=[grid])
-
-    backgrounder = apputils.Backgrounder(view)
-    client = session.std_client()
-    backgrounder(loader, client.get, URL_BASE2, date1=d1, date2=d2)
-
-    return view
-
-
-__all__ = ['edit_transaction', 'view_recent_transactions', 'TransactionCore', 'TransactionEditor']
+__all__ = ['edit_transaction', 'TransactionCore', 'TransactionEditor']

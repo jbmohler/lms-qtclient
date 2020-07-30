@@ -35,15 +35,15 @@ class AccountingExtensions:
         elif url.path() == 'transactions':
             transactions.edit_transaction(state.session, url.parameters()['key'])
         elif url.path() == 'transactions/recent':
-            if parent.foreground_tab('tran_recent'):
+            if parent.foreground_tab(calendar.TransactionRecent.ID):
                 return True
-            view = transactions.view_recent_transactions(self, state.session)
-            parent.adopt_tab(view, 'tran_recent', 'Recent Transactions')
+            view = calendar.TransactionRecent(parent, state.session)
+            parent.adopt_tab(view, view.ID, view.TITLE)
         elif url.path() == 'transactions/calendar':
-            if parent.foreground_tab('tran_calendar'):
+            if parent.foreground_tab(calendar.TransactionCalendar.ID):
                 return True
             view = calendar.TransactionCalendar(parent, state.session)
-            parent.adopt_tab(view, 'tran_calendar', 'Calendar')
+            parent.adopt_tab(view, view.ID, view.TITLE)
         elif url.path() == 'reporting/monthly-status':
             win = monthly.Exporter(state)
             win.show()
