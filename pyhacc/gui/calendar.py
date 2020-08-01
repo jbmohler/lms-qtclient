@@ -143,7 +143,7 @@ class TransactionCalendar(QtWidgets.QWidget):
 
 
 class TransactionRecent(QtWidgets.QWidget):
-    ID = "transaction-calendar"
+    ID = "transaction-recent"
     TITLE = "Transaction Recent"
     URL = "api/transactions/list"
 
