@@ -5,9 +5,9 @@ import apputils.models as models
 import apputils.viewmenus as viewmenus
 import apputils.widgets as widgets
 from client.qt import utils
-from client.qt import gridmgr
 from client.qt import bindings
 from client.qt import reporttab
+import client.qt as qt
 from .useradmin_userroles import UserRoleMapperTargetsByUser
 from .useradmin_userroles_selected_roles import UserRoleMapperTargetsByRole
 from .useradmin_roleactivities import RoleActivityMapperTargets
@@ -111,7 +111,7 @@ class UserList(QtWidgets.QWidget):
         self.grid = widgets.TableView()
         self.grid.setObjectName('content')
         self.grid.setSortingEnabled(True)
-        self.gridmgr = gridmgr.GridManager(self.grid, self)
+        self.gridmgr = qt.GridManager(self.grid, self)
         self.gridmgr.add_action('&Add User', triggered=self.cmd_add_user)
         self.gridmgr.add_action('&Set Roles', triggered=self.cmd_set_roles)
         self.gridmgr.add_action('&Edit User', triggered=self.cmd_edit_user)
@@ -192,9 +192,9 @@ class RoleSidebar(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.user_grid = widgets.TableView()
-        self.user_gridmgr = gridmgr.GridManager(self.user_grid, self)
+        self.user_gridmgr = qt.GridManager(self.user_grid, self)
         self.act_grid = widgets.TableView()
-        self.act_gridmgr = gridmgr.GridManager(self.act_grid, self)
+        self.act_gridmgr = qt.GridManager(self.act_grid, self)
 
         self.layout.addWidget(self.user_grid)
         self.layout.addWidget(self.act_grid)
@@ -252,7 +252,7 @@ class RoleList(QtWidgets.QWidget):
         self.grid = widgets.TableView()
         self.grid.setObjectName('content')
         self.grid.setSortingEnabled(True)
-        self.gridmgr = gridmgr.GridManager(self.grid, self)
+        self.gridmgr = qt.GridManager(self.grid, self)
         self.gridmgr.add_action('Add &New Role', triggered=self.cmd_add_new_role)
         self.gridmgr.add_action('&Rename Role', triggered=self.cmd_rename_role)
         self.gridmgr.add_action('&Delete Role', triggered=self.cmd_delete_role)
@@ -462,7 +462,7 @@ class ActivityList(QtWidgets.QWidget):
         self.grid = widgets.TableView()
         self.grid.setObjectName('content')
         self.grid.setSortingEnabled(True)
-        self.gridmgr = gridmgr.GridManager(self.grid, self)
+        self.gridmgr = qt.GridManager(self.grid, self)
         self.gridmgr.add_action('Add &New Activity', triggered=self.cmd_addnew_activity)
         self.gridmgr.add_action('&Edit Activity', triggered=self.cmd_edit_activity)
         self.splitter.addWidget(self.grid)
@@ -472,12 +472,15 @@ class ActivityList(QtWidgets.QWidget):
 
         self.layout = QtWidgets.QVBoxLayout(self)
 
-        self.filter_gizmo = QtWidgets.QHBoxLayout()
-        self.filter_edit = widgets.SearchEdit()
-        self.filter_edit.editingFinished.connect(self.refilter_list)
-        self.filter_gizmo.addWidget(self.filter_edit)
-        self.layout.addLayout(self.filter_gizmo)
+        self.filter_edit = apputils.construct("search")
+        self.setFocusProxy(self.filter_edit)
+
+        self.layout.addWidget(self.filter_edit)
         self.layout.addWidget(self.splitter)
+
+        self.load_timer = qt.StdActionPause()
+        self.load_timer.timeout.connect(self.refilter_list)
+        self.filter_edit.applyValue.connect(self.load_timer.ui_start)
 
         self.sidebar.backgrounder = self.backgrounder
         self.sidebar.client = self.client
@@ -520,7 +523,6 @@ class ActivityList(QtWidgets.QWidget):
         return m2
 
     def load(self):
-        self.setEnabled(False)
         try:
             content = yield
             self.records = content.main_table()
@@ -528,7 +530,7 @@ class ActivityList(QtWidgets.QWidget):
 
             with self.geo.grid_reset(self.grid):
                 # TODO:  make an elegant way to filter on a GridManager
-                m = gridmgr.client_table_as_model(self.records, self)
+                m = qt.client_table_as_model(self.records, self)
                 self.model = self.filterable_model(m)
                 self.grid.setModel(self.model)
                 self._core_model.set_rows(self.records.rows)
@@ -536,8 +538,6 @@ class ActivityList(QtWidgets.QWidget):
                 self.gridmgr._post_model_action()
         except:
             apputils.exception_message(self, 'There was an error loading the {}.'.format(self.TITLE))
-        finally:
-            self.setEnabled(True)
 
     def refresh(self):
         self.backgrounder(self.load, self.client.get, self.URL_TAIL)
