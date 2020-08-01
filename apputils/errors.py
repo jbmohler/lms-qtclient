@@ -43,7 +43,6 @@ class ExceptionLogger(QtCore.QObject):
     def __init__(self, parent):
         super(ExceptionLogger, self).__init__(parent)
         self._logname = tempfile.mktemp(prefix='log-error-', suffix='.txt')
-        self._log = open(self._logname, 'w')
 
     def excepthook(self, exc_type, exc_value, exc_traceback):
         try:
@@ -54,8 +53,8 @@ class ExceptionLogger(QtCore.QObject):
             des = str(exc_value)
             self.error_event.emit(des, details)
 
-            traceback.print_exception(exc_type, exc_value, exc_traceback, limit=None, file=self._log)
-            self._log.flush()
+            with open(self._logname, 'a') as logfile:
+                traceback.print_exception(exc_type, exc_value, exc_traceback, limit=None, file=logfile)
         except:
             traceback.print_exception(exc_type, exc_value, exc_traceback, limit=None, file=sys.stderr)
             des = str(exc_value)

@@ -632,7 +632,7 @@ class ReportsManager(QtCore.QObject):
         super(ReportsManager, self).__init__(main_window)
 
         self.main_window = main_window
-        self.tabs = main_window.central
+        self.tabs = main_window.workspace
 
         # 1) Init window
         self.setObjectName(self.ID)
@@ -660,8 +660,8 @@ class ReportsManager(QtCore.QObject):
     def adopt_preview(self, report, w):
         currentWidget = self.tabs.currentWidget()
         w._shell_tab_id = None
-        index = self.tabs.addTab(w, report.description.replace('&', '&&'))
-        self.tabs.setCurrentIndex(index)
+        index = self.main_window.addWorkspaceWindow(w, report.description.replace('&', '&&'), fixedpos=True)
+        #self.tabs.setCurrentIndex(index)
         if currentWidget != None and \
                 isinstance(currentWidget, ReportPreview) and \
                 not currentWidget.needs_explicit_close:
@@ -705,8 +705,8 @@ class ReportsManager(QtCore.QObject):
         w = ReportPreview(report, self.client.session, self.exports_dir, self)
         w.report_request_waiter = lambda tab=w: self.construct_waiter(tab)
         w.load_values(values, from_strings=True)
-        index = self.tabs.addTab(w, report.description.replace('&', '&&'))
-        self.tabs.setCurrentIndex(index)
+        index = self.main_window.addWorkspaceWindow(w, report.description.replace('&', '&&'), fixedpos=True)
+        #self.tabs.setCurrentIndex(index)
         if launch:
             w.launch_report()
         else:

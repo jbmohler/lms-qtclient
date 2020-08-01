@@ -6,6 +6,7 @@ import collections
 from PySide2 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
+import qtviews
 import client
 import apputils.rtxassets
 from . import serverdlgs
@@ -49,12 +50,14 @@ class DocumentThread(QtCore.QObject):
         self._mainwin.raise_()
         self.open_document.emit(obj)
 
+import qtviews
 
-class ShellWindow(QtWidgets.QMainWindow):
+class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
     ID = 'main-window'
 
     def __init__(self, parent=None):
         super(ShellWindow, self).__init__(parent)
+        self.initTabbedWorkspace()
 
         self.setWindowIcon(QtWidgets.QApplication.instance().icon)
         self.setWindowTitle(QtWidgets.QApplication.instance().applicationName())
@@ -62,15 +65,6 @@ class ShellWindow(QtWidgets.QMainWindow):
         winlist.register(self, self.ID)
 
         self.menu_actions = []
-
-        self.central = QtWidgets.QTabWidget()
-        self.central.setTabsClosable(True)
-        self.central.setDocumentMode(True)
-        self.central.tabCloseRequested.connect(self.close_tab)
-        self.setCentralWidget(self.central)
-
-        self.menu_actions = []
-
         self.statics = []
 
         statstypes = [ \
@@ -97,11 +91,6 @@ class ShellWindow(QtWidgets.QMainWindow):
         # TODO:  fix this -- if you comment this out, it crashes
         #self.server_connection.linkActivated.connect(os.startfile)
         status.addPermanentWidget(self.server_connection)
-
-        self.report_dock = QtWidgets.QDockWidget(reportdock.ReportsDock.TITLE, self)
-        self.report_dock.setObjectName(reportdock.ReportsDock.ID)
-        self.report_dock.hide()
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.report_dock)
 
         desktop = QtWidgets.QDesktopWidget()
         screensize = desktop.availableGeometry(self)
@@ -161,6 +150,8 @@ class ShellWindow(QtWidgets.QMainWindow):
         self.action_close_current = QtWidgets.QAction('&Close Current Tab', self)
         self.action_close_current.setShortcut(QtGui.QKeySequence('Ctrl+F4'))
         self.action_close_current.triggered.connect(self.close_current)
+
+        self.window_actions = []
 
         self.menu_window = menu.addMenu('&Window')
         self.menu_window.addAction(self.action_close_current)
@@ -246,13 +237,20 @@ class ShellWindow(QtWidgets.QMainWindow):
         self.construct_window_menu(self.menuBar())
         self.construct_help_menu(self.menuBar())
 
-        self.report_dock.setWidget(reportdock.ReportsDock(self.session, self.exports_dir))
-        self.report_dock.widget().main_window = self
-        act = self.report_dock.toggleViewAction()
-        act.setText('&Report List')
-        self.menu_window.insertAction(self.menu_window_sep, act)
+        #self.report_dock. (reportdock.ReportsDock(self.session, self.exports_dir))
+        #act = self.report_dock.toggleViewAction()
+        #act.setText('&Report List')
+        #self.menu_window.insertAction(self.menu_window_sep, act)
 
         self.report_manager = reports.ReportsManager(self.session, self.exports_dir, self)
+
+        self.report_dock = reportdock.ReportsDock(self.session, self.exports_dir)
+        self.report_dock.main_window = self
+        self.report_dock.hide()
+
+        self.addWorkspaceWindow(self.report_dock, self.report_dock.TITLE, settingsKey=self.report_dock.ID, addto="dock")
+
+        #self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.report_dock)
 
         return True
 
@@ -266,9 +264,11 @@ class ShellWindow(QtWidgets.QMainWindow):
             self.central.removeTab(index)
 
     def close_current(self):
-        self.close_tab(self.central.currentIndex())
+        self.closeTab(self.workspace.currentIndex())
 
     def tab_by_id(self, tab_id):
+        w = self.workspaceWindowByKey(tab_id)
+        return None, w
         for index in range(self.central.count()):
             widget = self.central.widget(index)
             if widget._shell_tab_id == tab_id:
@@ -286,14 +286,19 @@ class ShellWindow(QtWidgets.QMainWindow):
         self.adopt_tab(w, widclass.ID, widclass.TITLE)
 
     def foreground_tab(self, tab_id):
+        return self.selectTab(tab_id)
         index, widget = self.tab_by_id(tab_id)
         if widget != None:
             if index == None:
-                index = self.central.addTab(widget, widget._shell_tab_title)
-            self.central.setCurrentIndex(index)
+                self.addWorkspaceWindow(widget, title=widget._shell_tab_title, settingsKey=tab_id)
+            else:
+                self.central.setCurrentIndex(index)
+                widget.setFocus()
         return index != None
 
     def adopt_tab(self, widget, shell_id, tab_title, static=False):
+        self.addWorkspaceWindow(widget, title=tab_title, settingsKey=shell_id)
+        return
         widget._shell_tab_id = shell_id
         widget._shell_tab_title = tab_title
         widget._shell_fg_action = QtWidgets.QAction(self)
@@ -303,17 +308,21 @@ class ShellWindow(QtWidgets.QMainWindow):
         if static:
             self.statics.append(widget)
 
-        newindex = self.central.addTab(widget, tab_title)
-        self.central.setCurrentIndex(newindex)
-        widget.setFocus()
+        self.addWorkspaceWindow(widget, title=tab_title, settingsKey=shell_id)
 
     def disown_tab(self, widget):
         # nothing to do, let it just go out of scope
         pass
 
     def update_window_menu(self):
-        self.action_close_current.setEnabled(self.central.count() > 0)
+        self.action_close_current.setEnabled(self.workspace.count() > 0)
 
+        for act in self.window_actions:
+            self.menu_window.removeAction(act)
+
+        self.window_actions = self.tabsInWindowMenu(self.menu_window)
+
+        """
         static_ids = [w._shell_tab_id for w in self.statics]
 
         # clear out old window actions
@@ -337,6 +346,7 @@ class ShellWindow(QtWidgets.QMainWindow):
             else:
                 action.setText('{}'.format(widget.windowTitle()))
             self.menu_window.addAction(action)
+            """
 
     def closeEvent(self, event):
         for index in range(self.central.count()):
