@@ -346,12 +346,12 @@ class Importer(QtWidgets.QDialog):
         delimiter = self.delimiter_edit.currentText()
         delimiter = delimiter.replace('<tab>', '\t').replace('<space>', ' ')
 
-        lines = [l.strip() for l in self.raw_text.split('\n') if l.strip() != '']
+        lines = [ll.strip() for ll in self.raw_text.split('\n') if ll.strip() != '']
         if self.header_edit.isChecked():
             self.raw_headline = lines[0].split(delimiter)
             lines = lines[1:]
         self.btn_auto_map.setEnabled(self.header_edit.isChecked())
-        lines = [l.split(delimiter) for l in lines]
+        lines = [ll.split(delimiter) for ll in lines]
 
         if len(lines) == 0:
             messages.information(self, 'The clipboard is empty.')

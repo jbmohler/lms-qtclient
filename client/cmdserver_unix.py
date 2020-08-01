@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, os.path
+import os
 import json
 import socket
 import threading

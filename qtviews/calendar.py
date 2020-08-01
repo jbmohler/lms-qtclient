@@ -12,9 +12,10 @@ from PySide2 import QtCore, QtGui, QtWidgets
 from apputils import ObjectQtModel, Column
 from apputils.widgets import TableView
 
-day_names = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(' ')
+day_names = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" ")
 
 event_height = 20
+
 
 class EventWrapper(object):
     """
@@ -30,6 +31,7 @@ class EventWrapper(object):
     :param bkcolor:  something representing the background color of this item in
         the calendar
     """
+
     def __init__(self, obj, start_date, end_date, text, bkcolor):
         self.obj = obj
         self.start_date = start_date
@@ -41,11 +43,17 @@ class EventWrapper(object):
 
 class CalendarRow(object):
     def __init__(self, day0_date, entries):
-        assert len(entries) == 7, "We make a big assumption here that you have 7 days/week"
+        assert (
+            len(entries) == 7
+        ), "We make a big assumption here that you have 7 days/week"
         self.day0_date = day0_date
         self.entries_by_day = entries
         for d in range(7):
-            setattr(self,"day{0}".format(d),"{0}".format(self.day0_date + datetime.timedelta(d)))
+            setattr(
+                self,
+                "day{0}".format(d),
+                "{0}".format(self.day0_date + datetime.timedelta(d)),
+            )
 
     def entryList(self, index):
         """
@@ -66,7 +74,7 @@ class CalendarRow(object):
             end_deflate = lambda x: x.adjusted(-3, 0, -3, 0)
         else:
             end_deflate = lambda x: x
-        return end_deflate(r.translated(0, event_height*(entry.visual_row_level+1)))
+        return end_deflate(r.translated(0, event_height * (entry.visual_row_level + 1)))
 
     def date(self, index):
         """
@@ -76,35 +84,42 @@ class CalendarRow(object):
 
 
 def rgb_contrasting_foreground(c):
-    # see https://stackoverflow.com/questions/3116260/given-a-background-color-how-to-get-a-foreground-color-that-makes-it-readable-o 
+    # see https://stackoverflow.com/questions/3116260/given-a-background-color-how-to-get-a-foreground-color-that-makes-it-readable-o
     consts = [0.2126, 0.7152, 0.0721]
     comps = [c.red(), c.green(), c.blue()]
-    luminance = sum([c*x for c, x in zip(consts, comps)])
-    cname = 'white' if luminance < 140 else 'black'
+    luminance = sum([c * x for c, x in zip(consts, comps)])
+    cname = "white" if luminance < 140 else "black"
     return QtGui.QColor(cname)
+
 
 class CalendarDelegate(QtWidgets.QStyledItemDelegate):
     def paint(self, painter, option, index):
         options = QtWidgets.QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
 
-        style = QtWidgets.QApplication.style() if options.widget is None else options.widget.style()
+        style = (
+            QtWidgets.QApplication.style()
+            if options.widget is None
+            else options.widget.style()
+        )
 
         options.text = ""
-        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter);
+        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
 
         painter.save()
         painter.translate(options.rect.topLeft())
         painter.setClipRect(options.rect.translated(-options.rect.topLeft()))
-        
+
         this_day = index.internalPointer().date(index)
 
-        #entry_back_color = options.palette.color(QtGui.QPalette.Highlight)
+        # entry_back_color = options.palette.color(QtGui.QPalette.Highlight)
 
         deflated = lambda x: x.adjusted(2, 1, -2, -1)
         r = options.rect.translated(-options.rect.topLeft())
         r.setHeight(event_height - 2)
-        painter.drawText(deflated(r), 0, "{0} {1}".format(this_day.strftime("%B"), this_day.day))
+        painter.drawText(
+            deflated(r), 0, "{0} {1}".format(this_day.strftime("%B"), this_day.day)
+        )
 
         visible_count = (options.rect.height() // event_height) - 1
         entries = index.internalPointer().entryList(index)
@@ -120,8 +135,9 @@ class CalendarDelegate(QtWidgets.QStyledItemDelegate):
             entry_back_color = entry.bkcolor
             entry_front_color = rgb_contrasting_foreground(entry_back_color)
 
-            eventRect = index.internalPointer().entryBlock(entry, index,
-                    options.rect.translated(-options.rect.topLeft()))
+            eventRect = index.internalPointer().entryBlock(
+                entry, index, options.rect.translated(-options.rect.topLeft())
+            )
 
             painter.setBrush(QtGui.QBrush(entry.bkcolor))
             painter.setPen(QtCore.Qt.NoPen)
@@ -134,18 +150,22 @@ class CalendarDelegate(QtWidgets.QStyledItemDelegate):
 
     def sizeHint(self, option, index):
         entries = index.internalPointer().entryList(index)
-        return QtCore.QSize(80, (len(entries)+1)*event_height+1)
+        return QtCore.QSize(80, (len(entries) + 1) * event_height + 1)
+
 
 def test_calendar_entries():
-    colors = 'white, black, red, darkRed, green, darkGreen, blue, darkBlue, cyan, darkCyan, magenta, darkMagenta, yellow, darkYellow, gray, darkGray, lightGray'.split(', ')
+    colors = "white, black, red, darkRed, green, darkGreen, blue, darkBlue, cyan, darkCyan, magenta, darkMagenta, yellow, darkYellow, gray, darkGray, lightGray".split(
+        ", "
+    )
 
     tests = []
     base = datetime.date(2012, 4, 15)
     for i, c in enumerate(colors):
-        d = base+datetime.timedelta(days=i/3)
+        d = base + datetime.timedelta(days=i / 3)
         x = {"start": d, "end": d, "text": c, "bkcolor": QtGui.QColor(c)}
         tests.append(x)
     return tests
+
 
 class CalendarView(TableView):
     """
@@ -163,6 +183,7 @@ class CalendarView(TableView):
     ...     text = lambda x: x["text"],
     ...     bkColor = lambda x: x.get('bkcolor', QtGui.QColor(128, 128, 128)))
     """
+
     doubleClickCalendarEvent = QtCore.Signal(object)
     contextMenuCalendarEvent = QtCore.Signal(QtCore.QPoint, object)
     eventSelectionChanged = QtCore.Signal()
@@ -177,21 +198,25 @@ class CalendarView(TableView):
     def setDateRange(self, firstDate, numWeeks, dayHeight=3):
         self.firstDate = firstDate
         self.numWeeks = numWeeks
-        self.verticalHeader().setDefaultSectionSize(event_height*(dayHeight+1)+1)
+        self.verticalHeader().setDefaultSectionSize(event_height * (dayHeight + 1) + 1)
 
     def setEventList(self, events, startDate, endDate, text, bkColor):
-        events = [EventWrapper(e, startDate(e), endDate(e), text(e), bkColor(e)) 
-                        for e in events]
+        events = [
+            EventWrapper(e, startDate(e), endDate(e), text(e), bkColor(e))
+            for e in events
+        ]
 
         datarows = []
         for i in range(self.numWeeks):
-            day0 = self.firstDate + datetime.timedelta(i*7)
-            day6 = self.firstDate + datetime.timedelta(i*7+6)
+            day0 = self.firstDate + datetime.timedelta(i * 7)
+            day6 = self.firstDate + datetime.timedelta(i * 7 + 6)
 
             calWeek = []
             for i in range(7):
                 d = day0 + datetime.timedelta(i)
-                this_day_list = [e for e in events if e.start_date <= d and e.end_date >= d]
+                this_day_list = [
+                    e for e in events if e.start_date <= d and e.end_date >= d
+                ]
                 calWeek.append(this_day_list)
 
                 zz = list(range(len(this_day_list)))
@@ -205,7 +230,9 @@ class CalendarView(TableView):
 
             datarows.append(CalendarRow(day0, calWeek))
 
-        self.rows = ObjectQtModel(columns=[Column("day{0}".format(d), day_names[d]) for d in range(7)])
+        self.rows = ObjectQtModel(
+            columns=[Column("day{0}".format(d), day_names[d]) for d in range(7)]
+        )
         self.setModel(self.rows)
         self.rows.set_rows(datarows)
         self.selModel = self.selectionModel()
@@ -222,14 +249,16 @@ class CalendarView(TableView):
 
     def selectDate(self, d, selMode=QtCore.QItemSelectionModel.Select):
         m = self.selectionModel()
-        index = QtCore.QModelIndex() # TODO:  write this code
+        index = QtCore.QModelIndex()  # TODO:  write this code
         m.select(index, selMode)
 
     def itemAt(self, pos):
         index = self.indexAt(pos)
         if index is not None and index.isValid():
             for entry in index.internalPointer().entryList(index):
-                eventRect = index.internalPointer().entryBlock(entry, index, self.visualRect(index))
+                eventRect = index.internalPointer().entryBlock(
+                    entry, index, self.visualRect(index)
+                )
                 if eventRect.contains(pos):
                     return entry.obj
         return None
@@ -248,15 +277,18 @@ class CalendarView(TableView):
             event.accept()
         super(CalendarView, self).contextMenuEvent(event)
 
+
 def laywid(lay, wid):
     lay.addWidget(wid)
     return wid
+
 
 class CalendarTopNav(QtWidgets.QWidget):
     """
     >>> app = qtapp()
     >>> c = CalendarTopNav()
     """
+
     relativeMove = QtCore.Signal(int)
     absoluteMove = QtCore.Signal(object)
 
@@ -268,14 +300,16 @@ class CalendarTopNav(QtWidgets.QWidget):
         self.earlier = [
             laywid(main, QtWidgets.QPushButton("<<<")),
             laywid(main, QtWidgets.QPushButton("<<")),
-            laywid(main, QtWidgets.QPushButton("<"))]
+            laywid(main, QtWidgets.QPushButton("<")),
+        ]
         self.earlier.reverse()
         self.month_label = laywid(main, QtWidgets.QLabel("&Month:"))
         self.month = laywid(main, QtWidgets.QLineEdit())
         self.later = [
             laywid(main, QtWidgets.QPushButton(">")),
             laywid(main, QtWidgets.QPushButton(">>")),
-            laywid(main, QtWidgets.QPushButton(">>>"))]
+            laywid(main, QtWidgets.QPushButton(">>>")),
+        ]
         for b in self.earlier + self.later:
             b.setMaximumWidth(40)
         self.month_label.setBuddy(self.month)
@@ -286,8 +320,8 @@ class CalendarTopNav(QtWidgets.QWidget):
         for i in range(3):
             # need to fancy-dance the callables to get the correct closure in
             # the face of ambiguious Qt signal parameters.
-            _earlier = lambda *args, index=-i-1: self.relativeMove.emit(index)
-            _later = lambda *args, index=+i+1: self.relativeMove.emit(index)
+            _earlier = lambda *args, index=-i - 1: self.relativeMove.emit(index)
+            _later = lambda *args, index=+i + 1: self.relativeMove.emit(index)
             self.earlier[i].clicked.connect(_earlier)
             self.later[i].clicked.connect(_later)
 

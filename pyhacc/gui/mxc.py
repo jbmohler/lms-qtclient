@@ -100,5 +100,5 @@ class Controller:
 
     def dblog(self, resource):
         if hasattr(self, '_logger_list'):
-            for l in self._logger_list:
-                l.dblog(resource)
+            for ll in self._logger_list:
+                ll.dblog(resource)

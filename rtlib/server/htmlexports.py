@@ -18,8 +18,8 @@ def content_write_html(content, outfile, rptclass):
     lines = table.rows
     cols = [c for c in table.columns if not c.hidden]
 
-    def bracket_list(l, td, join=''):
-        return join.join(["<{0}>{1}</{0}>".format(td, i) for i in l])
+    def bracket_list(ll, td, join=''):
+        return join.join(["<{0}>{1}</{0}>".format(td, i) for i in ll])
 
     def format(p, c):
         v = getattr(p, c.attr)
