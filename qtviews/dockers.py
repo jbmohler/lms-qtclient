@@ -156,7 +156,7 @@ class TabbedWorkspaceMixin(object):
         s.endGroup()
 
     def addWorkspaceWindowOrSelect(self, widget, title=None, factory=None, settingsKey=None, addto=None):
-        w = self.selectTab(widget)
+        w = self.foreground_tab(widget)
         if w is None:
             self.addWorkspaceWindow(widget, title, factory, settingsKey, addto)
 
@@ -343,12 +343,13 @@ class TabbedWorkspaceMixin(object):
             action = winmenu.addAction(text)
             action.setCheckable(True)
             action.setChecked(child == self.workspace.currentWidget())
-            action.triggered.connect(lambda *args, key=child._docker_meta.settingsKey: self.selectTab(key))
+            action.triggered.connect(lambda *args,
+                    key=child._docker_meta.settingsKey: self.foreground_tab(key))
 
             actionlist.append(action)
         return actionlist
 
-    def selectTab(self, settingsKey):
+    def foreground_tab(self, settingsKey):
         desired = self.workspaceWindowByKey(settingsKey)
         if desired is not None:
             if hasattr(desired, '_docker'):

@@ -17,6 +17,7 @@ from . import reportdock
 from . import reports
 from . import winlist
 
+
 class ClientURLMenuItem:
     def __init__(self, item_name, client_url, auth_name):
         self.item_name = item_name
@@ -27,6 +28,7 @@ class ClientURLMenuItem:
         act = QtWidgets.QAction(self.item_name, parent)
         act.triggered.connect(lambda: parent.handle_url(self.client_url))
         return act
+
 
 class SeparatorMenuItem:
     def __init__(self):
@@ -50,7 +52,6 @@ class DocumentThread(QtCore.QObject):
         self._mainwin.raise_()
         self.open_document.emit(obj)
 
-import qtviews
 
 class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
     ID = 'main-window'
@@ -257,58 +258,34 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
     def show_reports(self):
         self.report_dock.show()
 
-    def close_tab(self, index):
-        tab = self.central.widget(index)
-        if tab.close():
-            self.disown_tab(tab)
-            self.central.removeTab(index)
-
     def close_current(self):
         self.closeTab(self.workspace.currentIndex())
 
     def tab_by_id(self, tab_id):
         w = self.workspaceWindowByKey(tab_id)
         return None, w
-        for index in range(self.central.count()):
-            widget = self.central.widget(index)
-            if widget._shell_tab_id == tab_id:
-                return index, widget
+        # TODO - research whether I need a static
         for widget in self.statics:
             if widget._shell_tab_id == tab_id:
                 return None, widget
         return None, None
 
     def create_or_adopt_tab(self, widclass):
+        # TODO streamline with qtviews
         if self.foreground_tab(widclass.ID):
             return
 
         w = widclass(self.session, self.exports_dir)
         self.adopt_tab(w, widclass.ID, widclass.TITLE)
 
-    def foreground_tab(self, tab_id):
-        return self.selectTab(tab_id)
-        index, widget = self.tab_by_id(tab_id)
-        if widget != None:
-            if index == None:
-                self.addWorkspaceWindow(widget, title=widget._shell_tab_title, settingsKey=tab_id)
-            else:
-                self.central.setCurrentIndex(index)
-                widget.setFocus()
-        return index != None
-
     def adopt_tab(self, widget, shell_id, tab_title, static=False):
         self.addWorkspaceWindow(widget, title=tab_title, settingsKey=shell_id)
         return
-        widget._shell_tab_id = shell_id
-        widget._shell_tab_title = tab_title
-        widget._shell_fg_action = QtWidgets.QAction(self)
-        widget._shell_fg_action._shell_tab_id = shell_id
-        widget._shell_fg_action.triggered.connect(functools.partial(self.foreground_tab, shell_id))
+
+        # TODO need a static?
 
         if static:
             self.statics.append(widget)
-
-        self.addWorkspaceWindow(widget, title=tab_title, settingsKey=shell_id)
 
     def disown_tab(self, widget):
         # nothing to do, let it just go out of scope
@@ -349,8 +326,8 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
             """
 
     def closeEvent(self, event):
-        for index in range(self.central.count()):
-            widget = self.central.widget(index)
+        for index in range(self.workspace.count()):
+            widget = self.workspace.widget(index)
             widget.close()
         winlist.unregister(self)
         self.close_doc_server()
