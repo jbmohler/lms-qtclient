@@ -17,6 +17,8 @@ class BasicWidgetsPlugin:
             'percent': wid.percent,
             'currency_usd': functools.partial(wid.quantity, decimals=2),
             'multiline': wid.multiline,
+            'html': wid.richtext,
+            'richtext': wid.richtext,
             'search': wid.search,
             'options': wid.combo,
             'radio': wid.radio}

@@ -143,7 +143,7 @@ class TransactionEditor(qt.ObjectDialog):
         sb.construct('tranref', 'basic')
         sb.construct('payee', 'basic')
         sb.construct('memo', 'basic')
-        sb.construct('receipt', 'multiline')
+        sb.construct('receipt', 'richtext')
 
         self.topgrid = QtWidgets.QGridLayout()
         self.topgrid.addWidget(qt.buddied('&Date', sb.widgets['trandate']), 0, 0)

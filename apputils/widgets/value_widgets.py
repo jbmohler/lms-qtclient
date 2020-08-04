@@ -272,3 +272,13 @@ def multiline(parent):
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     return w
+
+def richtext(parent):
+    Klass = apputils.as_modifiable(TextEdit2)
+    Klass.value = lambda self: self.toHtml()
+    Klass.setValue = lambda self, value: self.setHtml(value)
+    w = Klass(parent)
+    w.setTabChangesFocus(True)
+    w.textChanged.connect(lambda *args: w.setWidgetModified(True))
+    w.editingFinished.connect(lambda *args: w.setValueApplied())
+    return w
