@@ -394,13 +394,14 @@ class EditPersona(QtWidgets.QDialog):
                 parent = self.tagmap[row.parent_id]
                 parent.subtags.append(row)
 
-        columns = [
-                apputils.field('name', 'Name', check_attr="is_tagged")]
+        columns = [apputils.field("name", "Name", check_attr="is_tagged")]
 
         self.tags_model = apputils.ObjectQtModel(columns, descendant_attr="subtags")
 
         self.tags_grid.setModel(self.tags_model)
-        self.tags_model.set_rows([tag for tag in self.tagstable.rows if tag.parent_id == None])
+        self.tags_model.set_rows(
+            [tag for tag in self.tagstable.rows if tag.parent_id == None]
+        )
 
         self.binder.bind(self.editrow, self.persona.columns)
 
@@ -413,9 +414,13 @@ class EditPersona(QtWidgets.QDialog):
                 "api/persona/{}",
                 self.editrow.id,
                 files={
-                    "persona": self.persona.as_http_post_file(exclusions=['entity_name', 'tag_ids']),
-                    "tagdeltas": self.persona.as_http_post_file(inclusions=['tags_add', 'tags_remove']),
-                }
+                    "persona": self.persona.as_http_post_file(
+                        exclusions=["entity_name", "tag_ids"]
+                    ),
+                    "tagdeltas": self.persona.as_http_post_file(
+                        inclusions=["tags_add", "tags_remove"]
+                    ),
+                },
             )
 
         return super(EditPersona, self).accept()
@@ -425,6 +430,8 @@ class ContactView(QtWidgets.QWidget):
     TITLE = "Contact"
     ID = "contact-view"
     URL_PERSONA = "api/persona/{}"
+
+    update_ambient = QtCore.Signal(str)
 
     def __init__(self, parent, session):
         super(ContactView, self).__init__(parent)
@@ -475,13 +482,15 @@ class ContactView(QtWidgets.QWidget):
         dlg.load_new(self.client)
 
         if dlg.Accepted == dlg.exec_():
-            self.reload()
+            self.update_ambient.emit(dlg.editrow.id)
+            # self.reload()
 
     def cmd_edit_persona(self, bittype):
         dlg = EditPersona(self)
         dlg.load(self.client, self.persona)
 
         if dlg.Accepted == dlg.exec_():
+            self.update_ambient.emit(dlg.editrow.id)
             self.reload()
 
     def cmd_newbit(self, bittype):
@@ -527,9 +536,7 @@ class ContactView(QtWidgets.QWidget):
                 if "Yes" == apputils.message(self, msg, buttons=["Yes", "No"]):
                     with apputils.animator(self):
                         self.client.delete(
-                            "api/persona/{}/bit/{}".format(
-                                self.persona.id, bb.id
-                            )
+                            "api/persona/{}/bit/{}".format(self.persona.id, bb.id)
                         )
                         self.reload()
         else:
@@ -615,6 +622,7 @@ class ContactsList(QtWidgets.QWidget):
         self.sublay.addWidget(self.grid)
 
         self.sidebar = ContactView(self, session)
+        self.sidebar.update_ambient.connect(self.reload_from_persona)
         self.sublay.addWidget(self.sidebar)
         self.layout.addWidget(self.sublay)
 
@@ -630,7 +638,18 @@ class ContactsList(QtWidgets.QWidget):
         self.load_timer.timeout.connect(self.search_now)
         self.search_edit.applyValue.connect(self.load_timer.ui_start)
 
-        self.geo = apputils.WindowGeometry(self, size=False, position=False, grids=[self.grid])
+        self.geo = apputils.WindowGeometry(
+            self, size=False, position=False, grids=[self.grid]
+        )
+
+    def reload_from_persona(self, per_id):
+        self.backgrounder(
+            functools.partial(self.load_data, per_id),
+            self.client.get,
+            self.URL_SEARCH,
+            frag=self.search_edit.value(),
+            included=per_id,
+        )
 
     def search_now(self):
         self.backgrounder(
@@ -640,12 +659,19 @@ class ContactsList(QtWidgets.QWidget):
             frag=self.search_edit.value(),
         )
 
-    def load_data(self):
+    def load_data(self, focused_per_id=None):
         content = yield apputils.AnimateWait(self)
         self.table = content.main_table()
 
         with self.geo.grid_reset(self.grid):
             self.gridmgr.set_client_table(self.table)
+
+        if focused_per_id != None:
+            row = [xx for xx in self.table.rows if xx.id == focused_per_id]
+            if len(row) > 0:
+                i1, _ = self.grid.model().index_object(row[0])
+                self.grid.setCurrentIndex(i1)
+                self.sidebar.highlight(row[0])
 
 
 def list_widget(parent, session):
