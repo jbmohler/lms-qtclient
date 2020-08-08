@@ -202,18 +202,20 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
     link_count = 0
     offset = 0
     prior = None
+    row_group = []
     for index2, row_in in enumerate(filtered_rows):
         if group_expr != None:
             thisrow = group_expr.evaluate(row_in)
             if prior == None:
                 prior = thisrow
-                row_group = [BBRow(grid_top+index2+offset, row_in)]
 
                 if group_start_callback != None:
                     rows_used = group_start_callback(wbhelper, worksheet, box, row_in, grid_top+index2+offset)
                     offset += rows_used
                 print_column_headers(grid_top+index2+offset)
                 offset += 1
+
+                row_group = [BBRow(grid_top+index2+offset, row_in)]
             elif thisrow != prior:
                 if group_end_callback != None:
                     box.bound_rows = row_group
