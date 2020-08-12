@@ -239,7 +239,7 @@ class TransactionEditor(qt.ObjectDialog):
             model.object_changed(row)
 
 
-def edit_transaction(session, tranid='new'):
+def edit_transaction(session, tranid='new', copy=False):
     dlg = TransactionEditor()
 
     client = session.std_client()
@@ -252,7 +252,13 @@ def edit_transaction(session, tranid='new'):
         core = TransactionCore.from_endpoint(dlg, payload)
         dlg.bind(core)
 
-    backgrounder(finish_load, client.get, URL_BASE, tranid)
+    if copy:
+        assert tranid != "new"
+        url = URL_BASE + "/copy"
+    else:
+        url = URL_BASE
+
+    backgrounder(finish_load, client.get, url, tranid)
 
     def apply(bound):
         nonlocal client, core
