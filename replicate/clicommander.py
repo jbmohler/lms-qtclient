@@ -1,11 +1,12 @@
-
 class UserError(Exception):
     pass
+
 
 class CLI_Route:
     def __init__(self, name, f):
         self.name = name
         self.f = f
+
 
 class CLI_Commander:
     def __init__(self):
@@ -26,7 +27,7 @@ class CLI_Commander:
 
     @staticmethod
     def _normalize(cmd):
-        return cmd.lower().replace('-', '_')
+        return cmd.lower().replace("-", "_")
 
     def matched_routes(self, cmd):
         cmd2 = self._normalize(cmd)
@@ -36,7 +37,7 @@ class CLI_Commander:
             if rt.name == cmd2:
                 exact = rt
             elif rt.name.startswith(cmd2):
-                approx.append((rt, 'approx'))
+                approx.append((rt, "approx"))
 
         return exact, approx
 
@@ -53,17 +54,20 @@ class CLI_Commander:
             rt.f(cmd, args)
             return True
         elif len(approx) > 0:
-            lines = ['Candidates:'] + [rt.name for rt, _ in approx]
-            print('\n\t'.join(lines))
+            lines = ["Candidates:"] + [rt.name for rt, _ in approx]
+            print("\n\t".join(lines))
         return False
+
 
 GLOBAL_ROUTER = None
 
+
 def init_global_router(embeds):
     global GLOBAL_ROUTER
-    CLI_Commander2 = type('CLI_Commander2', (CLI_Commander,), embeds)
+    CLI_Commander2 = type("CLI_Commander2", (CLI_Commander,), embeds)
     GLOBAL_ROUTER = CLI_Commander2()
     return GLOBAL_ROUTER
+
 
 def get_global_router(auto=False):
     global GLOBAL_ROUTER
