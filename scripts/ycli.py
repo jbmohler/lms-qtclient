@@ -1,6 +1,7 @@
 import atexit
 import os
 import sys
+import shlex
 import readline
 import argparse
 import getpass
@@ -32,7 +33,7 @@ def loop(session, commands=None):
         if cmd in ('', '?'):
             cli.basic_help()
             continue
-        cmd, *args = cmd.split(' ')
+        cmd, *args = shlex.split(cmd)
         if cmd in ('quit', 'exit'):
             return
 
