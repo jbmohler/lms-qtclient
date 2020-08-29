@@ -228,6 +228,12 @@ class TransactionEditor(qt.ObjectDialog):
             self.tracker.set_dirty(row, attr)
 
         if isinstance(row, self.data.splittable.DataRow):
+            # read the journal
+            if 'account_id' in fields:
+                payload = self.client.get("api/account/{}", row.account_id)
+                row.jrn_name = payload.main_table().rows[0].jrn_name
+
+            # update the view
             model = self.trans_grid.model()
             if model.is_flipper(row):
                 with self.tracker.loading(reset=False):
@@ -243,6 +249,7 @@ def edit_transaction(session, tranid='new', copy=False):
     dlg = TransactionEditor()
 
     client = session.std_client()
+    dlg.client = client
     backgrounder = apputils.Backgrounder(dlg)
     core = None
 

@@ -18,7 +18,8 @@ def edit_account(session, acntid='new'):
 
     def apply(bound):
         nonlocal client, table
-        client.put(URL_BASE, bound.id, files={'account': table.as_http_post_file()})
+        client.put(URL_BASE, bound.id, files={'account':
+            table.as_http_post_file(exclusions=['atype_name', 'jrn_name'])})
         return True
 
     widgets.verify_settings_load(dlg, client, dlg.binder)
