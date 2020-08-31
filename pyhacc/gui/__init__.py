@@ -29,7 +29,11 @@ class AccountingExtensions:
         elif url.path() == 'accounttypes':
             edit_account_type(state.session, url.parameters()['key'])
         elif url.path() == 'reconcile':
-            reconcile.rec_window(state.session, **url.parameters())
+            w = reconcile.ReconciliationWindow(
+                session=state.session, **url.parameters()
+            )
+            w.show()
+            w.refresh()
         elif url.path() == 'transactions/new':
             transactions.edit_transaction(state.session, 'new')
         elif url.path() == 'transactions':

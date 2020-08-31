@@ -4,8 +4,6 @@ import apputils
 import apputils.widgets as widgets
 from . import mxc
 
-URL_BASE = "api/transactions/reconcile"
-
 
 class ReconciliationModel:
     @classmethod
@@ -30,15 +28,21 @@ class ReconciliationModel:
             ),
         }
 
+    def flip_reconciles(self):
+        for t in self.trans.rows:
+            if t.pending:
+                t.reconciled = True
+                t.pending = False
+
     @property
     def recbal(self):
-        delta = sum([t.balance for t in self.trans.rows if t.reconciled or t.pending])
+        delta = sum([t.balance for t in self.trans.rows if t.reconciled])
         delta *= 1.0 if self.account.debit_account else -1.0
         return self.account.prior_reconciled_balance + delta
 
     @property
     def pendbal(self):
-        delta = sum([t.balance for t in self.trans.rows if t.pending])
+        delta = sum([t.balance for t in self.trans.rows if t.reconciled or t.pending])
         delta *= 1.0 if self.account.debit_account else -1.0
         return self.account.prior_reconciled_balance + delta
 
@@ -59,6 +63,7 @@ class ReconciliationWindow(QtWidgets.QDialog):
 
     ID = "reconciliation-window"
     TITLE = "Account Reconciliation"
+    URL_BASE = "api/transactions/reconcile"
 
     def __init__(self, parent=None, session=None, **kwargs):
         super(ReconciliationWindow, self).__init__(parent)
@@ -133,6 +138,8 @@ class ReconciliationWindow(QtWidgets.QDialog):
             self.refresh()
 
     def cmd_reconcile(self):
+        self.data.flip_reconciles()
+
         if self.tracker.window_new_document(self, self.save):
             self.refresh()
 
@@ -142,10 +149,12 @@ class ReconciliationWindow(QtWidgets.QDialog):
 
     def save(self):
         with apputils.animator(self) as p:
-            p.background(self.client.put, URL_BASE, files=self.data.http_files())
+            p.background(self.client.put, self.URL_BASE, files=self.data.http_files())
 
     def refresh(self):
-        self.backgrounder(self.load, self.client.get, URL_BASE, account=self.account)
+        self.backgrounder(
+            self.load, self.client.get, self.URL_BASE, account=self.account
+        )
 
     def load(self):
         payload = yield apputils.AnimateWait(self)
@@ -176,7 +185,7 @@ class ReconciliationWindow(QtWidgets.QDialog):
         if self.tracker.load_lockout:
             return
 
-        if "pending" in fields:
+        if "pending" in fields or "reconciled" in fields:
             self.recbal_edit.setValue(self.data.recbal)
             self.pendbal_edit.setValue(self.data.pendbal)
 
@@ -187,13 +196,3 @@ class ReconciliationWindow(QtWidgets.QDialog):
             model = self.trans_grid.model()
             for attr in fields:
                 model.append_change_value(row, attr)
-
-
-def rec_window(session, **kwargs):
-    w = ReconciliationWindow(session=session, **kwargs)
-
-    w.show()
-    w.refresh()
-
-
-__all__ = ["rec_window"]
