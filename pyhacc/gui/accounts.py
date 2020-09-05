@@ -7,9 +7,11 @@ def edit_account(session, acntid='new'):
     dlg = qt.FormEntryDialog('PyHacc Account')
 
     dlg.add_form_row('acc_name', 'Account', 'basic')
+    dlg.add_form_row('description', 'Description', 'basic')
     dlg.add_form_row('type_id', 'Type', 'pyhacc_accounttype.id')
     dlg.add_form_row('journal_id', 'Journal', 'pyhacc_journal.id')
-    dlg.add_form_row('description', 'Description', 'multiline')
+    dlg.add_form_row('acc_note', 'Account Note', 'multiline')
+    dlg.add_form_row('rec_note', 'Reconciliation Note', 'multiline')
 
     client = session.std_client()
 
