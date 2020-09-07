@@ -11,10 +11,12 @@ from . import icons
 class PersonaMixin:
     @property
     def full_name(self):
-        if self.f_name in ["", None]:
-            return self.l_name
-        else:
-            return self.f_name + " " + self.l_name
+        names = []
+        if self.f_name not in ["", None]:
+            names.append(self.f_name)
+        if self.l_name not in ["", None]:
+            names.append(self.l_name)
+        return " ".join(names)
 
 
 class BitMixin:
@@ -34,19 +36,17 @@ class BitMixin:
         return "<tr><td>{}{}</td><td>{}</td></tr>".format(x[0], x[1], x[2])
 
     def html_chunk(self):
+        es = lambda x: x if x is not None else ""
+        ns = lambda x: x if x != "" else None
         bd = self.bit_data
         if self.bit_type == "street_addresses":
-            addr3 = [
-                bd["city"] if bd["city"] not in ["", None] else "",
-                bd["state"] if bd["state"] not in ["", None] else "",
-                bd["zip"] if bd["zip"] not in ["", None] else "",
-            ]
+            addr3 = [es(bd["city"]), es(bd["state"]), es(bd["zip"])]
 
             addresses = [
-                bd["address1"] if bd["address1"] not in ["", None] else None,
-                bd["address2"] if bd["address2"] not in ["", None] else None,
+                ns(bd["address1"]),
+                ns(bd["address2"]),
                 " ".join(addr3),
-                bd["country"] if bd["country"] not in ["", None] else None,
+                ns(bd["country"]),
             ]
             x = "<br />".join([x for x in addresses if x != None])
         elif self.bit_type == "urls":
@@ -58,13 +58,18 @@ class BitMixin:
             )
             lines.append(("URL", xurl))
             if bd["username"] not in ["", None] or bd["password"] not in ["", None]:
-                lines.append(("Username", bd["username"]))
-                localurl = "local:bit/copy-password?password={}".format(
-                    urllib.parse.quote(bd["password"])
-                )
-                lines.append(
-                    ("Password", '<a href="{}">Copy Password</a>'.format(localurl))
-                )
+                if ns(bd["username"]) is None:
+                    un = "(empty)"
+                else:
+                    un = bd["username"]
+                lines.append(("Username", un))
+                if ns(bd["password"]) is None:
+                    hlink = "(empty)"
+                else:
+                    qpass = urllib.parse.quote(bd["password"])
+                    localurl = "local:bit/copy-password?password={}".format(qpass)
+                    hlink = '<a href="{}">Copy Password</a>'.format(localurl)
+                lines.append(("Password", hlink))
             x = "<br />".join(["{}: {}".format(*x) for x in lines])
         elif self.bit_type == "phone_numbers":
             x = bd["number"]
