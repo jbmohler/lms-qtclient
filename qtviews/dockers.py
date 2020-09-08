@@ -375,7 +375,9 @@ class TabbedWorkspaceMixin(object):
             w._docker_meta.title = edit.text()
 
     def closeTab(self, index):
-        self.workspace.removeTab(index)
+        widget = self.workspace.widget(index)
+        if widget.close():
+            self.workspace.removeTab(index)
 
     def tabsInWindowMenu(self, winmenu):
         actionlist = []

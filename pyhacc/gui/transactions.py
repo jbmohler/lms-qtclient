@@ -8,6 +8,9 @@ from . import mxc
 
 URL_BASE = 'api/transaction/{}'
 
+def null0(v):
+    return v if v != None else 0.
+
 class SplitsTable(mxc.ModelRow):
     def _rtlib_init_(self):
         if self.sum == None:
@@ -40,8 +43,7 @@ class SplitsTable(mxc.ModelRow):
     @debit.setter
     def debit(self, v):
         self._debit = v
-        self.sum = self._debit if self._debit != None else 0. - \
-                    self._credit if self._credit != None else 0.
+        self.sum = null0(self._debit) - null0(self._credit)
 
     @property
     def credit(self):
@@ -53,8 +55,7 @@ class SplitsTable(mxc.ModelRow):
     @credit.setter
     def credit(self, v):
         self._credit = v
-        self.sum = self._debit if self._debit != None else 0. - \
-                    self._credit if self._credit != None else 0.
+        self.sum = null0(self._debit) - null0(self._credit)
 
 class TransactionCore:
     def __init__(self):

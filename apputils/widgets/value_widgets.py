@@ -78,8 +78,12 @@ def integer(parent):
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     return w
 
-def float_none_allowed(t):
-    return None if t == '' else float(t)
+def float_none_allowed(value):
+    if value in ['', None]:
+        return None
+    if isinstance(value, str) and ',' in value:
+        value = value.replace(',', '')
+    return float(value)
 
 def QLineEdit_setText_fromDouble(self, value, decimals):
     if value == None:

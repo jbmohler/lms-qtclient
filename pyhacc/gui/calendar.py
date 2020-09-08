@@ -214,7 +214,7 @@ class TransactionCalendar(QtWidgets.QWidget):
 
 class TransactionRecent(QtWidgets.QWidget):
     ID = "transaction-recent"
-    TITLE = "Transaction Recent"
+    TITLE = "Recent Transactions"
     URL = "api/transactions/list"
 
     def __init__(self, parent, session):

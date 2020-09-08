@@ -179,7 +179,7 @@ class ReconciliationWindow(QtWidgets.QDialog):
                 self.trans_grid.setModel(apputils.ObjectQtModel(columns, []))
                 self.trans_gridmgr.set_client_table_no_model(self.data.trans)
 
-            self.tracker.set_mayor_list([self.binder, self.trans_grid])
+                self.tracker.set_mayor_list([self.binder, self.trans_grid])
 
     def fields_changed(self, row, fields):
         if self.tracker.load_lockout:
