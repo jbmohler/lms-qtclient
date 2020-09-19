@@ -37,19 +37,16 @@ class ReconciliationModel:
     @property
     def recbal(self):
         delta = sum([t.balance for t in self.trans.rows if t.reconciled])
-        delta *= 1.0 if self.account.debit_account else -1.0
         return self.account.prior_reconciled_balance + delta
 
     @property
     def pendbal(self):
         delta = sum([t.balance for t in self.trans.rows if t.reconciled or t.pending])
-        delta *= 1.0 if self.account.debit_account else -1.0
         return self.account.prior_reconciled_balance + delta
 
     @property
     def outbal(self):
         delta = sum([t.balance for t in self.trans.rows])
-        delta *= 1.0 if self.account.debit_account else -1.0
         return self.account.prior_reconciled_balance + delta
 
 
@@ -129,9 +126,7 @@ class ReconciliationWindow(QtWidgets.QDialog):
 
         self.lay1.setStretch(1, 5)
 
-        self.geo = apputils.WindowGeometry(
-            self, position=False, grids=[self.trans_grid]
-        )
+        self.geo = apputils.WindowGeometry(self, grids=[self.trans_grid])
 
     def cmd_save(self):
         if self.tracker.window_new_document(self, self.save):
