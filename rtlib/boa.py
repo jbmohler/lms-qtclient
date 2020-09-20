@@ -143,8 +143,8 @@ def baseconvert(n, base):
 class Inline:
     def __repr__(self):
         keys = [x for x in dir(self) if not x.startswith('_')]
-        values = ['{}={}'.format(k, repr(getattr(self, k))) for k in keys]
-        return '{}({})'.format(self.__class__.__name__, ', '.join(values))
+        values = [f'{k}={repr(getattr(self, k))}' for k in keys]
+        return f"{self.__class__.__name__}({', '.join(values)})"
 
 def inline_object(**kwargs):
     r = Inline()

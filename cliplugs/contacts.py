@@ -24,7 +24,7 @@ def copy_clip(s):
         p = subprocess.Popen(['xclip', '-sel', 'clip'], stdin=subprocess.PIPE)
         p.communicate(input=s.encode('ascii'))
     else:
-        print('>>>{}<<<'.format(s))
+        print(f'>>>{s}<<<')
 
 def open_browser(u):
     cliutils.xdg_open(u)
@@ -77,7 +77,7 @@ def generate_security_answers(cmd, args):
 
     index = 1
     while True:
-        q1 = input("Q{}: ".format(index))
+        q1 = input(f"Q{index}: ")
         if q1 == "":
             break
 
@@ -85,7 +85,7 @@ def generate_security_answers(cmd, args):
 
         a1 = content.keys['password']
 
-        print("A{}: {}".format(index, a1))
+        print(f"A{index}: {a1}")
 
         index += 1
 
@@ -102,7 +102,7 @@ def wraptext(paragraph):
 def bit_wrap(bit, actual):
     concat = []
     if bit.name != None and bit.name != '':
-        concat.append('Name:  {}'.format(bit.name))
+        concat.append(f'Name:  {bit.name}')
     concat.append(actual)
     if bit.memo != None and bit.memo != '':
         concat.append(wraptext(bit.memo))
@@ -125,27 +125,27 @@ def persona_to_text(content, static=False, shortcuts=None, tagtable=None):
 
     for bit in bits.rows:
         if bit.bit_type == 'email_addresses':
-            data = 'e-mail:  {}'.format(bit.bit_data['email'])
+            data = f"e-mail:  {bit.bit_data['email']}"
         if bit.bit_type == 'phone_numbers':
-            data = 'phone:  {}'.format(bit.bit_data['number'])
+            data = f"phone:  {bit.bit_data['number']}"
         if bit.bit_type == 'urls':
             lines = []
             if static:
                 if bit.bit_data['url'] not in [None, '']:
-                    lines.append('url:  {}'.format(bit.bit_data['url']))
+                    lines.append(f"url:  {bit.bit_data['url']}")
                 if bit.bit_data['username'] not in [None, '']:
-                    lines.append('username:  {}'.format(bit.bit_data['username']))
+                    lines.append(f"username:  {bit.bit_data['username']}")
                 if bit.bit_data['password'] not in [None, '']:
-                    lines.append('password:  {}'.format(bit.bit_data['password']))
+                    lines.append(f"password:  {bit.bit_data['password']}")
             else:
                 if bit.bit_data['url'] not in [None, '']:
-                    lines.append('url:  {} (view u)'.format(bit.bit_data['url']))
+                    lines.append(f"url:  {bit.bit_data['url']} (view u)")
                     shortcuts['u'] = lambda x=bit.bit_data['url']: open_browser(x)
                 if bit.bit_data['username'] not in [None, '']:
-                    lines.append('username:  {} (copy b)'.format(bit.bit_data['username']))
+                    lines.append(f"username:  {bit.bit_data['username']} (copy b)")
                     shortcuts['b'] = lambda x=bit.bit_data['username']: copy_clip(x)
                 if bit.bit_data['password'] not in [None, '']:
-                    lines.append('password:  {} (copy c)'.format('** hidden **'))
+                    lines.append("password:  ** hidden ** (copy c)")
                     shortcuts['c'] = lambda x=bit.bit_data['password']: copy_clip(x)
             data = '\n'.join(lines)
         if bit.bit_type == 'street_addresses':

@@ -57,7 +57,7 @@ class TypedTable:
             row = self.rows[0]
         for c in c2:
             if labels:
-                lines.append('<b>{}</b>:  {}'.format(c.label, html.rc_value(c, row)))
+                lines.append(f'<b>{c.label}</b>:  {html.rc_value(c, row)}')
             else:
                 lines.append(html.rc_value(c, row))
         return '<br />'.join(lines)

@@ -31,8 +31,8 @@ class SlottedRow:
         return {k: getattr(self, k, None) for k in self.__class__.__slots__}
 
     def __repr__(self):
-        values = ['{}={}'.format(k, repr(getattr(self, k, unassigned))) for k in self.__class__.__slots__]
-        return '{}({})'.format(self.__class__.__name__, ', '.join(values))
+        values = [f'{k}={repr(getattr(self, k, unassigned))}' for k in self.__class__.__slots__]
+        return f"{self.__class__.__name__}({', '.join(values)})"
 
 def fixedrecord(name, members, mixin=None):
     """
@@ -40,10 +40,10 @@ def fixedrecord(name, members, mixin=None):
     """
     kw_clash = KEYWORD_SET.intersection(members)
     if len(kw_clash) > 0:
-        raise RuntimeError('refused identifiers ({}):  fixedrecord identifiers must not be keywords'.format(', '.join(kw_clash)))
+        raise RuntimeError(f"refused identifiers ({', '.join(kw_clash)}):  fixedrecord identifiers must not be keywords")
     junk = [m for m in members if None == IDENTIFIER_RE.match(m)]
     if len(junk) > 0:
-        raise RuntimeError('refused identifiers ({}):  fixedrecord identifiers must be valid Python variable identifier'.format(', '.join(junk)))
+        raise RuntimeError(f"refused identifiers ({', '.join(junk)}):  fixedrecord identifiers must be valid Python variable identifier")
 
     Kls1 = type(name, (SlottedRow,), {'__slots__': members})
     if mixin == None:
@@ -238,11 +238,11 @@ class PromptList:
         for k, v in relevance_groups.items():
             # v = (sibling, method, value)
             if len(v) != 3:
-                raise NotImplementedError('relevance mis-understood for prompt {} -- expect 3-tuple'.format(k))
+                raise NotImplementedError(f'relevance mis-understood for prompt {k} -- expect 3-tuple')
             if v[0] not in [c.attr for c in self.columns]:
-                raise NotImplementedError('relevance mis-understood for prompt {} -- no sibling by name of {}'.format(k, v[0]))
+                raise NotImplementedError(f'relevance mis-understood for prompt {k} -- no sibling by name of {v[0]}')
             if v[1] not in ('relevant-if-not', 'end-range'):
-                raise NotImplementedError('relevance mis-understood for prompt {} -- no method known by {}'.format(k, v[1]))
+                raise NotImplementedError(f'relevance mis-understood for prompt {k} -- no method known by {v[1]}')
 
         self.defaults = func(values)
         self.optional_attrs = optional_attrs
@@ -291,7 +291,7 @@ def convert_datetime(v):
         return datetime.datetime.strptime(v, '%Y-%m-%dT%H:%M:%S.%f')
     except ValueError:
         pass
-    raise ValueError('could not parse {} as datetime'.format(v))
+    raise ValueError(f'could not parse {v} as datetime')
 
 parse_datetime = convert_datetime
 
@@ -307,7 +307,7 @@ def parse_date(s):
     if isinstance(s, datetime.date):
         return s
     if len(s) != 10 or s[4] != '-' or s[7] != '-':
-        raise ValueError('invalid date string {}'.format(s))
+        raise ValueError(f'invalid date string {s}')
     return datetime.date(int(s[:4]), int(s[5:7]), int(s[8:10]))
 
 def parse_month_end(value):
@@ -326,7 +326,7 @@ def parse_bool(v):
         return True
     if v in [False, 0, 'false', 'no']:
         return False
-    raise ValueError('unacceptable bool import:  {}'.format(v))
+    raise ValueError(f'unacceptable bool import:  {v}')
 
 
 def str_column_coerce(column, value):

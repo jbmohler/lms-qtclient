@@ -370,16 +370,16 @@ class Importer(QtWidgets.QDialog):
         cols = []
         if self.importer.assess_row != None:
             cols += [models.field('status', 'Incoming')]
-        cols += [models.field('v{:03n}'.format(i), '<skip>') for i in range(columns)]
+        cols += [models.field(f'v{i:03n}', '<skip>') for i in range(columns)]
         for col in cols:
             if col.attr != 'status':
                 col.import_attr = None
 
         if self.importer.assess_row != None:
-            self.MyDataRow = rtlib.fixedrecord('MyDataRow', ['status']+['v{:03n}'.format(i) for i in range(columns)])
+            self.MyDataRow = rtlib.fixedrecord('MyDataRow', ['status']+[f'v{i:03n}' for i in range(columns)])
             rows = [self.MyDataRow(None, *v) for v in lines]
         else:
-            self.MyDataRow = rtlib.fixedrecord('MyDataRow', ['v{:03n}'.format(i) for i in range(columns)])
+            self.MyDataRow = rtlib.fixedrecord('MyDataRow', [f'v{i:03n}' for i in range(columns)])
             rows = [self.MyDataRow(*v) for v in lines]
 
         self.model = models.ObjectQtModel(cols, parent=self)
@@ -395,7 +395,7 @@ class Importer(QtWidgets.QDialog):
             sourced = [col.import_attr for col in self.model.columns if col.attr != 'status' and col.import_attr != None]
             missing = set(self.importer.required_columns).difference(sourced)
             if len(missing) == 1:
-                raise ModelImportError('Column "{}" is required for the import.'.format(missing.pop()))
+                raise ModelImportError(f'Column "{missing.pop()}" is required for the import.')
             if len(missing) > 1:
                 raise ModelImportError('Columns "{}" are required for the import.'.format('", "'.join(sorted(missing))))
 

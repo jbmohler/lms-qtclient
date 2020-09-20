@@ -74,7 +74,7 @@ class BBColumn:
         self.attr = attr
 
     def cell(self, index):
-        return '{}{}'.format(self.letter, index+1)
+        return f'{self.letter}{index + 1}'
 
 class BBRow:
     def __init__(self, index, row):

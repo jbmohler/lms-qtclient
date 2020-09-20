@@ -99,7 +99,7 @@ class ReportClientInfo:
             else:
                 v = default
                 values[prompt.attr] = v
-            placeholder = '<{}>'.format(prompt.attr)
+            placeholder = f'<{prompt.attr}>'
             if tail.find(placeholder) >= 0:
                 tail = tail.replace(placeholder, v)
             else:
@@ -283,7 +283,7 @@ class ReportPreview(QtWidgets.QWidget):
                     widget.lay2.addWidget(w1)
                     widget.lay2.addWidget(layoututils.stretcher())
                 else:
-                    raise NotImplementedError('relevancy method {} not known.'.format(rtuple[1]))
+                    raise NotImplementedError(f'relevancy method {rtuple[1]} not known.')
             else:
                 widget = self.bound_prompts[prompt.attr][1]
             form.addRow(prompt.label, widget)
@@ -373,7 +373,7 @@ class ReportPreview(QtWidgets.QWidget):
             self.sidebar_wrapper = SidebarWrapper()
             self.sidebar_wrapper._preview = self
             self.sidebar_wrapper.setWindowIcon(QtWidgets.QApplication.instance().icon)
-            self.sidebar_wrapper.setWindowTitle('{} Details'.format(self.report.description))
+            self.sidebar_wrapper.setWindowTitle(f'{self.report.description} Details')
 
             self.sidebar_wrapper.setCentralWidget(self.sidebar)
             self.sidebar_wrapper.show()
@@ -409,16 +409,16 @@ class ReportPreview(QtWidgets.QWidget):
             for stat, act in sb.statistics.actions_stattypes.items():
                 if act.isChecked():
                     if stat == 'count':
-                        stats.append('Count:  {}'.format(len(elements)))
+                        stats.append(f'Count:  {len(elements)}')
                     if stat == 'total':
-                        stats.append('Total:  {}'.format(sum(elements)))
+                        stats.append(f'Total:  {sum(elements)}')
                     if stat == 'average':
                         avg = sum(elements)/len(elements)
-                        stats.append('Average:  {}'.format(avg))
+                        stats.append(f'Average:  {avg}')
                     if stat == 'minimum':
-                        stats.append('Minimum:  {}'.format(min(elements)))
+                        stats.append(f'Minimum:  {min(elements)}')
                     if stat == 'maximum':
-                        stats.append('Maximum:  {}'.format(max(elements)))
+                        stats.append(f'Maximum:  {max(elements)}')
             sb.statistics.setText('; '.join(stats))
         else:
             sb.statistics.setText('')
@@ -457,7 +457,7 @@ class ReportPreview(QtWidgets.QWidget):
         try:
             content = yield apputils.JointBackgrounder(apputils.AnimateWait(self.grid), self.report_request_waiter())
         except:
-            utils.exception_message(self.window(), 'The report {} generated a server error.'.format(self.report.description))
+            utils.exception_message(self.window(), f'The report {self.report.description} generated a server error.')
             return
         finally:
             if self.grid.model() != None:
@@ -565,7 +565,7 @@ class ReportPreview(QtWidgets.QWidget):
             self.rpt_export_menu = menu
 
         augmented_head = self.header_strings.copy()
-        augmented_head.append('{:,} rows'.format(len(self.model.rows)))
+        augmented_head.append(f'{len(self.model.rows):,} rows')
         self.headers.setStyleSheet('QLabel {background: white; padding: 5px}')
         self.headers.setText('\n'.join(augmented_head))
 
@@ -582,7 +582,7 @@ class ReportPreview(QtWidgets.QWidget):
         self.my_actions = gridmgr.apply_client_relateds(self.power_menu, self.run.content)
 
     def settings_key(self):
-        return 'reports/{}'.format(self.report.url.replace('/', '_'))
+        return f"reports/{self.report.url.replace('/', '_')}"
 
     def update_report_line_selection(self, current, previous):
         if self.sidebar != None and hasattr(self.sidebar, 'highlight'):

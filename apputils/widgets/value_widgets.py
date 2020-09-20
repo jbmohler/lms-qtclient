@@ -39,7 +39,7 @@ def datetimewid(parent):
     Klass.INVALID = "QLineEdit{ background: --; }".replace('--', valix.INVALID_RGBA)
     Klass.VALID = "QLineEdit{}"
     Klass.value = lambda: apputils.not_implemented_error()
-    Klass.setValue = lambda self, value: self.setText('' if value == None else '{:%m/%d/%Y %I:%M:%S %p}'.format(value))
+    Klass.setValue = lambda self, value: self.setText('' if value == None else f'{value:%m/%d/%Y %I:%M:%S %p}')
     w = Klass(parent)
     w.setMaximumWidth(24*10)
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
@@ -89,7 +89,7 @@ def QLineEdit_setText_fromDouble(self, value, decimals):
     if value == None:
         s = ''
     else:
-        s = '{{:.{}f}}'.format(decimals).format(value)
+        s = f'{{:.{decimals}f}}'.format(value)
     self.setText(s)
 
 def quantity_value(self):
@@ -121,7 +121,7 @@ def QLineEdit_setText_fromPercent(self, value, decimals):
     if value == None:
         s = ''
     else:
-        s = '{{:.{}f}}'.format(decimals).format(value*100.)
+        s = f'{{:.{decimals}f}}'.format(value*100.)
     self.setText(s)
 
 def percent_value(self):

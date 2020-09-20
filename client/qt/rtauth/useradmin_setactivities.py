@@ -93,7 +93,7 @@ class ManageActivities(QtWidgets.QMainWindow):
 
             self.center.setEnabled(True)
         except:
-            apputils.exception_message(self, 'There was an error loading {}.'.format(self.TITLE))
+            apputils.exception_message(self, f'There was an error loading {self.TITLE}.')
 
     def save_activities(self):
         try:
@@ -102,7 +102,7 @@ class ManageActivities(QtWidgets.QMainWindow):
 
             self.client.post(self.SRC_URL, files=files)
         except Exception:
-            apputils.exception_message(self.window(), 'Error saving {}.'.format(self.TITLE))
+            apputils.exception_message(self.window(), f'Error saving {self.TITLE}.')
             raise
 
     def closeEvent(self, event):

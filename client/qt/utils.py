@@ -13,7 +13,7 @@ class RtxTrayIcon(QtWidgets.QSystemTrayIcon):
         self.messageClicked.connect(self.show_error_log)
 
     def error_event(self, descr, data):
-        self.showMessage('Error: {}'.format(descr), 'See error log for details')
+        self.showMessage(f'Error: {descr}', 'See error log for details')
         if data != None:
             app = QtWidgets.QApplication.instance()
             app.session.report_python_traceback_event('Shell Client Error', descr, data)
@@ -34,16 +34,16 @@ def exception_message(parent, message):
     type_, value, tb = sys.exc_info()
     if isinstance(value, client.RtxServerError):
         msgBox.setIcon(QtWidgets.QMessageBox.Critical)
-        msgBox.setText('{}'.format(str(value)))
+        msgBox.setText(f'{str(value)}')
     elif isinstance(value, client.RtxError):
         # Warning seems justified here since this is an exception.  However,
         # that's not entirely clear and maybe RtxError should offer a level
         # hint.
         msgBox.setIcon(QtWidgets.QMessageBox.Warning)
-        msgBox.setText('{}'.format(str(value)))
+        msgBox.setText(f'{str(value)}')
     else:
         msgBox.setIcon(QtWidgets.QMessageBox.Critical)
-        msgBox.setText('{}\n\nException message:  {}'.format(message, str(value)))
+        msgBox.setText(f'{message}\n\nException message:  {str(value)}')
         msgBox.setDetailedText('\n'.join(traceback.format_exception(type_, value, tb)))
 
     msgBox.exec_()
@@ -57,9 +57,9 @@ def red_warning(parent, text):
     if len(splits) > 1:
         line1, rest = splits
         rest = rest.replace('\n', '<br />')
-        formatted = '<font size="24" color="red">{}</font><br />{}'.format(line1, rest)
+        formatted = f'<font size="24" color="red">{line1}</font><br />{rest}'
     else:
-        formatted = '<font size="24" color="red">{}</font>'.format(text)
+        formatted = f'<font size="24" color="red">{text}</font>'
 
     msgBox.setText(formatted)
 

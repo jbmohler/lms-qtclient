@@ -7,7 +7,7 @@ def show_connection_error(parent, message, r):
     msgBox.setWindowTitle(QtWidgets.QApplication.applicationName())
     msgBox.setIcon(QtWidgets.QMessageBox.Critical)
 
-    msgBox.setText('{}\n\nWeb status code:  {}\nURL:  {}'.format(message, r.status_code, r.url))
+    msgBox.setText(f'{message}\n\nWeb status code:  {r.status_code}\nURL:  {r.url}')
     msgBox.setDetailedText(r.text)
 
     msgBox.exec_()
@@ -72,7 +72,7 @@ class ServerDiagnostics(QtWidgets.QDialog):
         x1 = time.time()
         r = self.session.get(self.session.prefix('api/ping'))
         if r.status_code != 200:
-            self.max_ping_time_edit.setText('ERROR:  {}'.format(r.status_code))
+            self.max_ping_time_edit.setText(f'ERROR:  {r.status_code}')
         x2 = time.time()
         if r.status_code == 200:
             self.ping_times.append(x2-x1)
@@ -80,7 +80,7 @@ class ServerDiagnostics(QtWidgets.QDialog):
 
             avg = sum(self.ping_times)/len(self.ping_times)
             mx = max(self.ping_times)
-            ms = lambda t: '{:.1f} ms'.format(t*1000.)
+            ms = lambda t: f'{t * 1000.0:.1f} ms'
 
             self.avg_ping_time_edit.setText(ms(avg))
             self.max_ping_time_edit.setText(ms(mx))

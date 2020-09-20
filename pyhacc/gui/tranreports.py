@@ -21,7 +21,7 @@ def group_footer_profit(wbhelper, worksheet, bounding_box, footer_index):
     totaled = [col for col in bounding_box.columns if is_totaled(col)]
 
     for col in totaled:
-        formula = '=SUM({}:{})'.format(col.cell(i1), col.cell(i2))
+        formula = f'=SUM({col.cell(i1)}:{col.cell(i2)})'
         total = sum([getattr(row, col.attr) for row in bounding_box.rows if getattr(row, col.attr) != None])
         worksheet.write_formula(footer_index, col.index, formula, wbhelper.bold_currency_format, value=total)
 
@@ -54,7 +54,7 @@ def full_summary(wbhelper, worksheet, bounding_box, footer_index):
     totaled = [col for col in bounding_box.columns if is_totaled(col)]
 
     for col in totaled:
-        formula = '=SUM({}:{})'.format(col.cell(i1), col.cell(i2))
+        formula = f'=SUM({col.cell(i1)}:{col.cell(i2)})'
         total = sum([getattr(row, col.attr) for row in bounding_box.rows if getattr(row, col.attr) != None])
         worksheet.write_formula(footer_index, col.index, formula, wbhelper.bold_currency_format, value=total)
 

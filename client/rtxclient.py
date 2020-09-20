@@ -15,7 +15,7 @@ class RtxServerError(RtxError):
 
 def exception_string(request, method):
     if request.status_code == 401:
-        return 'The request to {} is not authorized.'.format(request.url)
+        return f'The request to {request.url} is not authorized.'
     return """\
 Server request failed with status code:  {0.status_code}
 URL:  {0.url}
@@ -62,7 +62,7 @@ class RtxSession(requests.Session):
         try:
             table = self.settings_map[settings_name]
         except KeyError:
-            raise RuntimeError('call ensure_static_settings with the name {}'.format(settings_name))
+            raise RuntimeError(f'call ensure_static_settings with the name {settings_name}')
 
         return [r._as_tuple()[0] if not withkey else r._as_tuple()[:2] for r in table.rows]
 
@@ -73,7 +73,7 @@ class RtxSession(requests.Session):
             return
 
         client = self.std_client()
-        params = {'s{}'.format(i): v for i, v in enumerate(not_yet_here)}
+        params = {f's{i}': v for i, v in enumerate(not_yet_here)}
         content = client.get('api/static_settings', **params)
 
         for k, table in content.all_tables():
@@ -90,11 +90,11 @@ class RtxSession(requests.Session):
         try:
             r = self.post(self.prefix('api/session-by-pin'), data=p)
         except requests.ConnectionError:
-            raise RtxServerError('The login server {} was unavailable.'.format(self.server_url))
+            raise RtxServerError(f'The login server {self.server_url} was unavailable.')
         except requests.Timeout:
-            raise RtxServerError('The login server {} was slow responding.'.format(self.server_url))
+            raise RtxServerError(f'The login server {self.server_url} was slow responding.')
         if r.status_code not in (200, 210):
-            raise RtxServerError('Login response failed from server {}.\n\n{}'.format(self.server_url, exception_string(r, 'POST')))
+            raise RtxServerError(f"Login response failed from server {self.server_url}.\n\n{exception_string(r, 'POST')}")
         elif r.status_code == 210:
             raise RtxError('Invalid user name or password.  Check your caps lock.')
 
@@ -110,11 +110,11 @@ class RtxSession(requests.Session):
         try:
             r = self.post(self.prefix('api/session/promote-2fa'), data=p)
         except requests.ConnectionError:
-            raise RtxServerError('The login server {} was unavailable.'.format(self.server_url))
+            raise RtxServerError(f'The login server {self.server_url} was unavailable.')
         except requests.Timeout:
-            raise RtxServerError('The login server {} was slow responding.'.format(self.server_url))
+            raise RtxServerError(f'The login server {self.server_url} was slow responding.')
         if r.status_code not in (200, 210):
-            raise RtxServerError('Login response failed from server {}.\n\n{}'.format(self.server_url, exception_string(r, 'POST')))
+            raise RtxServerError(f"Login response failed from server {self.server_url}.\n\n{exception_string(r, 'POST')}")
         elif r.status_code == 210:
             raise RtxError('Invalid user name or password.  Check your caps lock.')
 
@@ -131,11 +131,11 @@ class RtxSession(requests.Session):
         try:
             r = self.post(self.prefix('api/session'), data=p)
         except requests.ConnectionError:
-            raise RtxServerError('The login server {} was unavailable.'.format(self.server_url))
+            raise RtxServerError(f'The login server {self.server_url} was unavailable.')
         except requests.Timeout:
-            raise RtxServerError('The login server {} was slow responding.'.format(self.server_url))
+            raise RtxServerError(f'The login server {self.server_url} was slow responding.')
         if r.status_code not in (200, 210):
-            raise RtxServerError('Login response failed from server {}.\n\n{}'.format(self.server_url, exception_string(r, 'POST')))
+            raise RtxServerError(f"Login response failed from server {self.server_url}.\n\n{exception_string(r, 'POST')}")
         elif r.status_code == 210:
             raise RtxError('Invalid user name or password.  Check your caps lock.')
 

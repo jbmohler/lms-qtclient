@@ -223,7 +223,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
 
     def post_login(self):
         s = self.session
-        self.server_connection.setText('<a href="{}">{}</a> {}'.format(s.prefix(''), s.server_url, s.rtx_user))
+        self.server_connection.setText(f"<a href=\"{s.prefix('')}\">{s.server_url}</a> {s.rtx_user}")
 
         self.construct_file_menu(self.menuBar())
 

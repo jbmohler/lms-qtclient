@@ -25,9 +25,9 @@ class DataBitMixin:
         if self.website not in ["", None]:
             base += "<br /><a href='{0}'>{0}</a>".format(self.website)
         if self.uname not in ["", None]:
-            base += "<br /><b>Username: </b>{}".format(self.uname)
+            base += f"<br /><b>Username: </b>{self.uname}"
         if self.pword not in ["", None]:
-            base += "<br /><b>Password: </b>{}".format(self.pword)
+            base += f"<br /><b>Password: </b>{self.pword}"
 
         return base
 
@@ -184,15 +184,13 @@ class DataBitView(QtWidgets.QWidget):
         self.bit = content.named_table("bit", mixin=DataBitMixin).rows[0]
 
         self.view.setHtml(
-            """
+            f"""
 <html>
 <body>
-{}
+{self.bit.html_view}
 </body>
 </html>
-""".format(
-                self.bit.html_view
-            )
+"""
         )
 
 

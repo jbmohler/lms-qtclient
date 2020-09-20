@@ -53,13 +53,13 @@ class LocalDirectory:
         cliutils.xdg_open(self.dirname)
 
     def _candidates(self, base, extension):
-        yield os.path.join(self.dirname, '{}.{}'.format(base, extension))
+        yield os.path.join(self.dirname, f'{base}.{extension}')
         for i in itertools.count(1):
-            yield os.path.join(self.dirname, '{}-{}.{}'.format(base, i, extension))
+            yield os.path.join(self.dirname, f'{base}-{i}.{extension}')
 
     def user_output_filename(self, title, extension):
         fn_title = re.sub('[/\\&:]', '_', title)
-        base = '{}-{}'.format(fn_title, datetime.datetime.now().isoformat().replace(':', '-'))
+        base = f"{fn_title}-{datetime.datetime.now().isoformat().replace(':', '-')}"
 
         for candidate in self._candidates(base, extension):
             if not os.path.exists(candidate):

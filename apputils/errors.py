@@ -72,7 +72,7 @@ def exception_message(parent, message):
     msgBox.setIcon(QtWidgets.QMessageBox.Critical)
 
     type_, value, tb = sys.exc_info()
-    msgBox.setText('{}\n\nException message:  {}'.format(message, str(value)))
+    msgBox.setText(f'{message}\n\nException message:  {str(value)}')
     msgBox.setDetailedText('\n'.join(traceback.format_exception(type_, value, tb)))
 
     msgBox.exec_()

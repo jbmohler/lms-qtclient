@@ -34,7 +34,7 @@ def xdg_open(file):
             import win32api
             win32api.ShellExecute(0, None, file, None, None, 1)
         except ImportError as e:
-            xx = os.system('start {0}'.format(file))
+            xx = os.system(f'start {file}')
             if xx != 0:
                 raise RuntimeError('could not launch file')
     elif is_wsl():

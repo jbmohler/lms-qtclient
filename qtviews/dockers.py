@@ -24,7 +24,7 @@ class WindowMeta(object):
         return self.settingsKey.startswith("detached_")
 
     def detach(self):
-        self.settingsKey = "detached_{0}".format(uuid.uuid1().hex)
+        self.settingsKey = f"detached_{uuid.uuid1().hex}"
 
 
 class Docker(QtWidgets.QDockWidget):

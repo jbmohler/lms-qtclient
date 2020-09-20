@@ -26,7 +26,7 @@ def shortened_to_72(identifier):
     global SHORT_COUNT
     if len(identifier) > 72:
         SHORT_COUNT += 1
-        identifier = identifier[:32] + 'SHRT{:04n}'.format(SHORT_COUNT) + identifier[-32:]
+        identifier = identifier[:32] + f'SHRT{SHORT_COUNT:04n}' + identifier[-32:]
     return identifier
 
 def tempname(name):
@@ -73,7 +73,7 @@ def components(basedir=None):
         return COMPS
 
 def wxs_render():
-    outfn = tempname('lmssuite-{}.wxs'.format(LMS.VERSION))
+    outfn = tempname(f'lmssuite-{LMS.VERSION}.wxs')
     r1 = open('lmssuite.wxs', 'r').read()
     r2 = template.Template(r1).render(LMS=LMS, components=components)
     open(outfn, 'w').write(r2)

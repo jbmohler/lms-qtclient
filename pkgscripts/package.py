@@ -162,7 +162,7 @@ def main():
     shutil.copytree(os.path.join(PySide2.__path__[0], 'openssl'), os.path.join(outroot, 'binary', 'lib', 'openssl'))
     shutil.copyfile(os.path.join(root, 'pkgscripts', 'redist', 'vcruntime140.dll'), os.path.join(outroot, 'binary', 'vcruntime140.dll'))
     for mexe in GENERATED_EXE:
-        shutil.copyfile(os.path.join(root, 'pkgscripts', 'app.config'), os.path.join(outroot, 'binary', '{}.config'.format(mexe)))
+        shutil.copyfile(os.path.join(root, 'pkgscripts', 'app.config'), os.path.join(outroot, 'binary', f'{mexe}.config'))
 
     #os.startfile(os.path.join(outroot, 'binary'))
     #os.startfile(os.path.join(outroot, 'binary', 'lmssuite.exe'))

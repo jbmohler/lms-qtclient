@@ -99,7 +99,7 @@ class UserRoleMapperTargetsByRole(QtWidgets.QMainWindow):
 
             fred = {'tracker': self.tracker}
             for u in self.role_universe:
-                fred['role_{}'.format(u)] = RoleIndexer(u)
+                fred[f'role_{u}'] = RoleIndexer(u)
             self.MyUserRoleMapperRowMixin = type('MyUserRoleMapperRowMixin', (UserRoleMapperRowMixin,), fred)
 
             with self.tracker.loading():
@@ -113,7 +113,7 @@ class UserRoleMapperTargetsByRole(QtWidgets.QMainWindow):
 
             columns = [c for c in self.records.columns if c.attr in ['username']]
             for u in self.roles.rows:
-                columns.append(apputils.field('role_{}'.format(u.id), u.role_name.replace(' ', '\n', 2), type_='boolean', checkbox=True, editable=True))
+                columns.append(apputils.field(f'role_{u.id}', u.role_name.replace(' ', '\n', 2), type_='boolean', checkbox=True, editable=True))
             self.model = apputils.ObjectQtModel(columns=columns)
 
             with self.geo.grid_reset(self.grid):
@@ -127,7 +127,7 @@ class UserRoleMapperTargetsByRole(QtWidgets.QMainWindow):
 
             self.setEnabled(True)
         except:
-            apputils.exception_message(self, 'There was an error loading {}.'.format(self.TITLE))
+            apputils.exception_message(self, f'There was an error loading {self.TITLE}.')
 
     def save_targets(self):
         try:
@@ -137,7 +137,7 @@ class UserRoleMapperTargetsByRole(QtWidgets.QMainWindow):
 
             self.client.put(self.SRC_URL, data=data, files=files)
         except Exception:
-            apputils.exception_message(self.window(), 'Error saving {}.'.format(self.TITLE))
+            apputils.exception_message(self.window(), f'Error saving {self.TITLE}.')
             raise
 
     def closeEvent(self, event):

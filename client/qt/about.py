@@ -20,13 +20,13 @@ def module_ver(name):
             v = x.__version__
     except:
         v = 'unknown version'
-    return '{0} ({1})'.format(name, v)
+    return f'{name} ({v})'
 
 
 def about_box(parent, header):
     modules = ['Python', QtCore.__name__.split('.')[0], 'requests', 'xlsxwriter']
     vers = '<br />'.join([module_ver(m) for m in modules])
     name = QtWidgets.QApplication.instance().applicationName()
-    QtWidgets.QMessageBox.about(parent, 'About {}'.format(name), """\
+    QtWidgets.QMessageBox.about(parent, f'About {name}', """\
 {}<br />
 <p>Library Versions:  <br />{vers}</p>""".format(header, vers=vers))

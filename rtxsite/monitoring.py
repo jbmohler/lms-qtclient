@@ -15,5 +15,5 @@ def email(target, status, msg):
     email_from = rtxsite.config['alerts'].email_from
     email_to = rtxsite.config['alerts'].email_to
     s = smtplib.SMTP(smtp)
-    s.sendmail(email_from, email_to, 'Subject:  {}\n\n{}'.format(status, msg))
+    s.sendmail(email_from, email_to, f'Subject:  {status}\n\n{msg}')
     s.close()

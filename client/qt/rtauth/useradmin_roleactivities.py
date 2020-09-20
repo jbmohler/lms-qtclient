@@ -138,8 +138,8 @@ class RoleActivityMapperTargets(QtWidgets.QMainWindow):
 
             fred = {'tracker': self.tracker}
             for u in self.role_universe:
-                fred['meta_{}'.format(u)] = RoleIndexer(u)
-                fred['permitted_{}'.format(u)] = RoleIndexerPermitted(u)
+                fred[f'meta_{u}'] = RoleIndexer(u)
+                fred[f'permitted_{u}'] = RoleIndexerPermitted(u)
             self.MyRoleActivityMapperRowMixin = type('MyRoleActivityMapperRowMixin', (RoleActivityMapperRowMixin,), fred)
 
             with self.tracker.loading():
@@ -153,8 +153,8 @@ class RoleActivityMapperTargets(QtWidgets.QMainWindow):
 
             columns = [c for c in self.records.columns if c.attr in ['act_name', 'description']]
             for u in self.roles.rows:
-                a1 = 'meta_{}'.format(u.id)
-                a2 = 'permitted_{}'.format(u.id)
+                a1 = f'meta_{u.id}'
+                a2 = f'permitted_{u.id}'
                 columns.append(apputils.field(a1, u.role_name.replace(' ', '\n', 2), formatter=perm_meta_formatter, check_attr=a2))
             self.model = apputils.ObjectQtModel(columns=columns)
 
@@ -169,7 +169,7 @@ class RoleActivityMapperTargets(QtWidgets.QMainWindow):
 
             self.setEnabled(True)
         except:
-            apputils.exception_message(self, 'There was an error loading {}.'.format(self.TITLE))
+            apputils.exception_message(self, f'There was an error loading {self.TITLE}.')
 
     def save_targets(self):
         try:
@@ -179,7 +179,7 @@ class RoleActivityMapperTargets(QtWidgets.QMainWindow):
 
             self.client.put(self.SRC_URL, data=data, files=files)
         except Exception:
-            apputils.exception_message(self.window(), 'Error saving {}.'.format(self.TITLE))
+            apputils.exception_message(self.window(), f'Error saving {self.TITLE}.')
             raise
 
     def edit_perm_meta(self, index):

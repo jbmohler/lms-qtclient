@@ -82,7 +82,7 @@ class UserListSidebar(QtCore.QObject):
         #self.refresh.emit()
 
     def cmd_delete_user(self, row):
-        if 'Yes' == apputils.message(self.window(), 'Are you sure that you wish to delete the user {}?'.format(row.username), buttons=['Yes', 'No']):
+        if 'Yes' == apputils.message(self.window(), f'Are you sure that you wish to delete the user {row.username}?', buttons=['Yes', 'No']):
             try:
                 self.client.delete(self.SRC_INSTANCE_URL, row.id)
                 self.refresh.emit()
@@ -152,7 +152,7 @@ class UserList(QtWidgets.QWidget):
         self.refresh()
 
     def cmd_delete_user(self, row):
-        if 'Yes' == apputils.message(self.window(), 'Are you sure that you wish to delete the user {}?'.format(row.username), buttons=['Yes', 'No']):
+        if 'Yes' == apputils.message(self.window(), f'Are you sure that you wish to delete the user {row.username}?', buttons=['Yes', 'No']):
             try:
                 self.client.delete(self.SRC_INSTANCE_URL, row.id)
                 self.refresh()
@@ -169,7 +169,7 @@ class UserList(QtWidgets.QWidget):
             with self.geo.grid_reset(self.grid):
                 self.gridmgr.set_client_table(self.records)
         except:
-            apputils.exception_message(self, 'There was an error loading the {}.'.format(self.TITLE))
+            apputils.exception_message(self, f'There was an error loading the {self.TITLE}.')
         finally:
             self.setEnabled(True)
 
@@ -358,7 +358,7 @@ class RoleList(QtWidgets.QWidget):
             with self.geo.grid_reset(self.grid):
                 self.gridmgr.set_client_table(self.records)
         except:
-            apputils.exception_message(self, 'There was an error loading the {}.'.format(self.TITLE))
+            apputils.exception_message(self, f'There was an error loading the {self.TITLE}.')
         finally:
             self.setEnabled(True)
 
@@ -394,7 +394,7 @@ class ActivitySidebar(QtWidgets.QWidget):
         try:
             content = yield
         except Exception as e:
-            self.html.setHtml('<html><body>Error:  {}</body></html>'.format(str(e)))
+            self.html.setHtml(f'<html><body>Error:  {str(e)}</body></html>')
             return
 
         acttable = content.main_table()
@@ -403,7 +403,7 @@ class ActivitySidebar(QtWidgets.QWidget):
         if activity.prompts is None:
             reportgunk = ''
         else:
-            gui_url = 'rtx:report/{}?prompt1=value1'.format(activity.act_name)
+            gui_url = f'rtx:report/{activity.act_name}?prompt1=value1'
             self.prompts = rtlib.PromptList(activity.prompts)
 
             cols = ['label', 'attr', 'type_']
@@ -422,21 +422,20 @@ class ActivitySidebar(QtWidgets.QWidget):
 {}
 """.format(gui_url, self.client.session.server_url, table.as_html(border='1', cellspacing='0'))
 
-        html = """\
-<html>
+        html = f"""<html>
 <body>
-<h2>{}</h2>
+<h2>{activity.description}</h2>
 
-{}
+{reportgunk}
 
 <hr />
 
 <h3>Documentation Note:</h3>
 
-{}
+{activity.note}
 
 </body>
-</html>""".format(activity.description, reportgunk, activity.note)
+</html>"""
         self.html.setHtml(html)
 
         #self.html.page().setLinkDelegationPolicy(QtWebEngineWidgets.QWebEnginePage.DelegateAllLinks)
@@ -537,7 +536,7 @@ class ActivityList(QtWidgets.QWidget):
                 self.gridmgr.table = self.records
                 self.gridmgr._post_model_action()
         except:
-            apputils.exception_message(self, 'There was an error loading the {}.'.format(self.TITLE))
+            apputils.exception_message(self, f'There was an error loading the {self.TITLE}.')
 
     def refresh(self):
         self.backgrounder(self.load, self.client.get, self.URL_TAIL)

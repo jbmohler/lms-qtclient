@@ -13,7 +13,7 @@ def delete_personas_by_tag(session, tagname):
 
     for persona in personas.main_table().rows:
         print('delete -- ', persona)
-        mycli.delete('api/persona/{}'.format(persona.id))
+        mycli.delete(f'api/persona/{persona.id}')
 
 
 if __name__ == '__main__':

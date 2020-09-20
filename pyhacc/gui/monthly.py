@@ -80,7 +80,7 @@ class Exporter(QtWidgets.QDialog):
             if self.end_count >= 4:
                 self.btn_export_all.setEnabled(True)
         except:
-            apputils.exception_message(self, 'There was an error loading {}.'.format(self.TITLE))
+            apputils.exception_message(self, f'There was an error loading {self.TITLE}.')
 
     def load_rpt1(self):
         yield from self.end_report('balance-sheet')
@@ -103,7 +103,7 @@ class Exporter(QtWidgets.QDialog):
         for key in self.results.keys():
             content = self.results[key]
             # fname = exportdir.user_output_filename(key, 'xlsx')
-            fname = exportdir.join('{}-{:%b%d}.xlsx'.format(key, defdate))
+            fname = exportdir.join(f'{key}-{defdate:%b%d}.xlsx')
             view = rtlib.server.uview_from_client_table(content.main_table())
             rform = content.keys.get('report-formats', [])
             if len(rform) > 0:

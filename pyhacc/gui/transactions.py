@@ -101,18 +101,18 @@ class TransactionCore:
     def ascii_repr(self):
         lines = []
         if self.tranrow.trandate is not None:
-            lines.append("Date:  {0}".format(self.tranrow.trandate))
+            lines.append(f"Date:  {self.tranrow.trandate}")
         if self.tranrow.tranref not in [None, ""]:
-            lines.append("Reference:  {0}".format(self.tranrow.tranref))
+            lines.append(f"Reference:  {self.tranrow.tranref}")
         if self.tranrow.payee not in [None, ""]:
-            lines.append("Payee:  {0}".format(self.tranrow.payee))
+            lines.append(f"Payee:  {self.tranrow.payee}")
         if self.tranrow.memo not in [None, ""]:
-            lines.append("Memo:  {0}".format(self.tranrow.memo))
+            lines.append(f"Memo:  {self.tranrow.memo}")
         lines.append("-"*(20+1+12+1+12))
         for x in self.splittable.rows:
-            debstr = " "*12 if x.debit == None else "{0:12.2f}".format(x.debit)
-            credstr = " "*12 if x.credit == None else "{0:12.2f}".format(x.credit)
-            lines.append("{0.account.acc_name:<20} {1} {2}".format(x, debstr, credstr))
+            debstr = " "*12 if x.debit == None else f"{x.debit:12.2f}"
+            credstr = " "*12 if x.credit == None else f"{x.credit:12.2f}"
+            lines.append(f"{x.account.acc_name:<20} {debstr} {credstr}")
         lines.append("-"*(20+1+12+1+12))
 
         return '\n'.join(lines)

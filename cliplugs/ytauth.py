@@ -72,13 +72,13 @@ def reports(cmd, args):
 
     for role, rs in sorted(roles, key=lambda x: x[1]):
         code = code1(rcodes, role)
-        print('{} {}'.format(code, role))
+        print(f'{code} {role}')
 
         for row in table.rows:
             if row.role == role:
                 icode = code3(repcodes, row.description, code)
                 row.code = icode
-                print('   {} {}'.format(icode, row.description))
+                print(f'   {icode} {row.description}')
 
     while True:
         rcode = input('report (code):  ')
@@ -140,7 +140,7 @@ def add_user(cmd, args):
                 match = fuzzyparsers.fuzzy_match(roles.rows, role, mfunc)
                 elected.append(match)
         except ValueError:
-            print('ambiguous match for "{}"'.format(role))
+            print(f'ambiguous match for "{role}"')
             continue
         break
 

@@ -58,4 +58,4 @@ def show_table(table, max_rows=50, max_columns=14, max_colwidth=20):
         args += [formatter(row, c) for c in columns]
         print("|".join(x).format(*args))
     if len(table.rows) > max_rows:
-        print("{} rows; first {}".format(len(table.rows), max_rows))
+        print(f"{len(table.rows)} rows; first {max_rows}")

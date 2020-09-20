@@ -128,7 +128,7 @@ class ReportsDock(QtWidgets.QWidget):
 
             self.setEnabled(True)
         except:
-            utils.exception_message(self.window(), 'There was an error loading the {}.'.format(self.TITLE))
+            utils.exception_message(self.window(), f'There was an error loading the {self.TITLE}.')
 
     def refilter(self, newText):
         self.model2.setFilterFixedString(newText)

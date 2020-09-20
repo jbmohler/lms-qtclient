@@ -70,7 +70,7 @@ def show_link_parented(parent, url):
             break
 
     if not handled:
-        apputils.information(parent, 'Invalid URL string:  {}'.format(url))
+        apputils.information(parent, f'Invalid URL string:  {url}')
 
 def show_link(url):
     from . import winlist
@@ -168,7 +168,7 @@ class ReportClientRowRelateds:
         dynparams = {k: getattr(row, v) for k, v in self.url_dyn_params.items()}
         params.update(dynparams)
         p2 = urllib.parse.urlencode(params)
-        url = '{}?{}'.format(self.url_base, p2)
+        url = f'{self.url_base}?{p2}'
         show_link(url)
 
 def apply_client_row_relateds(ctxmenu, content):

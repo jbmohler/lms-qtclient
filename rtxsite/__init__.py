@@ -40,11 +40,11 @@ def add_fidolib_site(zipname, timeout=None):
         r = requests.get(server+'/install/'+zipname, **kwargs)
     except requests.exceptions.Timeout as e:
         if not os.path.exists(zipfile):
-            info_message('The server {} could not be contacted.  This program must be connected to the RTX network.  {}'.format(server, questions))
+            info_message(f'The server {server} could not be contacted.  This program must be connected to the RTX network.  {questions}')
             sys.exit(1)
     if r == None or r.status_code != 200:
         if not os.path.exists(zipfile):
-            info_message('The file {} could not be downloaded.  {}'.format(server+'/install/'+zipname, questions))
+            info_message(f"The file {server + '/install/' + zipname} could not be downloaded.  {questions}")
             sys.exit(1)
     else:
         with open(zipfile, 'wb') as fd:

@@ -113,7 +113,7 @@ class ImportDataPreview(QtWidgets.QWizardPage):
                         cols.append(target)
                         mapped_columns.append((index, target))
                     else:
-                        warnings.append('Heading {} (column {}) is ignored.'.format(h, index))
+                        warnings.append(f'Heading {h} (column {index}) is ignored.')
             else:
                 try:
                     index += 1
@@ -132,7 +132,7 @@ class ImportDataPreview(QtWidgets.QWizardPage):
                         values[c.attr] = v
                     imported_rows.append(cls(**values))
                 except Exception as e:
-                    errors.append('Row {0}:  {1}'.format(index, str(e)))
+                    errors.append(f'Row {index}:  {str(e)}')
 
         errors = warnings + errors
         if len(errors) > 0 and len(errors) <= 5:

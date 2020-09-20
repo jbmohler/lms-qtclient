@@ -6,7 +6,7 @@ import replicate as api
 cli = api.get_global_router()
 
 def get_field(label, default, type_='basic'):
-    prompt = '{} [{}]:  '.format(label, default)
+    prompt = f'{label} [{default}]:  '
     value = input(prompt)
     if value == '':
         value = default
@@ -24,13 +24,13 @@ class TranController:
     def text_repr(self):
         lines = []
         if self.tranrow.trandate != None:
-            lines.append("Date:  {0}".format(self.tranrow.trandate))
+            lines.append(f"Date:  {self.tranrow.trandate}")
         if self.tranrow.tranref not in [None, ""]:
-            lines.append("Reference:  {0}".format(self.tranrow.tranref))
+            lines.append(f"Reference:  {self.tranrow.tranref}")
         if self.tranrow.payee not in [None, ""]:
-            lines.append("Payee:  {0}".format(self.tranrow.payee))
+            lines.append(f"Payee:  {self.tranrow.payee}")
         if self.tranrow.memo not in [None, ""]:
-            lines.append("Memo:  {0}".format(self.tranrow.memo))
+            lines.append(f"Memo:  {self.tranrow.memo}")
         lines.append("-"*(20+1+12+1+12))
         #for x in self.splits.rows:
         #    lines.append("{0.account:<20} {0.debit:12.2f} {0.credit:12.2f}".format(x))
@@ -101,21 +101,21 @@ def dump_data(session, outdir):
         bscontent = client.get('api/gledger/balance-sheet',
                 date=datetime.date(year, 12, 31))
         bsfile = os.path.join(datadir, str(year),
-                'bal_sheet_{}.html'.format(year))
+                f'bal_sheet_{year}.html')
         rtlib.server.content_write_html(bscontent, bsfile, 'BalanceSheet')
 
         trancontent = client.get('api/transactions/tran-detail',
                 date1=datetime.date(year, 1, 1),
                 date2=datetime.date(year, 12, 31))
         tranfile = os.path.join(datadir, str(year),
-                'transactions_{}.html'.format(year))
+                f'transactions_{year}.html')
         rtlib.server.content_write_html(trancontent, tranfile, 'TransactionList')
 
         plcontent = client.get('api/gledger/detailed-pl',
                 date1=datetime.date(year, 1, 1),
                 date2=datetime.date(year, 12, 31))
         plfile = os.path.join(datadir, str(year),
-                'detail_pl_{}.html'.format(year))
+                f'detail_pl_{year}.html')
         rtlib.server.content_write_html(plcontent, plfile, 'DetailedProfitAndLoss')
 
 
@@ -134,7 +134,7 @@ def dump_prior_month(session, outdir):
     month_begin = datetime.date(year, month, 1)
     month_end = td - datetime.timedelta(days=td.day)
 
-    print('Dumping history {} to {}'.format(month_begin, month_end))
+    print(f'Dumping history {month_begin} to {month_end}')
 
     bscontent = client.get('api/gledger/balance-sheet',
             date=month_end)

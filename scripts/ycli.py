@@ -50,7 +50,7 @@ def loop(session, commands=None):
         except climod.RtxError as e:
             print(str(e))
         except Exception as e:
-            print("ERROR -- {}".format(str(e)))
+            print(f"ERROR -- {str(e)}")
         finally:
             readline.set_auto_history(True)
 
@@ -96,10 +96,10 @@ if __name__ == "__main__":
     client = session.raw_client()
     client.get("api/monitor")
 
-    print("Connected to {} ...".format(session.server_url), file=sys.stderr)
+    print(f"Connected to {session.server_url} ...", file=sys.stderr)
 
     if presession.username is None or presession.password is None:
-        username = input("username [{}]: ".format(presession.username))
+        username = input(f"username [{presession.username}]: ")
         if username == "":
             username = presession.username
         password = getpass.getpass("password: ")

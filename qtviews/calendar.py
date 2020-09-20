@@ -51,8 +51,8 @@ class CalendarRow(object):
         for d in range(7):
             setattr(
                 self,
-                "day{0}".format(d),
-                "{0}".format(self.day0_date + datetime.timedelta(d)),
+                f"day{d}",
+                f"{self.day0_date + datetime.timedelta(d)}",
             )
 
     def entryList(self, index):
@@ -118,7 +118,7 @@ class CalendarDelegate(QtWidgets.QStyledItemDelegate):
         r = options.rect.translated(-options.rect.topLeft())
         r.setHeight(event_height - 2)
         painter.drawText(
-            deflated(r), 0, "{0} {1}".format(this_day.strftime("%B"), this_day.day)
+            deflated(r), 0, f"{this_day.strftime('%B')} {this_day.day}"
         )
 
         visible_count = (options.rect.height() // event_height) - 1
@@ -231,7 +231,7 @@ class CalendarView(TableView):
             datarows.append(CalendarRow(day0, calWeek))
 
         self.rows = ObjectQtModel(
-            columns=[Column("day{0}".format(d), day_names[d]) for d in range(7)]
+            columns=[Column(f"day{d}", day_names[d]) for d in range(7)]
         )
         self.setModel(self.rows)
         self.rows.set_rows(datarows)

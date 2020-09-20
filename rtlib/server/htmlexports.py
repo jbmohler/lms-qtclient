@@ -31,7 +31,7 @@ def content_write_html(content, outfile, rptclass):
     header += [bracket_list([format(p, c) for c in cols], "td") for p in lines]
     table = bracket_list(header, "tr", join='\n')
 
-    heads = ["  <p>{}</p>".format(x) for x in content.keys['headers'][1:]]
+    heads = [f"  <p>{x}</p>" for x in content.keys['headers'][1:]]
     heads = "\n".join(heads)
 
     with open(outfile, 'w') as outf:

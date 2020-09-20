@@ -48,7 +48,7 @@ def write_grid_geometry(grid, name):
             properties = {'width': header.sectionSize(i)}
             if column.hidden != header.isSectionHidden(i):
                 properties['visible'] = not header.isSectionHidden(i)
-            settings.setValue('column-{}'.format(column.attr), json.dumps(properties))
+            settings.setValue(f'column-{column.attr}', json.dumps(properties))
 
         if grid.isSortingEnabled():
             section = header.sortIndicatorSection()
@@ -66,7 +66,7 @@ def write_grid_geometry(grid, name):
             if attr.endswith('#'):
                 x = attr
             else:
-                x = 'after-{}'.format(attr)
+                x = f'after-{attr}'
             if x in keys:
                 settings.remove(x)
 
@@ -76,7 +76,7 @@ def write_grid_geometry(grid, name):
                 if i1 == 0:
                     x = 'after#'
                 else:
-                    x = 'after-{}'.format(natural[i1-1])
+                    x = f'after-{natural[i1 - 1]}'
                 settings.setValue(x, json.dumps(actual[j1:j2]))
     else:
         for i in range(model.columnCount(QtCore.QModelIndex())):
@@ -84,7 +84,7 @@ def write_grid_geometry(grid, name):
                     'width': header.sectionSize(i),
                     'visible': not header.isSectionHidden(i),
                     'visual-index': header.visualIndex(i)}
-            settings.setValue('Column{:02n}'.format(i), json.dumps(properties))
+            settings.setValue(f'Column{i:02n}', json.dumps(properties))
     settings.endGroup()
 
 def read_grid_geometry(grid, name):
@@ -103,7 +103,7 @@ def read_grid_geometry(grid, name):
     visuals = []
     if 'Column00' in settings.childKeys():
         for i in range(model.columnCount(QtCore.QModelIndex())):
-            p = settings.value('Column{:02n}'.format(i), None)
+            p = settings.value(f'Column{i:02n}', None)
             if p == None:
                 if defaults is not None and defaults[i] is not None:
                     grid.setColumnWidth(i, int(float(defaults[i]) * total / defaultTotal))
@@ -131,7 +131,7 @@ def read_grid_geometry(grid, name):
     elif isinstance(model, models.ObjectQtModel):
         widthmult = get_char_width()        
         for i, column in enumerate(model.columns):
-            p = settings.value('column-{}'.format(column.attr), None)
+            p = settings.value(f'column-{column.attr}', None)
             if p == None:
                 if defaults is not None and defaults[i] is not None:
                     grid.setColumnWidth(i, int(float(defaults[i]) * total / defaultTotal))
@@ -169,7 +169,7 @@ def read_grid_geometry(grid, name):
             if attr.endswith('#'):
                 x = attr
             else:
-                x = 'after-{}'.format(attr)
+                x = f'after-{attr}'
             p = settings.value(x, None)
             if p != None:
                 # insert these columns after the other
@@ -380,17 +380,17 @@ class WindowGeometry(QtCore.QObject):
 
     def grid_restore(self, g):
         if g.model() != None:
-            read_grid_geometry(g, '{}/{}'.format(self.name, g.objectName()))
+            read_grid_geometry(g, f'{self.name}/{g.objectName()}')
 
     def grid_save(self, g):
         if g.model() != None:
-            write_grid_geometry(g, '{}/{}'.format(self.name, g.objectName()))
+            write_grid_geometry(g, f'{self.name}/{g.objectName()}')
 
     def splitter_persist_location(self, splitter_index):
         splitter_name = self.splitters[splitter_index].objectName()
         if splitter_name in [None, ""]:
             splitter_name = str(splitter_index)
-        return "splitter/{0}".format(splitter_name)
+        return f"splitter/{splitter_name}"
 
     def updateSplitter(self, splitter_index, pos, index):
         settings = QtCore.QSettings()
@@ -402,7 +402,7 @@ class WindowGeometry(QtCore.QObject):
         tab_name = self.tabs[tab_index].tab.objectName()
         if tab_name in [None, ""]:
             tab_name = str(tab_index)
-        return "tab/{0}/{1}".format(tab_name, v)
+        return f"tab/{tab_name}/{v}"
 
     def updateTabLastSave(self, tab_index, checked, how):
         reopen = None

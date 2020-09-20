@@ -24,13 +24,13 @@ def datetime_formatter(value):
 def integer_formatter(value):
     if value == None:
         return '--'
-    return '{:,}'.format(int(value))
+    return f'{int(value):,}'
 
 def filesize_formatter(value):
     if value == None:
         return ''
 
-    return '{:,} KB'.format(math.ceil(value/1024))
+    return f'{math.ceil(value / 1024):,} KB'
 
 def dollar_formatter(value, blankzero=False):
     """
@@ -48,10 +48,10 @@ def dollar_formatter(value, blankzero=False):
     # check for close to floating point zero
     if blankzero and abs(value) < 0.001:
         return ''
-    return '{:,.2f}'.format(value)
+    return f'{value:,.2f}'
 
 def percent_formatter(value):
-    return '{:,.1%}'.format(value)
+    return f'{value:,.1%}'
 
 @allow_none
 def fixedpoint_nan_formatter(value, decimals):

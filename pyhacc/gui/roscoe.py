@@ -53,7 +53,7 @@ def test_roscoe(session):
         payload = client.post(URL_BASE, data=bound.get_data())
         root = xml.parseString(payload)
         xx = root.toprettyxml()
-        apputils.information(dlg, 'TwiML:\n\n{}'.format(xx), richtext=False)
+        apputils.information(dlg, f'TwiML:\n\n{xx}', richtext=False)
 
     obj = TwilioParams()
     obj.Body = ''

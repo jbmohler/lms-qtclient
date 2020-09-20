@@ -64,13 +64,13 @@ def cell(column, row):
     if v == None:
         pass
     elif column.type_ == 'html':
-        td.append(ET.fromstring('<p>{}</p>'.format(v)))
+        td.append(ET.fromstring(f'<p>{v}</p>'))
     elif column.type_ == 'multiline':
         v = saxutils.escape(v).replace('\n', '<br />')
-        td.append(ET.fromstring('<p>{}</p>'.format(v)))
+        td.append(ET.fromstring(f'<p>{v}</p>'))
     elif column.type_ == 'boolean':
         td.attrib['align'] = 'center'
-        td.append(ET.fromstring('<p>{}</p>'.format(v)))
+        td.append(ET.fromstring(f'<p>{v}</p>'))
     elif link == None:
         td.text = str(v) if str(v) != '' else '\u00a0'
     else:

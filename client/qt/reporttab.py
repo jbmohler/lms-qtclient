@@ -65,7 +65,7 @@ class ReportTab(QtWidgets.QWidget):
 
             self.setEnabled(True)
         except:
-            apputils.exception_message(self, 'There was an error loading the {}.'.format(self.TITLE))
+            apputils.exception_message(self, f'There was an error loading the {self.TITLE}.')
 
     def refresh(self):
         self.backgrounder(self.load, self.client.get, self.URL_TAIL)

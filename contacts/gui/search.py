@@ -22,18 +22,14 @@ class PersonaMixin:
 class BitMixin:
     @property
     def html_view(self):
-        edurl = "local:bit/edit?id={}&type={}".format(self.id, self.bit_type)
-        dturl = "local:bit/delete?id={}&type={}".format(self.id, self.bit_type)
+        edurl = f"local:bit/edit?id={self.id}&type={self.bit_type}"
+        dturl = f"local:bit/delete?id={self.id}&type={self.bit_type}"
         x = [
-            '<a href="{}"><img src="{}"></a>'.format(
-                edurl, "qrc:/contacts/default-edit.png"
-            ),
-            '<a href="{}"><img src="{}"></a>'.format(
-                dturl, "qrc:/contacts/bit-delete.png"
-            ),
-            "<p>{}</p>".format(self.html_chunk()),
+            f"<a href=\"{edurl}\"><img src=\"qrc:/contacts/default-edit.png\"></a>",
+            f"<a href=\"{dturl}\"><img src=\"qrc:/contacts/bit-delete.png\"></a>",
+            f"<p>{self.html_chunk()}</p>",
         ]
-        return "<tr><td>{}{}</td><td>{}</td></tr>".format(x[0], x[1], x[2])
+        return f"<tr><td>{x[0]}{x[1]}</td><td>{x[2]}</td></tr>"
 
     def html_chunk(self):
         es = lambda x: x if x is not None else ""
@@ -67,8 +63,8 @@ class BitMixin:
                     hlink = "(empty)"
                 else:
                     qpass = urllib.parse.quote(bd["password"])
-                    localurl = "local:bit/copy-password?password={}".format(qpass)
-                    hlink = '<a href="{}">Copy Password</a>'.format(localurl)
+                    localurl = f"local:bit/copy-password?password={qpass}"
+                    hlink = f'<a href="{localurl}">Copy Password</a>'
                 lines.append(("Password", hlink))
             x = "<br />".join(["{}: {}".format(*x) for x in lines])
         elif self.bit_type == "phone_numbers":
@@ -78,11 +74,11 @@ class BitMixin:
         else:
             x = str(self.bit_data)
         if self.name not in ["", None]:
-            x = "<b>{}: </b>".format(self.name) + x
+            x = f"<b>{self.name}: </b>" + x
         if self.memo in ["", None]:
             return x
         else:
-            return "{}\n(memo)".format(x)
+            return f"{x}\n(memo)"
 
     def delete_message(self):
         msg = "Are you sure that you want to delete this contact data?"
@@ -541,7 +537,7 @@ class ContactView(QtWidgets.QWidget):
                 if "Yes" == apputils.message(self, msg, buttons=["Yes", "No"]):
                     with apputils.animator(self):
                         self.client.delete(
-                            "api/persona/{}/bit/{}".format(self.persona.id, bb.id)
+                            f"api/persona/{self.persona.id}/bit/{bb.id}"
                         )
                         self.reload()
         else:
@@ -577,7 +573,7 @@ class ContactView(QtWidgets.QWidget):
         self.bits = content.named_table("bits", mixin=BitMixin)
 
         chunks = []
-        chunks.append("<h1>{}</h1>".format(self.persona.full_name))
+        chunks.append(f"<h1>{self.persona.full_name}</h1>")
         if self.persona.memo != None:
             chunks.append(self.persona.memo.replace("\n", "<br />"))
 
