@@ -10,17 +10,19 @@ def qt_app_init(plugpoint):
     import lmssystem.lmsicons
 
     app = QtWidgets.QApplication([])
-    app.setOrganizationDomain('lms.kiwistrawberry.us')
-    app.setOrganizationName('Mohler')
-    app.setApplicationName('lms Data Suite')
-    app.icon = QtGui.QIcon(':/lms/jlm_initials.ico')
-    app.exports_dir = climod.LocalDirectory(appname='lmsDataSuite', tail='Exports')
+    app.setOrganizationDomain("lms.kiwistrawberry.us")
+    app.setOrganizationName("Mohler")
+    app.setApplicationName("lms Data Suite")
+    app.icon = QtGui.QIcon(":/lms/jlm_initials.ico")
+    app.exports_dir = climod.LocalDirectory(appname="lmsDataSuite", tail="Exports")
 
     import platform
+
     if platform.system() == "Windows":
         # This is needed to display the app icon on the taskbar on Windows 7
         import ctypes
-        myappid = f'{app.organizationDomain()}.1.0.0' # arbitrary string
+
+        myappid = f"{app.organizationDomain()}.1.0.0"  # arbitrary string
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     import pyhacc.gui as pg
@@ -42,10 +44,10 @@ def qt_app_init(plugpoint):
 
     return app
 
+
 def replicate_init():
     # import the modules that create new CLI routes
-    import cliplugs.ytauth # noqa: F401
-    import cliplugs.finance # noqa: F401
-    import cliplugs.contacts # noqa: F401
-    import cliplugs.roscoe # noqa: F401
-
+    import cliplugs.ytauth  # noqa: F401
+    import cliplugs.finance  # noqa: F401
+    import cliplugs.contacts  # noqa: F401
+    import cliplugs.roscoe  # noqa: F401

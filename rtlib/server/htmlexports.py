@@ -13,12 +13,13 @@ html_template = """\
 </html>
 """
 
+
 def content_write_html(content, outfile, rptclass):
     table = content.main_table()
     lines = table.rows
     cols = [c for c in table.columns if not c.hidden]
 
-    def bracket_list(ll, td, join=''):
+    def bracket_list(ll, td, join=""):
         return join.join(["<{0}>{1}</{0}>".format(td, i) for i in ll])
 
     def format(p, c):
@@ -27,17 +28,20 @@ def content_write_html(content, outfile, rptclass):
             v = c.formatter(v)
         return v
 
-    header = [bracket_list([c.label.replace('\n', '<br />') for c in cols], "th")]
+    header = [bracket_list([c.label.replace("\n", "<br />") for c in cols], "th")]
     header += [bracket_list([format(p, c) for c in cols], "td") for p in lines]
-    table = bracket_list(header, "tr", join='\n')
+    table = bracket_list(header, "tr", join="\n")
 
-    heads = [f"  <p>{x}</p>" for x in content.keys['headers'][1:]]
+    heads = [f"  <p>{x}</p>" for x in content.keys["headers"][1:]]
     heads = "\n".join(heads)
 
-    with open(outfile, 'w') as outf:
-        outf.write(html_template.format(
-            title=content.keys['headers'][0],
-            version='0.0.1', 
-            rptclass=rptclass,
-            heads=heads,
-            table="<table>\n" + table + "\n</table>"))
+    with open(outfile, "w") as outf:
+        outf.write(
+            html_template.format(
+                title=content.keys["headers"][0],
+                version="0.0.1",
+                rptclass=rptclass,
+                heads=heads,
+                table="<table>\n" + table + "\n</table>",
+            )
+        )

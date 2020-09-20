@@ -8,29 +8,32 @@ import apputils.viewmenus as viewmenus
 
 RTX_EXTENSION_PLUGS = []
 
+
 def add_extension_plug(plug):
     global RTX_EXTENSION_PLUGS
     RTX_EXTENSION_PLUGS.append(plug)
+
 
 def search_export(sbname, state, exports_dir):
     state = QtWidgets.QApplication.instance()
 
     global RTX_EXTENSION_PLUGS
     for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, 'report_formats', None)
+        f = getattr(plug, "report_formats", None)
         if f != None:
             sb = f(state, sbname)
         else:
             sb = None
         if sb != None:
             return sb
+
 
 def search_sidebar(sbname, state, exports_dir):
     state = QtWidgets.QApplication.instance()
 
     global RTX_EXTENSION_PLUGS
     for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, 'load_sidebar', None)
+        f = getattr(plug, "load_sidebar", None)
         if f != None:
             sb = f(state, sbname)
         else:
@@ -38,21 +41,24 @@ def search_sidebar(sbname, state, exports_dir):
         if sb != None:
             return sb
 
+
 def get_menus():
     global RTX_EXTENSION_PLUGS
     for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, 'get_menus', None)
+        f = getattr(plug, "get_menus", None)
         for menuname, items in f():
             yield (menuname, items)
 
+
 def url_params(url):
     values = urllib.parse.parse_qs(url.query())
-    #dict(url.queryItems())
+    # dict(url.queryItems())
     # TODO figure out correct +-decoding
-    #values = {k: v.replace('+', ' ') for k, v in values.items()}
-    #values = {k: urllib.parse.unquote(v) for k, v in values.items()}
+    # values = {k: v.replace('+', ' ') for k, v in values.items()}
+    # values = {k: urllib.parse.unquote(v) for k, v in values.items()}
     values = {k: v[0] for k, v in values.items()}
     return values
+
 
 def show_link_parented(parent, url):
     if not isinstance(url, QtCore.QUrl):
@@ -70,11 +76,14 @@ def show_link_parented(parent, url):
             break
 
     if not handled:
-        apputils.information(parent, f'Invalid URL string:  {url}')
+        apputils.information(parent, f"Invalid URL string:  {url}")
+
 
 def show_link(url):
     from . import winlist
+
     show_link_parented(winlist.main_window(), url)
+
 
 def url_handler(col, ctxmenu):
     def view_item():
@@ -83,8 +92,10 @@ def url_handler(col, ctxmenu):
 
     return view_item
 
+
 ObjectRole = models.ObjectRole
 UrlRole = models.UrlRole
+
 
 def callable_handler(col, ctxmenu, callback, reloads):
     def make_callback():
@@ -96,19 +107,21 @@ def callable_handler(col, ctxmenu, callback, reloads):
 
     return make_callback
 
+
 def callable_should_appear(index, column):
     row = index.data(models.ObjectRole)
     if column.row_url_label != None:
         return True
-    if hasattr(row.__class__, 'model_columns'):
+    if hasattr(row.__class__, "model_columns"):
         return column.attr in row.__class__.model_columns
     return True
+
 
 def callable_is_enabled(index, column):
     row = index.data(models.ObjectRole)
     if column.row_url_label != None:
         return True
-    if hasattr(row.__class__, 'model_columns'):
+    if hasattr(row.__class__, "model_columns"):
         thecol = row.__class__.model_columns.get(column.attr)
     else:
         thecol = column
@@ -117,30 +130,42 @@ def callable_is_enabled(index, column):
     if thecol.url_key == None:
         checkattr = thecol.attr
     else:
-        checkattr = thecol.url_key.split(',')[0]
+        checkattr = thecol.url_key.split(",")[0]
     return getattr(row, checkattr, None) != None
 
+
 def apply_column_url_views(ctxmenu, model, no_default=False):
-    collist = model.columns_full if hasattr(model, 'columns_full') else model.columns
+    collist = model.columns_full if hasattr(model, "columns_full") else model.columns
     for col in collist:
         for action_defn in col.actions:
             if action_defn.matches_scope(col):
                 action = None
-                if action_defn.callback == '__url__':
+                if action_defn.callback == "__url__":
                     if col.url_factory != None:
                         action = QtWidgets.QAction(ctxmenu.parent())
                         action.triggered.connect(url_handler(col, ctxmenu))
-                        action.should_appear = lambda index, column=col: callable_should_appear(index, column)
-                        action.is_enabled = lambda index, column=col: callable_is_enabled(index, column)
+                        action.should_appear = lambda index, column=col: callable_should_appear(
+                            index, column
+                        )
+                        action.is_enabled = lambda index, column=col: callable_is_enabled(
+                            index, column
+                        )
                 else:
                     action = QtWidgets.QAction(ctxmenu.parent())
-                    action.triggered.connect(callable_handler(col, ctxmenu, action_defn.callback, action_defn.reloads))
+                    action.triggered.connect(
+                        callable_handler(
+                            col, ctxmenu, action_defn.callback, action_defn.reloads
+                        )
+                    )
 
                 if action != None:
                     label = action_defn.interpolated_label(col)
                     action.setText(label)
-                    isdefault = col.represents and action_defn.defaulted and not no_default
+                    isdefault = (
+                        col.represents and action_defn.defaulted and not no_default
+                    )
                     ctxmenu.add_action(action, default=isdefault)
+
 
 class ReportClientRowRelateds:
     def __init__(self, *args):
@@ -168,22 +193,26 @@ class ReportClientRowRelateds:
         dynparams = {k: getattr(row, v) for k, v in self.url_dyn_params.items()}
         params.update(dynparams)
         p2 = urllib.parse.urlencode(params)
-        url = f'{self.url_base}?{p2}'
+        url = f"{self.url_base}?{p2}"
         show_link(url)
 
+
 def apply_client_row_relateds(ctxmenu, content):
-    rel = content.keys.get('client-row-relateds', [])
+    rel = content.keys.get("client-row-relateds", [])
     ctxmenu.rcrr = [ReportClientRowRelateds(*x) for x in rel]
     for rc in ctxmenu.rcrr:
         ctxmenu.add_action(rc.action(ctxmenu.parent(), ctxmenu))
 
+
 def apply_client_relateds(ctxmenu, content):
-    relateds = content.keys.get('client-relateds', [])
+    relateds = content.keys.get("client-relateds", [])
     actions = []
     for label, link in relateds:
         act = QtWidgets.QAction(label, ctxmenu.parent())
+
         def action(xlink=link):
             show_link(xlink)
+
         act.triggered.connect(lambda: action())
         actions.append(act)
         ctxmenu.addAction(act)
@@ -195,11 +224,12 @@ def client_table_as_model(table, parent, include_data=True, blank_row=False):
     m.columns_full = table.columns_full
     if include_data:
         if blank_row:
-            xx = table.DataRow(*tuple((None,)*len(table.DataRow.__slots__)))
+            xx = table.DataRow(*tuple((None,) * len(table.DataRow.__slots__)))
             m.set_rows([xx] + table.rows)
         else:
             m.set_rows(table.rows)
     return m
+
 
 class GridManager(QtCore.QObject):
     current_row_update = QtCore.Signal()
@@ -246,9 +276,9 @@ class GridManager(QtCore.QObject):
         kwargs = {}
         for a in args:
             v = None
-            if a == 'rows':
+            if a == "rows":
                 v = self.selected_rows()
-            elif a == 'row':
+            elif a == "row":
                 if self.ctxmenu.active_index != None:
                     v = self.ctxmenu.active_index.data(models.ObjectRole)
                 else:
@@ -266,7 +296,7 @@ class GridManager(QtCore.QObject):
         # add client-row-relateds
         # TODO: support this
         # apply_client_row_relateds(self.ctxmenu, self.run.content)
-        #self.my_actions = apply_client_relateds(self.power_menu, self.run.content)
+        # self.my_actions = apply_client_relateds(self.power_menu, self.run.content)
         if not self.fixed_rowset:
             self.ctxmenu.add_action(self.delete_action)
         for act in self._core_actions:
@@ -297,10 +327,12 @@ class GridManager(QtCore.QObject):
 
         self._post_model_action()
 
+
 class ThunkImporter:
     def __init__(self, import_row=None, assess_row=None):
         self.import_row = import_row
         self.assess_row = assess_row
+
 
 class EditableGridManager(GridManager):
     def __init__(self, grid, parent, fixed_rowset=False):
@@ -312,8 +344,8 @@ class EditableGridManager(GridManager):
         self._core_actions = []
         self.fixed_rowset = fixed_rowset
 
-        self.delete_action = QtWidgets.QAction('&Delete Row', self.grid)
-        self.delete_action.setShortcut('Ctrl+Delete')
+        self.delete_action = QtWidgets.QAction("&Delete Row", self.grid)
+        self.delete_action.setShortcut("Ctrl+Delete")
         self.delete_action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.delete_action.triggered.connect(self.delete_current_row)
 
@@ -333,7 +365,7 @@ class EditableGridManager(GridManager):
 
     def delete_current_row(self):
         if not self.table:
-            return 
+            return
 
         # get selection from grid & delete
         index = self.grid.currentIndex()

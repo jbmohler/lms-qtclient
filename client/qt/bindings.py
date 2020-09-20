@@ -1,6 +1,7 @@
 from PySide2 import QtCore, QtWidgets
 import apputils
 
+
 class Binder(QtCore.QObject):
     def __init__(self, parent):
         super(Binder, self).__init__(parent)
@@ -26,8 +27,8 @@ class Binder(QtCore.QObject):
             return
         setattr(self.bound, attr, v)
         self.widgets[attr].setWidgetModified(False)
-        #uk = (something)[attr].url_key
-        #if uk != None:
+        # uk = (something)[attr].url_key
+        # if uk != None:
         #    setattr(self.bound, uk, self.widgets[attr].key_value())
 
     def bind(self, row, columns=None):

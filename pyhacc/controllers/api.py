@@ -1,4 +1,3 @@
-
 class Controller:
     def preset_group(self, **kwargs):
         pass
@@ -8,6 +7,7 @@ class Controller:
 
     def values_changed(self):
         pass
+
 
 class ControlledModelRow:
     controller = None

@@ -4,6 +4,7 @@ from . import reportcore
 from . import html
 from . import server
 
+
 def augment_table(table, insert_columns, xform):
     columns = table.DataRow.__slots__
     for instuple in insert_columns:
@@ -21,10 +22,12 @@ def augment_table(table, insert_columns, xform):
     tx.rows = rlist
     return tx
 
+
 def simple_table(columns, column_map=None):
     if column_map == None:
         column_map = {}
     return ClientTable([(c, column_map.get(c, None)) for c in columns], [])
+
 
 class TypedTable:
     """
@@ -36,14 +39,14 @@ class TypedTable:
         self.columns = columns
 
     def as_html(self, **kwargs):
-        return html.styled_html_table(self.columns, self.rows, **kwargs).decode('utf8')
+        return html.styled_html_table(self.columns, self.rows, **kwargs).decode("utf8")
 
     def as_html_xml(self, **kwargs):
         return html.html_table(self.columns, self.rows, **kwargs)
 
     def as_form_html(self, row=None, exclude=None, include=None, labels=True):
         if exclude != None and include != None:
-            raise RuntimeError('unclear meaning')
+            raise RuntimeError("unclear meaning")
 
         if exclude != None:
             c2 = [c for c in self.columns if c.attr not in exclude]
@@ -57,10 +60,11 @@ class TypedTable:
             row = self.rows[0]
         for c in c2:
             if labels:
-                lines.append(f'<b>{c.label}</b>:  {html.rc_value(c, row)}')
+                lines.append(f"<b>{c.label}</b>:  {html.rc_value(c, row)}")
             else:
                 lines.append(html.rc_value(c, row))
-        return '<br />'.join(lines)
+        return "<br />".join(lines)
+
 
 class ExpansionAlignment:
     def __init__(self, *args):
@@ -94,7 +98,11 @@ class ClientTable:
         self.rows = [f(x) for x in rows]
 
         # initialize pkey for deletion
-        pkey = [col[0] for col in columns if col[1] != None and col[1].get('primary_key', False)]
+        pkey = [
+            col[0]
+            for col in columns
+            if col[1] != None and col[1].get("primary_key", False)
+        ]
         self.pkey = pkey
 
         self.columns = reportcore.parse_columns(columns)
@@ -103,7 +111,7 @@ class ClientTable:
 
         self.deleted_rows = []
 
-    def duplicate(self, rows, deleted='duplicate'):
+    def duplicate(self, rows, deleted="duplicate"):
         # TODO:  make sure that deleted rows don't show up here as rows to save
         x = self.__class__.__new__(self.__class__)
         x.DataRow = self.DataRow
@@ -111,17 +119,19 @@ class ClientTable:
         x.columns = self.columns
         x.columns_full = self.columns_full
         x.pkey = self.pkey
-        if deleted == 'duplicate':
+        if deleted == "duplicate":
             x.deleted_rows = list(self.deleted_rows)
         else:
-            raise NotImplementedError('this value of deleted not handled')
+            raise NotImplementedError("this value of deleted not handled")
         return x
 
     def converter(self, row_field_list):
         return reportcore.as_python(row_field_list, to_localtime=self.to_localtime)
 
     def row_factory(self, row_field_list, mixin):
-        self.DataRow = reportcore.fixedrecord('DataRow', [r[0] for r in row_field_list], mixin=mixin)
+        self.DataRow = reportcore.fixedrecord(
+            "DataRow", [r[0] for r in row_field_list], mixin=mixin
+        )
         to_python = self.converter(row_field_list)
 
         def init_bare(r):
@@ -134,7 +144,7 @@ class ClientTable:
             x._rtlib_init_()
             return x
 
-        return init_custom if hasattr(self.DataRow, '_rtlib_init_') else init_bare
+        return init_custom if hasattr(self.DataRow, "_rtlib_init_") else init_bare
 
     def recorded_delete(self, row):
         index = self.rows.index(row)
@@ -152,7 +162,7 @@ class ClientTable:
         row = self.flipper_row()
         yield row
         self.rows.append(row)
-        if hasattr(row, '_row_added_'):
+        if hasattr(row, "_row_added_"):
             row._row_added_()
 
     def flipper_row(self):
@@ -160,7 +170,7 @@ class ClientTable:
         try:
             newself._init_block = True
             newself.__init__(**{a: None for a in self.DataRow.__slots__})
-            if hasattr(newself, '_init_flipper_'):
+            if hasattr(newself, "_init_flipper_"):
                 newself._init_flipper_()
             return newself
         finally:
@@ -173,7 +183,9 @@ class ClientTable:
         return TypedTable(self.columns, self.rows).as_html_xml(**kwargs)
 
     def as_form_html(self, row=None, exclude=None, include=None, labels=True):
-        return TypedTable(self.columns, self.rows).as_form_html(row=row, exclude=exclude, include=include, labels=labels)
+        return TypedTable(self.columns, self.rows).as_form_html(
+            row=row, exclude=exclude, include=include, labels=labels
+        )
 
     def as_tab2(self, column_map=None):
         """
@@ -187,10 +199,17 @@ class ClientTable:
         rows = [r._as_tuple() for r in self.rows]
         return columns, rows
 
-    def as_writable(self, exclusions=None, inclusions=None, extensions=None, getter=None):
+    def as_writable(
+        self, exclusions=None, inclusions=None, extensions=None, getter=None
+    ):
         assert exclusions == None or inclusions == None
 
-        if exclusions == None and inclusions == None and extensions == None and getter == None:
+        if (
+            exclusions == None
+            and inclusions == None
+            and extensions == None
+            and getter == None
+        ):
             attrs = self.DataRow.__slots__
             slimrows = [r._as_tuple() for r in self.rows]
         else:
@@ -212,9 +231,11 @@ class ClientTable:
         keys = {}
         if len(self.deleted_rows):
             if len(self.pkey) == 0:
-                raise RuntimeError('no primary key declared; needed for deleted row set')
+                raise RuntimeError(
+                    "no primary key declared; needed for deleted row set"
+                )
             pfunc = lambda row: [getattr(row, p1) for p1 in self.pkey]
-            keys['deleted'] = [pfunc(row) for row in self.deleted_rows]
+            keys["deleted"] = [pfunc(row) for row in self.deleted_rows]
         return (keys, attrs, slimrows)
 
     def as_http_post_file(self, *args, **kwargs):

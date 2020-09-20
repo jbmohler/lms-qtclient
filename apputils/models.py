@@ -5,6 +5,7 @@ import valix
 from rtlib import Column, field, ModelMixin
 from PySide2 import QtCore, QtGui
 
+
 def base_columned_model(m1):
     if isinstance(m1, QtCore.QAbstractProxyModel):
         m1 = m1.sourceModel()
@@ -13,24 +14,29 @@ def base_columned_model(m1):
     else:
         return None
 
+
 class ValueSetRefusal(ValueError):
     pass
 
-HILITE_BK_COLOR = '#ecf469'
 
-ObjectRole = QtCore.Qt.UserRole+1
-ColumnAttributeRole = QtCore.Qt.UserRole+2
-ColumnMetaRole = QtCore.Qt.UserRole+3
-UrlRole = QtCore.Qt.UserRole+4
-DecimalRole = QtCore.Qt.UserRole+5
-RenderRole = QtCore.Qt.UserRole+6
+HILITE_BK_COLOR = "#ecf469"
+
+ObjectRole = QtCore.Qt.UserRole + 1
+ColumnAttributeRole = QtCore.Qt.UserRole + 2
+ColumnMetaRole = QtCore.Qt.UserRole + 3
+UrlRole = QtCore.Qt.UserRole + 4
+DecimalRole = QtCore.Qt.UserRole + 5
+RenderRole = QtCore.Qt.UserRole + 6
 
 RenderNormal = None
 RenderHtml = 1
 RenderMultiline = 2
 
+
 class ObjectQtModel(QtCore.QAbstractItemModel):
-    def __init__(self, columns, rowprops=None, parent=None, descendant_attr=None, dataclass=None):
+    def __init__(
+        self, columns, rowprops=None, parent=None, descendant_attr=None, dataclass=None
+    ):
         # TODO: address TieredObjectQtModel duplicate
         super(ObjectQtModel, self).__init__(parent)
         ModelMixin.__init__(self, columns, rowprops)
@@ -41,14 +47,16 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
 
         try:
             # rather ham-fisted approach to locking stuff to top of cells automatically
-            self.lockvert = len([c for c in self.columns if c.type_ in ('multiline', 'html')]) > 0
+            self.lockvert = (
+                len([c for c in self.columns if c.type_ in ("multiline", "html")]) > 0
+            )
         except:
             # rather ham-fisted hack in ham-fisted algorithm to fallback to default
             self.lockvert = False
 
-        self._main_rows = None # live rows
-        self._flip_rows = None # flipper rows before edit
-        self._fltr_rows = None # currently showing rows (not including flipper)
+        self._main_rows = None  # live rows
+        self._flip_rows = None  # flipper rows before edit
+        self._fltr_rows = None  # currently showing rows (not including flipper)
 
         if dataclass == None:
             self.constraint_functions = []
@@ -60,7 +68,7 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
         if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
             return self.columns[col].label
         if orientation == QtCore.Qt.Vertical and role == QtCore.Qt.DisplayRole:
-            return str(col+1)
+            return str(col + 1)
         return None
 
     def sort(self, column, order):
@@ -72,7 +80,10 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
         else:
             sortlist = self._fltr_rows[:]
         c = self.columns[column]
-        sortlist.sort(key=lambda x: c.sortkey(getattr(x, c.attr)), reverse=order == QtCore.Qt.DescendingOrder)
+        sortlist.sort(
+            key=lambda x: c.sortkey(getattr(x, c.attr)),
+            reverse=order == QtCore.Qt.DescendingOrder,
+        )
         self.beginResetModel()
         if usemain:
             self._main_rows = sortlist
@@ -81,12 +92,12 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
         self.endResetModel()
 
     def removeRows(self, row, count, parent):
-        assert not parent.isValid(), 'hierarchical models not supported here (yet)'
+        assert not parent.isValid(), "hierarchical models not supported here (yet)"
 
-        self.beginRemoveRows(parent, row, row+count-1)
+        self.beginRemoveRows(parent, row, row + count - 1)
         holder = self._main_rows if self._fltr_rows == None else self._fltr_rows
-        todel = holder[row:row+count]
-        del holder[row:row+count]
+        todel = holder[row : row + count]
+        del holder[row : row + count]
         if self._fltr_rows != None:
             for row in todel:
                 if row in self._main_rows:
@@ -214,7 +225,7 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
         try:
             holder = self._main_rows if self._fltr_rows == None else self._fltr_rows
             if holder == None:
-                raise ValueError('not yet initialized with rows')
+                raise ValueError("not yet initialized with rows")
             rowindex = holder.index(obj)
         except ValueError:
             return QtCore.QModelIndex()
@@ -231,7 +242,10 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
         parent = QtCore.QModelIndex()
         if row > self.rowCount(parent) or row < 0:
             return QtCore.QModelIndex(), QtCore.QModelIndex()
-        return self.index(row, 0, parent), self.index(row, len(self.columns)-1, parent)
+        return (
+            self.index(row, 0, parent),
+            self.index(row, len(self.columns) - 1, parent),
+        )
 
     def index_object(self, obj, parent=None):
         try:
@@ -239,7 +253,10 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
             row = holder.index(obj)
         except ValueError:
             return QtCore.QModelIndex(), QtCore.QModelIndex()
-        return self.index(row, 0, parent), self.index(row, len(self.columns)-1, parent)
+        return (
+            self.index(row, 0, parent),
+            self.index(row, len(self.columns) - 1, parent),
+        )
 
     def index_columns(self, column, parent=None):
         colindex = None
@@ -250,7 +267,10 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
             return
         count = self.rowCount(parent)
         if count > 0:
-            return self.index(0, colindex, parent), self.index(count-1, colindex, parent)
+            return (
+                self.index(0, colindex, parent),
+                self.index(count - 1, colindex, parent),
+            )
         else:
             return QtCore.QModelIndex(), QtCore.QModelIndex()
 
@@ -287,7 +307,7 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
             if c.checkbox:
                 return None
             func = c.formatter
-            if primary_value == None and not getattr(func, 'allow_none', False):
+            if primary_value == None and not getattr(func, "allow_none", False):
                 return None
             return func(primary_value)
         elif role == QtCore.Qt.EditRole:
@@ -298,23 +318,37 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
             if c.checkbox:
                 return QtCore.Qt.Checked if primary_value else QtCore.Qt.Unchecked
             elif c.check_attr != None:
-                return QtCore.Qt.Checked if getattr(r, c.check_attr) else QtCore.Qt.Unchecked
+                return (
+                    QtCore.Qt.Checked
+                    if getattr(r, c.check_attr)
+                    else QtCore.Qt.Unchecked
+                )
         elif role == QtCore.Qt.TextAlignmentRole:
             align = c.alignment
             hori = "left"
             vert = "top" if self.lockvert else "vcenter"
             if align is not None:
-                t = align.split('-', 1)
+                t = align.split("-", 1)
                 if len(t) == 1:
                     hori = align
                 else:
                     hori, vert = t
             # should not have to cast to int in either of these returns
             # see https://bugreports.qt-project.org/browse/PYSIDE-20
-        #     if hasattr(r,"textAlignmentRole"):
-        #         return int(r.textAlignmentRole(c))
-            return int({"left": QtCore.Qt.AlignLeft, "hcenter": QtCore.Qt.AlignHCenter, "right": QtCore.Qt.AlignRight}[hori] | \
-                     {"top": QtCore.Qt.AlignTop, "vcenter": QtCore.Qt.AlignVCenter, "bottom": QtCore.Qt.AlignBottom}[vert])
+            #     if hasattr(r,"textAlignmentRole"):
+            #         return int(r.textAlignmentRole(c))
+            return int(
+                {
+                    "left": QtCore.Qt.AlignLeft,
+                    "hcenter": QtCore.Qt.AlignHCenter,
+                    "right": QtCore.Qt.AlignRight,
+                }[hori]
+                | {
+                    "top": QtCore.Qt.AlignTop,
+                    "vcenter": QtCore.Qt.AlignVCenter,
+                    "bottom": QtCore.Qt.AlignBottom,
+                }[vert]
+            )
         # elif role == QtCore.Qt.FontRole:
         #     if hasattr(r,"fontRole"):
         #         # return r.fontRole(c)
@@ -324,8 +358,8 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
             if c.foreground_attr != None:
                 v = getattr(r, c.foreground_attr)
                 return QtGui.QColor(v)
-            if 'foreground' in self.rowprops:
-                v = getattr(r, self.rowprops['foreground'])
+            if "foreground" in self.rowprops:
+                v = getattr(r, self.rowprops["foreground"])
                 return QtGui.QColor(v)
         elif role == QtCore.Qt.BackgroundRole:
             if self._hilite != None and primary_value != None:
@@ -338,8 +372,8 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
             if c.background_attr != None:
                 v = getattr(r, c.background_attr)
                 return QtGui.QColor(v)
-            if 'background' in self.rowprops:
-                v = getattr(r, self.rowprops['background'])
+            if "background" in self.rowprops:
+                v = getattr(r, self.rowprops["background"])
                 return QtGui.QColor(v)
         # elif role >= QtCore.Qt.UserRole:
         #     assert QtCore.Qt.UserRole <= role < QtCore.Qt.UserRole+len(self.columns)
@@ -353,16 +387,20 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
         elif role == DecimalRole:
             if c.is_numeric and primary_value != None:
                 # TODO:  find a better way to get decimals
-                if c.type_ == 'currency_usd':
-                    return decimal.Decimal(primary_value).quantize(decimal.Decimal('.01'))
+                if c.type_ == "currency_usd":
+                    return decimal.Decimal(primary_value).quantize(
+                        decimal.Decimal(".01")
+                    )
                 else:
-                    return decimal.Decimal(primary_value).quantize(decimal.Decimal('.01'))
+                    return decimal.Decimal(primary_value).quantize(
+                        decimal.Decimal(".01")
+                    )
             else:
                 return None
         elif role == RenderRole:
-            if c.type_ == 'html':
+            if c.type_ == "html":
                 return RenderHtml
-            if c.type_ == 'multiline':
+            if c.type_ == "multiline":
                 return RenderMultiline
             return RenderNormal
 
@@ -371,8 +409,8 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if not index.isValid():
             return None
-        #elif role != QtCore.Qt.DisplayRole and role != QtCore.Qt.EditRole:
-            #return None
+        # elif role != QtCore.Qt.DisplayRole and role != QtCore.Qt.EditRole:
+        # return None
 
         c = self._column_at_index(index)
 
@@ -408,7 +446,9 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
         # add siblings of values to check to list of values to check
         self._values_to_check.sort(key=lambda x: id(x[0]))
         v2 = []
-        for idrow, cells in itertools.groupby(self._values_to_check, key=(lambda x: id(x[0]))):
+        for idrow, cells in itertools.groupby(
+            self._values_to_check, key=(lambda x: id(x[0]))
+        ):
             clist = list(cells)
             attrs = set([at1 for row, at1 in clist])
             row = clist[0][0]
@@ -426,7 +466,7 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
         return True
 
     def append_change_value(self, row, attr):
-        if not hasattr(self, '_values_to_check'):
+        if not hasattr(self, "_values_to_check"):
             # drop it on the floor
             return
         self._values_to_check.append((row, attr))
@@ -453,7 +493,9 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
 
 
 class TieredObjectQtModel(ObjectQtModel):
-    def __init__(self, columns, dataclasses, rowprops=None, parent=None, descendant_attr=None):
+    def __init__(
+        self, columns, dataclasses, rowprops=None, parent=None, descendant_attr=None
+    ):
         # TODO:  address ObjectQtModel duplicate
         super(TieredObjectQtModel, self).__init__(parent)
         ModelMixin.__init__(self, columns, rowprops)
@@ -464,9 +506,9 @@ class TieredObjectQtModel(ObjectQtModel):
         self.dataclasses = dataclasses
 
         self.constraint_functions = []
-        #if dataclass == None:
+        # if dataclass == None:
         #    self.constraint_functions = []
-        #else:
+        # else:
         #    self.constraint_functions = valix.class_constraints(dataclass)
         self.invalid_fields = set()
 

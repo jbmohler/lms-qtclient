@@ -5,8 +5,10 @@ exact widget used.
 """
 from PySide2 import QtCore
 
+
 class ModValueError(ValueError):
     pass
+
 
 class ModifiedMixin:
     # Widgets implementing ModifiedMixin are expected to have methods `value`
@@ -16,7 +18,7 @@ class ModifiedMixin:
 
     # _modified = 0 (no changes); 2 (changed, not yet set model); 1 (changed and applied)
     def widgetModified(self):
-        return self._modified if hasattr(self, '_modified') else 0
+        return self._modified if hasattr(self, "_modified") else 0
 
     def setWidgetModified(self, mod):
         # this signal is set up in as_modifiable
@@ -61,12 +63,11 @@ class ModifiedMixin:
 
 
 def as_modifiable(kls):
-    signals = {\
-            'valueChanged': QtCore.Signal(),
-            'applyValue': QtCore.Signal()}
-    return type('Modifiable'+kls.__name__, (kls, ModifiedMixin), signals)
+    signals = {"valueChanged": QtCore.Signal(), "applyValue": QtCore.Signal()}
+    return type("Modifiable" + kls.__name__, (kls, ModifiedMixin), signals)
+
 
 def is_modifiable(e):
     # This is an approximate check for the interface defined by ModifiedMixin.
     # We might want to consider using Python's abc module.
-    return hasattr(e, 'setValueApplied')
+    return hasattr(e, "setValueApplied")

@@ -25,47 +25,39 @@ from . import evaluator
 EXCEL_MAX_URLS = 1e8
 EXCEL_HARD_MAX = 65530
 
+
 class WorkbookHelpers:
     """
     This class is set of callback helpers for rtlib family grouped reports.
     """
+
     def __init__(self, workbook):
-        self.bold_format = workbook.add_format({\
-                        'bold': True})
-        self.wrapped_format = workbook.add_format({\
-                        'text_wrap': True})
-        self.boldwrap_format = workbook.add_format({\
-                        'bold': True,
-                        'text_wrap': True})
-        self.group_header = workbook.add_format({\
-                        'align': 'center',
-                        'bold': True,
-                        'font_size': 14,
-                        'bottom': 2})
-        self.url_format = workbook.add_format({\
-                        'font_color': 'blue',
-                        'underline': 1})
-        self.url_right_format = workbook.add_format({\
-                        'font_color': 'blue',
-                        'underline': 1, 
-                        'align': 'right'})
-        self.right_format = workbook.add_format({\
-                        'align': 'right'})
-        self.date_format = workbook.add_format({\
-                        'num_format': 'mm/dd/yyyy',
-                        'align': 'left'})
-        self.datetime_format = workbook.add_format({\
-                        'num_format': 'mm/dd/yyyy hh:mm:ss', 
-                        'align': 'left'})
-        self.percent_format = workbook.add_format({\
-                        'num_format': '0%'})
-        self.bold_currency_format = workbook.add_format({\
-                        'bold': True,
-                        'num_format': '#,##0.00'})
-        self.currency_accounting_truncated_format = workbook.add_format({\
-                        'num_format': '#,##0_);(#,##0)'})
-        self.currency_format = workbook.add_format({\
-                        'num_format': '#,##0.00'})
+        self.bold_format = workbook.add_format({"bold": True})
+        self.wrapped_format = workbook.add_format({"text_wrap": True})
+        self.boldwrap_format = workbook.add_format({"bold": True, "text_wrap": True})
+        self.group_header = workbook.add_format(
+            {"align": "center", "bold": True, "font_size": 14, "bottom": 2}
+        )
+        self.url_format = workbook.add_format({"font_color": "blue", "underline": 1})
+        self.url_right_format = workbook.add_format(
+            {"font_color": "blue", "underline": 1, "align": "right"}
+        )
+        self.right_format = workbook.add_format({"align": "right"})
+        self.date_format = workbook.add_format(
+            {"num_format": "mm/dd/yyyy", "align": "left"}
+        )
+        self.datetime_format = workbook.add_format(
+            {"num_format": "mm/dd/yyyy hh:mm:ss", "align": "left"}
+        )
+        self.percent_format = workbook.add_format({"num_format": "0%"})
+        self.bold_currency_format = workbook.add_format(
+            {"bold": True, "num_format": "#,##0.00"}
+        )
+        self.currency_accounting_truncated_format = workbook.add_format(
+            {"num_format": "#,##0_);(#,##0)"}
+        )
+        self.currency_format = workbook.add_format({"num_format": "#,##0.00"})
+
 
 class BBColumn:
     def __init__(self, index, letter, attr):
@@ -74,12 +66,14 @@ class BBColumn:
         self.attr = attr
 
     def cell(self, index):
-        return f'{self.letter}{index + 1}'
+        return f"{self.letter}{index + 1}"
+
 
 class BBRow:
     def __init__(self, index, row):
         self.index = index
         self.row = row
+
 
 class TableBoundingBox:
     def __init__(self):
@@ -98,8 +92,19 @@ class TableBoundingBox:
     def rows(self):
         return [b.row for b in self.bound_rows]
 
-def export_view(fname, view, headers=None, options=None, sort_key=None,
-        max_url=EXCEL_MAX_URLS, suppress_grouped_column=False, group_start_callback=None, group_end_callback=None, hyperlinks=True):
+
+def export_view(
+    fname,
+    view,
+    headers=None,
+    options=None,
+    sort_key=None,
+    max_url=EXCEL_MAX_URLS,
+    suppress_grouped_column=False,
+    group_start_callback=None,
+    group_end_callback=None,
+    hyperlinks=True,
+):
     """
     Export a grid to an excel xlsx file with column order and widths matching
     the passed view.
@@ -128,22 +133,26 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
         options = {}
 
     model = view.model()
-    if hasattr(view, 'header'):
+    if hasattr(view, "header"):
         header = view.header()
-        columns_visible = [(c, index) for index, c in enumerate(model.columns) if not header.isSectionHidden(index)]
+        columns_visible = [
+            (c, index)
+            for index, c in enumerate(model.columns)
+            if not header.isSectionHidden(index)
+        ]
         columns_visible.sort(key=lambda x: header.visualIndex(x[1]))
         columns = [c for c, _ in columns_visible]
     else:
         columns_visible = [(c, index) for index, c in enumerate(model.columns)]
         columns = [c for c in model.columns]
-    if hasattr(model, 'exportcolumns'):
+    if hasattr(model, "exportcolumns"):
         columns = [c for c in columns if c.attr in model.exportcolumns]
-    if suppress_grouped_column and 'row_group' in options:
-        columns = [c for c in columns if c.attr != options['row_group']]
+    if suppress_grouped_column and "row_group" in options:
+        columns = [c for c in columns if c.attr != options["row_group"]]
 
     def print_headers(row):
         for index, head in enumerate(headers):
-            worksheet.write(row+index, 0, head)
+            worksheet.write(row + index, 0, head)
 
     print_headers(0)
 
@@ -152,23 +161,27 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
 
     for index, __c_index in enumerate(columns_visible):
         _, c_index = __c_index
-        worksheet.set_column(index, index, view.columnWidth(c_index)/view.logicalDpiX()*12)
+        worksheet.set_column(
+            index, index, view.columnWidth(c_index) / view.logicalDpiX() * 12
+        )
 
     def print_column_headers(row):
         for index, header in enumerate(columns):
-            worksheet.write(row, grid_left+index, header.label, wbhelper.boldwrap_format)
+            worksheet.write(
+                row, grid_left + index, header.label, wbhelper.boldwrap_format
+            )
 
     pagebreaks = []
     group_expr = None
     page_break_groups = False
     row_filter_expr = None
-    if 'hpagebreak' in options:
-        group_expr = evaluator.PreparedEvaluator(options['hpagebreak'])
+    if "hpagebreak" in options:
+        group_expr = evaluator.PreparedEvaluator(options["hpagebreak"])
         page_break_groups = True
-    if 'row_group' in options:
-        group_expr = evaluator.PreparedEvaluator(options['row_group'])
-    if 'row_filter' in options:
-        row_filter_expr = evaluator.PreparedEvaluator(options['row_filter'])
+    if "row_group" in options:
+        group_expr = evaluator.PreparedEvaluator(options["row_group"])
+    if "row_filter" in options:
+        row_filter_expr = evaluator.PreparedEvaluator(options["row_filter"])
 
     if row_filter_expr != None:
         row_predicate = row_filter_expr.evaluate
@@ -188,16 +201,26 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
     # cleverly choose columns to show links for
     if hyperlinks:
         for col in columns:
-            if col.represents and col.url_factory != None and len(columns_to_link) < allowed_columns:
+            if (
+                col.represents
+                and col.url_factory != None
+                and len(columns_to_link) < allowed_columns
+            ):
                 columns_to_link.append(col.attr)
         for col in columns:
-            if not col.represents and col.url_factory != None and len(columns_to_link) < allowed_columns:
+            if (
+                not col.represents
+                and col.url_factory != None
+                and len(columns_to_link) < allowed_columns
+            ):
                 columns_to_link.append(col.attr)
 
     box = TableBoundingBox()
     for index, col in enumerate(columns):
-        gridindex = grid_left+index
-        box.columns.append(BBColumn(gridindex, xlutil.xl_col_to_name(gridindex), col.attr))
+        gridindex = grid_left + index
+        box.columns.append(
+            BBColumn(gridindex, xlutil.xl_col_to_name(gridindex), col.attr)
+        )
 
     link_count = 0
     offset = 0
@@ -210,38 +233,44 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
                 prior = thisrow
 
                 if group_start_callback != None:
-                    rows_used = group_start_callback(wbhelper, worksheet, box, row_in, grid_top+index2+offset)
+                    rows_used = group_start_callback(
+                        wbhelper, worksheet, box, row_in, grid_top + index2 + offset
+                    )
                     offset += rows_used
-                print_column_headers(grid_top+index2+offset)
+                print_column_headers(grid_top + index2 + offset)
                 offset += 1
 
-                row_group = [BBRow(grid_top+index2+offset, row_in)]
+                row_group = [BBRow(grid_top + index2 + offset, row_in)]
             elif thisrow != prior:
                 if group_end_callback != None:
                     box.bound_rows = row_group
-                    rows_used = group_end_callback(wbhelper, worksheet, box, grid_top+index2+offset)
+                    rows_used = group_end_callback(
+                        wbhelper, worksheet, box, grid_top + index2 + offset
+                    )
                     offset += rows_used
 
-                pagebreaks.append(grid_top+index2+offset)
+                pagebreaks.append(grid_top + index2 + offset)
                 prior = thisrow
 
                 # repeat header
                 if page_break_groups:
-                    print_headers(grid_top+index2+offset)
+                    print_headers(grid_top + index2 + offset)
                     offset += len(headers) + 1
 
                 if group_start_callback != None:
-                    rows_used = group_start_callback(wbhelper, worksheet, box, row_in, grid_top+index2+offset)
+                    rows_used = group_start_callback(
+                        wbhelper, worksheet, box, row_in, grid_top + index2 + offset
+                    )
                     offset += rows_used
-                print_column_headers(grid_top+index2+offset)
+                print_column_headers(grid_top + index2 + offset)
                 offset += 1
 
-                row_group = [BBRow(grid_top+index2+offset, row_in)]
+                row_group = [BBRow(grid_top + index2 + offset, row_in)]
             else:
-                row_group.append(BBRow(grid_top+index2+offset, row_in))
+                row_group.append(BBRow(grid_top + index2 + offset, row_in))
         elif index2 == 0:
             # only print this the first time around
-            print_column_headers(grid_top+index2+offset)
+            print_column_headers(grid_top + index2 + offset)
             offset += 1
 
         for index, col in enumerate(columns):
@@ -251,36 +280,72 @@ def export_view(fname, view, headers=None, options=None, sort_key=None,
                     v = v[0]
                 else:
                     v = str(v)
-            if isinstance(v, str) and col.alignment == 'right':
+            if isinstance(v, str) and col.alignment == "right":
                 v = v.lstrip()
-            if col.formatter != None and hasattr(col.formatter, 'as_xlsx'):
+            if col.formatter != None and hasattr(col.formatter, "as_xlsx"):
                 fmtfunc = col.formatter.as_xlsx
                 v = fmtfunc(v)
             link = None
             if hyperlinks:
-                if col.attr in columns_to_link:# and link_count < EXCEL_HARD_MAX:
+                if col.attr in columns_to_link:  # and link_count < EXCEL_HARD_MAX:
                     link = rtlib.column_url(col, row_in)
             if col.checkbox:
-                worksheet.write_boolean(grid_top+index2+offset, grid_left+index, v)
+                worksheet.write_boolean(
+                    grid_top + index2 + offset, grid_left + index, v
+                )
             elif link != None:
                 link_count += 1
                 v2 = '=hyperlink("{}", "{}")'.format(link, v.replace('"', '""'))
-                worksheet.write_formula(grid_top+index2+offset, grid_left+index, v2, wbhelper.url_right_format if col.alignment == 'right' else wbhelper.url_format)
-                #worksheet.write_url(grid_top+index2+offset, grid_left+index, link, wbhelper.url_right_format if col.alignment == 'right' else wbhelper.url_format, v)
-            elif col.type_ == 'currency_usd' and v != None:
-                worksheet.write(grid_top+index2+offset, grid_left+index, v, wbhelper.currency_format)
-            elif col.type_ == 'percent' and v != None:
-                worksheet.write(grid_top+index2+offset, grid_left+index, v, wbhelper.percent_format)
-            elif col.type_ == 'date' and v != None:
-                worksheet.write_datetime(grid_top+index2+offset, grid_left+index, v, wbhelper.date_format)
-            elif col.type_ == 'datetime' and v != None:
-                worksheet.write_datetime(grid_top+index2+offset, grid_left+index, v, wbhelper.datetime_format)
+                worksheet.write_formula(
+                    grid_top + index2 + offset,
+                    grid_left + index,
+                    v2,
+                    wbhelper.url_right_format
+                    if col.alignment == "right"
+                    else wbhelper.url_format,
+                )
+                # worksheet.write_url(grid_top+index2+offset, grid_left+index, link, wbhelper.url_right_format if col.alignment == 'right' else wbhelper.url_format, v)
+            elif col.type_ == "currency_usd" and v != None:
+                worksheet.write(
+                    grid_top + index2 + offset,
+                    grid_left + index,
+                    v,
+                    wbhelper.currency_format,
+                )
+            elif col.type_ == "percent" and v != None:
+                worksheet.write(
+                    grid_top + index2 + offset,
+                    grid_left + index,
+                    v,
+                    wbhelper.percent_format,
+                )
+            elif col.type_ == "date" and v != None:
+                worksheet.write_datetime(
+                    grid_top + index2 + offset,
+                    grid_left + index,
+                    v,
+                    wbhelper.date_format,
+                )
+            elif col.type_ == "datetime" and v != None:
+                worksheet.write_datetime(
+                    grid_top + index2 + offset,
+                    grid_left + index,
+                    v,
+                    wbhelper.datetime_format,
+                )
             else:
-                worksheet.write(grid_top+index2+offset, grid_left+index, v, wbhelper.right_format if col.alignment == 'right' else None)
+                worksheet.write(
+                    grid_top + index2 + offset,
+                    grid_left + index,
+                    v,
+                    wbhelper.right_format if col.alignment == "right" else None,
+                )
 
     if group_end_callback != None:
         box.bound_rows = row_group
-        rows_used = group_end_callback(wbhelper, worksheet, box, grid_top+index2+offset+1)
+        rows_used = group_end_callback(
+            wbhelper, worksheet, box, grid_top + index2 + offset + 1
+        )
 
     if page_break_groups:
         worksheet.set_h_pagebreaks(pagebreaks)

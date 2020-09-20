@@ -1,36 +1,44 @@
 import math
 import fuzzyparsers
 
+
 def as_xlsx(xlsx_formatter):
     def dec(f):
         f.as_xlsx = xlsx_formatter
         return f
+
     return dec
+
 
 def allow_none(func):
     func.allow_none = True
     return func
 
+
 def date_formatter(value):
     if value == None:
-        return ''
-    return value.strftime('%m/%d/%Y')
+        return ""
+    return value.strftime("%m/%d/%Y")
+
 
 def datetime_formatter(value):
     if value == None:
-        return ''
-    return value.strftime('%m/%d/%Y %I:%M %p')
+        return ""
+    return value.strftime("%m/%d/%Y %I:%M %p")
+
 
 def integer_formatter(value):
     if value == None:
-        return '--'
-    return f'{int(value):,}'
+        return "--"
+    return f"{int(value):,}"
+
 
 def filesize_formatter(value):
     if value == None:
-        return ''
+        return ""
 
-    return f'{math.ceil(value / 1024):,} KB'
+    return f"{math.ceil(value / 1024):,} KB"
+
 
 def dollar_formatter(value, blankzero=False):
     """
@@ -44,14 +52,16 @@ def dollar_formatter(value, blankzero=False):
     '-298,357.00'
     """
     if value is None:
-        value = 0.
+        value = 0.0
     # check for close to floating point zero
     if blankzero and abs(value) < 0.001:
-        return ''
-    return f'{value:,.2f}'
+        return ""
+    return f"{value:,.2f}"
+
 
 def percent_formatter(value):
-    return f'{value:,.1%}'
+    return f"{value:,.1%}"
+
 
 @allow_none
 def fixedpoint_nan_formatter(value, decimals):
@@ -64,19 +74,20 @@ def fixedpoint_nan_formatter(value, decimals):
     '10,835.89'
     """
     if value == None:
-        return '--'
-    return '{:,.{}f}'.format(value, decimals)
+        return "--"
+    return "{:,.{}f}".format(value, decimals)
 
 
 ###### reverse formatting ... roughly coercing strings ##########
 def currency_coerce(value):
-    if value in ['', None]:
+    if value in ["", None]:
         return None
-    if isinstance(value, str) and ',' in value:
-        value = value.replace(',', '')
+    if isinstance(value, str) and "," in value:
+        value = value.replace(",", "")
     return float(value)
 
+
 def date_coerce(value):
-    if value == '':
+    if value == "":
         return None
     return fuzzyparsers.parse_date(value)

@@ -2,6 +2,7 @@ import io
 import rtlib
 from . import xlsxexports
 
+
 class UnifiedViewModel(rtlib.ModelMixin):
     def model(self):
         # This is the point, they are unified!
@@ -13,10 +14,12 @@ class UnifiedViewModel(rtlib.ModelMixin):
     def logicalDpiX(self):
         return 30
 
+
 def uview_from_client_table(table):
     uview = UnifiedViewModel([col for col in table.columns if not col.hidden])
     uview.set_rows(table.rows)
     return uview
+
 
 def stdresponse_to_xlsx(sresponse, filename=None, preparsed=False):
     """
@@ -29,7 +32,7 @@ def stdresponse_to_xlsx(sresponse, filename=None, preparsed=False):
         output = filename
 
     keys, columns, rows = sresponse
-    headers = keys['headers']
+    headers = keys["headers"]
     if preparsed:
         table = rtlib.UnparsingClientTable(columns, rows)
     else:

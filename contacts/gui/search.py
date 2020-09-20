@@ -25,8 +25,8 @@ class BitMixin:
         edurl = f"local:bit/edit?id={self.id}&type={self.bit_type}"
         dturl = f"local:bit/delete?id={self.id}&type={self.bit_type}"
         x = [
-            f"<a href=\"{edurl}\"><img src=\"qrc:/contacts/default-edit.png\"></a>",
-            f"<a href=\"{dturl}\"><img src=\"qrc:/contacts/bit-delete.png\"></a>",
+            f'<a href="{edurl}"><img src="qrc:/contacts/default-edit.png"></a>',
+            f'<a href="{dturl}"><img src="qrc:/contacts/bit-delete.png"></a>',
             f"<p>{self.html_chunk()}</p>",
         ]
         return f"<tr><td>{x[0]}{x[1]}</td><td>{x[2]}</td></tr>"
@@ -536,9 +536,7 @@ class ContactView(QtWidgets.QWidget):
                 msg = bb.delete_message()
                 if "Yes" == apputils.message(self, msg, buttons=["Yes", "No"]):
                     with apputils.animator(self):
-                        self.client.delete(
-                            f"api/persona/{self.persona.id}/bit/{bb.id}"
-                        )
+                        self.client.delete(f"api/persona/{self.persona.id}/bit/{bb.id}")
                         self.reload()
         else:
             cliutils.xdg_open(url.toString())

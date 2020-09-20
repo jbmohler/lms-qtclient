@@ -54,7 +54,7 @@ class DocumentThread(QtCore.QObject):
 
 
 class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
-    ID = 'main-window'
+    ID = "main-window"
 
     def __init__(self, parent=None):
         super(ShellWindow, self).__init__(parent)
@@ -68,34 +68,35 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.menu_actions = []
         self.statics = []
 
-        statstypes = [ \
-                ('count', '&Count'),
-                ('total', '&Total'),
-                ('average', '&Average'),
-                ('minimum', 'Mi&nimum'),
-                ('maximum', 'Ma&ximum')]
-        self.statistics = QtWidgets.QLabel('')
+        statstypes = [
+            ("count", "&Count"),
+            ("total", "&Total"),
+            ("average", "&Average"),
+            ("minimum", "Mi&nimum"),
+            ("maximum", "Ma&ximum"),
+        ]
+        self.statistics = QtWidgets.QLabel("")
         self.statistics.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
         self.statistics.actions_stattypes = collections.OrderedDict()
         for stat, label in statstypes:
             act = QtWidgets.QAction(label, self)
             act.setCheckable(True)
-            act.setChecked(stat == 'total')
+            act.setChecked(stat == "total")
             self.statistics.actions_stattypes[stat] = act
             self.statistics.addAction(act)
 
         status = self.statusBar()
         status.statistics = self.statistics
         status.addPermanentWidget(self.statistics)
-        #status.addPermanentWidget(QtWidgets.QLabel('Server {}'.format(client.__version__)))
-        self.server_connection = QtWidgets.QLabel('Not Connected')
+        # status.addPermanentWidget(QtWidgets.QLabel('Server {}'.format(client.__version__)))
+        self.server_connection = QtWidgets.QLabel("Not Connected")
         # TODO:  fix this -- if you comment this out, it crashes
-        #self.server_connection.linkActivated.connect(os.startfile)
+        # self.server_connection.linkActivated.connect(os.startfile)
         status.addPermanentWidget(self.server_connection)
 
         desktop = QtWidgets.QDesktopWidget()
         screensize = desktop.availableGeometry(self)
-        self.resize(QtCore.QSize(screensize.width()*0.7, screensize.height()*0.7))
+        self.resize(QtCore.QSize(screensize.width() * 0.7, screensize.height() * 0.7))
 
         self.geo = apputils.WindowGeometry(self)
 
@@ -105,7 +106,11 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
             if item.auth_name == None or self.session.authorized(item.auth_name):
                 applicable.append(item)
 
-        sep_indices = [index for index, item in enumerate(applicable) if isinstance(item, SeparatorMenuItem)]
+        sep_indices = [
+            index
+            for index, item in enumerate(applicable)
+            if isinstance(item, SeparatorMenuItem)
+        ]
 
         if len(sep_indices) == len(applicable):
             # empty menu -- no authorized items
@@ -115,7 +120,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
 
         excess = []
         for index, item in enumerate(applicable):
-            if index-1 in sep_indices and index in sep_indices:
+            if index - 1 in sep_indices and index in sep_indices:
                 excess.append(index)
         for index in reversed(excess):
             del applicable[index]
@@ -129,51 +134,57 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
             menu.addAction(act)
 
     def construct_file_menu(self, menu):
-        self.action_exit = QtWidgets.QAction('E&xit', self)
+        self.action_exit = QtWidgets.QAction("E&xit", self)
         self.action_exit.triggered.connect(self.close)
 
-        self.action_exit_all = QtWidgets.QAction('Exit &All', self)
-        self.action_exit_all.setShortcut('Ctrl+F12')
+        self.action_exit_all = QtWidgets.QAction("Exit &All", self)
+        self.action_exit_all.setShortcut("Ctrl+F12")
         self.action_exit_all.setShortcutContext(QtCore.Qt.ApplicationShortcut)
         self.action_exit_all.triggered.connect(self.close_all)
 
-        self.action_exports = QtWidgets.QAction('View &Export Directory', self)
+        self.action_exports = QtWidgets.QAction("View &Export Directory", self)
         self.action_exports.triggered.connect(lambda: self.exports_dir.show_browser())
 
-        self.menu_file = menu.addMenu('&File')
-        self.menu_file.addAction('&Reports').triggered.connect(self.show_reports)
+        self.menu_file = menu.addMenu("&File")
+        self.menu_file.addAction("&Reports").triggered.connect(self.show_reports)
         self.menu_file.addAction(self.action_exports)
         self.menu_file.addSeparator()
         self.menu_file.addAction(self.action_exit)
         self.menu_file.addAction(self.action_exit_all)
 
     def construct_window_menu(self, menu):
-        self.action_close_current = QtWidgets.QAction('&Close Current Tab', self)
-        self.action_close_current.setShortcut(QtGui.QKeySequence('Ctrl+F4'))
+        self.action_close_current = QtWidgets.QAction("&Close Current Tab", self)
+        self.action_close_current.setShortcut(QtGui.QKeySequence("Ctrl+F4"))
         self.action_close_current.triggered.connect(self.close_current)
 
         self.window_actions = []
 
-        self.menu_window = menu.addMenu('&Window')
+        self.menu_window = menu.addMenu("&Window")
         self.menu_window.addAction(self.action_close_current)
         self.menu_window_sep = self.menu_window.addSeparator()
         self.menu_window.aboutToShow.connect(self.update_window_menu)
 
     def construct_help_menu(self, menu):
-        self.action_about = QtWidgets.QAction('&About', self)
-        self.action_about.triggered.connect(lambda: about.about_box(self, 'rtx shell'))
+        self.action_about = QtWidgets.QAction("&About", self)
+        self.action_about.triggered.connect(lambda: about.about_box(self, "rtx shell"))
 
-        self.action_syshelp = QtWidgets.QAction('&Technical Manual', self)
-        self.action_syshelp.triggered.connect(lambda: winlist.show_link_parented(self, self.session.prefix('docs/index.html')))
+        self.action_syshelp = QtWidgets.QAction("&Technical Manual", self)
+        self.action_syshelp.triggered.connect(
+            lambda: winlist.show_link_parented(
+                self, self.session.prefix("docs/index.html")
+            )
+        )
 
-        self.action_serverdiag = QtWidgets.QAction('Server && &Connection', self)
-        self.action_serverdiag.triggered.connect(lambda: serverdlgs.server_diagnostics(self, self.session))
+        self.action_serverdiag = QtWidgets.QAction("Server && &Connection", self)
+        self.action_serverdiag.triggered.connect(
+            lambda: serverdlgs.server_diagnostics(self, self.session)
+        )
 
-        self.action_exceptions = QtWidgets.QAction('View &Exception Log', self)
+        self.action_exceptions = QtWidgets.QAction("View &Exception Log", self)
         app = QtCore.QCoreApplication.instance()
         self.action_exceptions.triggered.connect(app.excepter.show)
 
-        self.menu_help = menu.addMenu('&Help')
+        self.menu_help = menu.addMenu("&Help")
         self.menu_help.addAction(self.action_about)
         self.menu_help.addAction(self.action_syshelp)
         self.menu_help.addAction(self.action_serverdiag)
@@ -189,7 +200,9 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
                 pass
 
         if not login:
-            dlg = serverdlgs.RtxLoginDialog(self, self.session, settings_group='Example')
+            dlg = serverdlgs.RtxLoginDialog(
+                self, self.session, settings_group="Example"
+            )
             if dlg.exec_() == QtWidgets.QDialog.Accepted:
                 pass
             else:
@@ -223,13 +236,16 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
 
     def post_login(self):
         s = self.session
-        self.server_connection.setText(f"<a href=\"{s.prefix('')}\">{s.server_url}</a> {s.rtx_user}")
+        self.server_connection.setText(
+            f"<a href=\"{s.prefix('')}\">{s.server_url}</a> {s.rtx_user}"
+        )
 
         self.construct_file_menu(self.menuBar())
 
         ctors = {
-                'ClientURLMenuItem': ClientURLMenuItem,
-                'SeparatorMenuItem': SeparatorMenuItem}
+            "ClientURLMenuItem": ClientURLMenuItem,
+            "SeparatorMenuItem": SeparatorMenuItem,
+        }
 
         for menuname, items in gridmgr.get_menus():
             schematic = [ctors[n](*args) for n, args in items]
@@ -238,20 +254,27 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.construct_window_menu(self.menuBar())
         self.construct_help_menu(self.menuBar())
 
-        #self.report_dock. (reportdock.ReportsDock(self.session, self.exports_dir))
-        #act = self.report_dock.toggleViewAction()
-        #act.setText('&Report List')
-        #self.menu_window.insertAction(self.menu_window_sep, act)
+        # self.report_dock. (reportdock.ReportsDock(self.session, self.exports_dir))
+        # act = self.report_dock.toggleViewAction()
+        # act.setText('&Report List')
+        # self.menu_window.insertAction(self.menu_window_sep, act)
 
-        self.report_manager = reports.ReportsManager(self.session, self.exports_dir, self)
+        self.report_manager = reports.ReportsManager(
+            self.session, self.exports_dir, self
+        )
 
         self.report_dock = reportdock.ReportsDock(self.session, self.exports_dir)
         self.report_dock.main_window = self
         self.report_dock.hide()
 
-        self.addWorkspaceWindow(self.report_dock, self.report_dock.TITLE, settingsKey=self.report_dock.ID, addto="dock")
+        self.addWorkspaceWindow(
+            self.report_dock,
+            self.report_dock.TITLE,
+            settingsKey=self.report_dock.ID,
+            addto="dock",
+        )
 
-        #self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.report_dock)
+        # self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.report_dock)
 
         return True
 
@@ -335,6 +358,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
 
     def close_all(self):
         winlist.close_all()
+
 
 def basic_shell_window(app, presession=None, document=None):
     sys.excepthook = apputils.guiexcepthook

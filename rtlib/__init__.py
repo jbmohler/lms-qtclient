@@ -7,9 +7,9 @@ formatters, and descriptive type strings to be decoded and used in building a
 UI.
 """
 
-from .boa import * # noqa: F401
-from .formatters import * # noqa: F401
-from .reportcore import * # noqa: F401
-from .html import * # noqa: F401
-from .client import * # noqa: F401
-from .basic_types import * # noqa: F401
+from .boa import *  # noqa: F401
+from .formatters import *  # noqa: F401
+from .reportcore import *  # noqa: F401
+from .html import *  # noqa: F401
+from .client import *  # noqa: F401
+from .basic_types import *  # noqa: F401

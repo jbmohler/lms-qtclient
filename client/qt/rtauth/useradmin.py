@@ -12,6 +12,7 @@ from .useradmin_userroles import UserRoleMapperTargetsByUser
 from .useradmin_userroles_selected_roles import UserRoleMapperTargetsByRole
 from .useradmin_roleactivities import RoleActivityMapperTargets
 
+
 class ReportTabEx(reporttab.ReportTab):
     def __init__(self, session, exports_dir, parent=None):
         super(ReportTabEx, self).__init__(parent)
@@ -22,7 +23,9 @@ class ReportTabEx(reporttab.ReportTab):
         self.client = session.std_client()
         self.backgrounder = apputils.Backgrounder(self)
         self.ctxmenu = viewmenus.ContextMenu(self.grid, self)
-        self.geo = apputils.WindowGeometry(self, size=False, position=False, grids=[self.grid])
+        self.geo = apputils.WindowGeometry(
+            self, size=False, position=False, grids=[self.grid]
+        )
 
         self.init_view2()
 
@@ -33,12 +36,13 @@ class ReportTabEx(reporttab.ReportTab):
 
 
 class SessionList(ReportTabEx):
-    ID = 'administrative/sessions'
-    TITLE = 'Active Session List'
-    URL_TAIL = 'api/sessions/active'
+    ID = "administrative/sessions"
+    TITLE = "Active Session List"
+    URL_TAIL = "api/sessions/active"
+
 
 class UserListSidebar(QtCore.QObject):
-    SRC_INSTANCE_URL = 'api/user/{}'
+    SRC_INSTANCE_URL = "api/user/{}"
     refresh = QtCore.Signal()
 
     def __init__(self, parent, state):
@@ -52,16 +56,25 @@ class UserListSidebar(QtCore.QObject):
 
         if not self.added:
             self.added = True
-            self.gridmgr.add_action('&Add User', triggered=self.cmd_add_user)
-            self.gridmgr.add_action('&Set Roles', triggered=self.cmd_set_roles)
-            self.gridmgr.add_action('&Edit User', triggered=self.cmd_edit_user)
-            self.gridmgr.add_action('&Delete User', triggered=self.cmd_delete_user)
+            self.gridmgr.add_action("&Add User", triggered=self.cmd_add_user)
+            self.gridmgr.add_action("&Set Roles", triggered=self.cmd_set_roles)
+            self.gridmgr.add_action("&Edit User", triggered=self.cmd_edit_user)
+            self.gridmgr.add_action("&Delete User", triggered=self.cmd_delete_user)
 
     def window(self):
         return self.gridmgr.grid.window()
 
     def cmd_add_user(self):
-        user = rtlib.ClientTable([('full_name', None), ('username', None), ('password', None), ('password2', None), ('descr', None)], [])
+        user = rtlib.ClientTable(
+            [
+                ("full_name", None),
+                ("username", None),
+                ("password", None),
+                ("password2", None),
+                ("descr", None),
+            ],
+            [],
+        )
         with user.adding_row() as r2:
             pass
         if edit_user_dlg(self, user, editrec=False):
@@ -76,25 +89,31 @@ class UserListSidebar(QtCore.QObject):
     def cmd_set_roles(self, rows):
         users = [o.id for o in rows]
 
-        w = UserRoleMapperTargetsByUser(self.client.session, self.exports_dir, None, users)
+        w = UserRoleMapperTargetsByUser(
+            self.client.session, self.exports_dir, None, users
+        )
         w.show()
         # TODO: should show call be modal?
-        #self.refresh.emit()
+        # self.refresh.emit()
 
     def cmd_delete_user(self, row):
-        if 'Yes' == apputils.message(self.window(), f'Are you sure that you wish to delete the user {row.username}?', buttons=['Yes', 'No']):
+        if "Yes" == apputils.message(
+            self.window(),
+            f"Are you sure that you wish to delete the user {row.username}?",
+            buttons=["Yes", "No"],
+        ):
             try:
                 self.client.delete(self.SRC_INSTANCE_URL, row.id)
                 self.refresh.emit()
             except:
-                utils.exception_message(self.window(), 'The user could not be deleted.')
+                utils.exception_message(self.window(), "The user could not be deleted.")
 
 
 class UserList(QtWidgets.QWidget):
-    ID = 'administrative/users'
-    TITLE = 'User List'
-    URL_TAIL = 'api/users/list'
-    SRC_INSTANCE_URL = 'api/user/{}'
+    ID = "administrative/users"
+    TITLE = "User List"
+    URL_TAIL = "api/users/list"
+    SRC_INSTANCE_URL = "api/user/{}"
 
     def __init__(self, session, exports_dir, parent=None):
         super(UserList, self).__init__(parent)
@@ -109,13 +128,13 @@ class UserList(QtWidgets.QWidget):
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
         self.grid = widgets.TableView()
-        self.grid.setObjectName('content')
+        self.grid.setObjectName("content")
         self.grid.setSortingEnabled(True)
         self.gridmgr = qt.GridManager(self.grid, self)
-        self.gridmgr.add_action('&Add User', triggered=self.cmd_add_user)
-        self.gridmgr.add_action('&Set Roles', triggered=self.cmd_set_roles)
-        self.gridmgr.add_action('&Edit User', triggered=self.cmd_edit_user)
-        self.gridmgr.add_action('&Delete User', triggered=self.cmd_delete_user)
+        self.gridmgr.add_action("&Add User", triggered=self.cmd_add_user)
+        self.gridmgr.add_action("&Set Roles", triggered=self.cmd_set_roles)
+        self.gridmgr.add_action("&Edit User", triggered=self.cmd_edit_user)
+        self.gridmgr.add_action("&Delete User", triggered=self.cmd_delete_user)
         self.splitter.addWidget(self.grid)
 
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -123,16 +142,27 @@ class UserList(QtWidgets.QWidget):
 
         QDB = QtWidgets.QDialogButtonBox
         self.buttons = QDB(QtCore.Qt.Horizontal)
-        self.buttons.addButton('&Refresh', QDB.ApplyRole).clicked.connect(self.refresh)
-        self.buttons.addButton('&Export', QDB.ApplyRole).clicked.connect(self.export)
+        self.buttons.addButton("&Refresh", QDB.ApplyRole).clicked.connect(self.refresh)
+        self.buttons.addButton("&Export", QDB.ApplyRole).clicked.connect(self.export)
         self.layout.addWidget(self.buttons)
 
-        self.geo = apputils.WindowGeometry(self, size=False, position=False, grids=[self.grid])
+        self.geo = apputils.WindowGeometry(
+            self, size=False, position=False, grids=[self.grid]
+        )
 
         self.refresh()
 
     def cmd_add_user(self):
-        user = rtlib.ClientTable([('full_name', None), ('username', None), ('password', None), ('password2', None), ('descr', None)], [])
+        user = rtlib.ClientTable(
+            [
+                ("full_name", None),
+                ("username", None),
+                ("password", None),
+                ("password2", None),
+                ("descr", None),
+            ],
+            [],
+        )
         with user.adding_row() as r2:
             pass
         if edit_user_dlg(self, user, editrec=False):
@@ -147,29 +177,37 @@ class UserList(QtWidgets.QWidget):
     def cmd_set_roles(self, rows):
         users = [o.id for o in rows]
 
-        w = UserRoleMapperTargetsByUser(self.client.session, self.exports_dir, None, users)
+        w = UserRoleMapperTargetsByUser(
+            self.client.session, self.exports_dir, None, users
+        )
         w.show()
         self.refresh()
 
     def cmd_delete_user(self, row):
-        if 'Yes' == apputils.message(self.window(), f'Are you sure that you wish to delete the user {row.username}?', buttons=['Yes', 'No']):
+        if "Yes" == apputils.message(
+            self.window(),
+            f"Are you sure that you wish to delete the user {row.username}?",
+            buttons=["Yes", "No"],
+        ):
             try:
                 self.client.delete(self.SRC_INSTANCE_URL, row.id)
                 self.refresh()
             except:
-                utils.exception_message(self.window(), 'The user could not be deleted.')
+                utils.exception_message(self.window(), "The user could not be deleted.")
 
     def load(self):
         self.setEnabled(False)
         try:
             content = yield
             self.records = content.main_table()
-            self.headers = content.keys['headers']
+            self.headers = content.keys["headers"]
 
             with self.geo.grid_reset(self.grid):
                 self.gridmgr.set_client_table(self.records)
         except:
-            apputils.exception_message(self, f'There was an error loading the {self.TITLE}.')
+            apputils.exception_message(
+                self, f"There was an error loading the {self.TITLE}."
+            )
         finally:
             self.setEnabled(True)
 
@@ -177,7 +215,7 @@ class UserList(QtWidgets.QWidget):
         self.backgrounder(self.load, self.client.get, self.URL_TAIL)
 
     def export(self, options=None):
-        fname = self.exports_dir.user_output_filename(self.TITLE, 'xlsx')
+        fname = self.exports_dir.user_output_filename(self.TITLE, "xlsx")
 
         if fname != None:
             rtlib.server.export_view(fname, self.grid, self.headers, options=options)
@@ -206,14 +244,21 @@ class RoleSidebar(QtWidgets.QWidget):
             self.act_grid.setModel(None)
             self.user_grid.setModel(None)
         else:
-            self.backgrounder(self.load_activities, self.client.get, 'api/activities/by-role', role=row.id)
-            self.backgrounder(self.load_users, self.client.get, 'api/users/by-role', role=row.id)
+            self.backgrounder(
+                self.load_activities,
+                self.client.get,
+                "api/activities/by-role",
+                role=row.id,
+            )
+            self.backgrounder(
+                self.load_users, self.client.get, "api/users/by-role", role=row.id
+            )
 
     def load_users(self):
         try:
             content = yield
         except:
-            utils.exception_message(self.window(), 'Error loading users')
+            utils.exception_message(self.window(), "Error loading users")
             return
 
         with self.geo.grid_reset(self.user_grid):
@@ -224,18 +269,19 @@ class RoleSidebar(QtWidgets.QWidget):
         try:
             content = yield
         except:
-            utils.exception_message(self.window(), 'Error loading activities')
+            utils.exception_message(self.window(), "Error loading activities")
             return
 
         with self.geo.grid_reset(self.act_grid):
             self.activities = content.main_table()
             self.act_gridmgr.set_client_table(self.activities)
 
+
 class RoleList(QtWidgets.QWidget):
-    ID = 'administrative/roles'
-    TITLE = 'Role List'
-    URL_TAIL = 'api/roles/list'
-    SRC_INSTANCE_URL = 'api/role/{}'
+    ID = "administrative/roles"
+    TITLE = "Role List"
+    URL_TAIL = "api/roles/list"
+    SRC_INSTANCE_URL = "api/role/{}"
 
     def __init__(self, session, exports_dir, parent=None):
         super(RoleList, self).__init__(parent)
@@ -250,14 +296,14 @@ class RoleList(QtWidgets.QWidget):
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
         self.grid = widgets.TableView()
-        self.grid.setObjectName('content')
+        self.grid.setObjectName("content")
         self.grid.setSortingEnabled(True)
         self.gridmgr = qt.GridManager(self.grid, self)
-        self.gridmgr.add_action('Add &New Role', triggered=self.cmd_add_new_role)
-        self.gridmgr.add_action('&Rename Role', triggered=self.cmd_rename_role)
-        self.gridmgr.add_action('&Delete Role', triggered=self.cmd_delete_role)
-        self.gridmgr.add_action('Assigned &Users', triggered=self.cmd_assigned_users)
-        self.gridmgr.add_action('Permitted &Actions', triggered=self.cmd_permit_actions)
+        self.gridmgr.add_action("Add &New Role", triggered=self.cmd_add_new_role)
+        self.gridmgr.add_action("&Rename Role", triggered=self.cmd_rename_role)
+        self.gridmgr.add_action("&Delete Role", triggered=self.cmd_delete_role)
+        self.gridmgr.add_action("Assigned &Users", triggered=self.cmd_assigned_users)
+        self.gridmgr.add_action("Permitted &Actions", triggered=self.cmd_permit_actions)
         self.splitter.addWidget(self.grid)
 
         self.sidebar = RoleSidebar()
@@ -272,11 +318,13 @@ class RoleList(QtWidgets.QWidget):
 
         QDB = QtWidgets.QDialogButtonBox
         self.buttons = QDB(QtCore.Qt.Horizontal)
-        self.buttons.addButton('&Refresh', QDB.ApplyRole).clicked.connect(self.refresh)
-        self.buttons.addButton('&Export', QDB.ApplyRole).clicked.connect(self.export)
+        self.buttons.addButton("&Refresh", QDB.ApplyRole).clicked.connect(self.refresh)
+        self.buttons.addButton("&Export", QDB.ApplyRole).clicked.connect(self.export)
         self.layout.addWidget(self.buttons)
 
-        self.geo = apputils.WindowGeometry(self, size=False, position=False, grids=[self.grid])
+        self.geo = apputils.WindowGeometry(
+            self, size=False, position=False, grids=[self.grid]
+        )
 
         self.refresh()
 
@@ -285,7 +333,7 @@ class RoleList(QtWidgets.QWidget):
         self.sidebar.highlight(row)
 
     def cmd_add_new_role(self):
-        content = self.client.get(self.SRC_INSTANCE_URL, 'new')
+        content = self.client.get(self.SRC_INSTANCE_URL, "new")
         t = content.main_table()
         self._edit_role(t)
 
@@ -298,7 +346,7 @@ class RoleList(QtWidgets.QWidget):
         try:
             self.client.delete(self.SRC_INSTANCE_URL, row.id)
         except:
-            utils.exception_message(self.window(), 'The role could not be deleted.')
+            utils.exception_message(self.window(), "The role could not be deleted.")
 
         self.refresh()
 
@@ -306,22 +354,22 @@ class RoleList(QtWidgets.QWidget):
         assert len(table.rows) == 1
 
         w = QtWidgets.QDialog(self.window())
-        w.setWindowTitle('Edit Role')
+        w.setWindowTitle("Edit Role")
 
         w.bind = bindings.Binder(w)
 
         layout = QtWidgets.QVBoxLayout(w)
         form = QtWidgets.QFormLayout()
-        form.addRow('&Role Name:', w.bind.construct('role_name', 'basic'))
-        form.addRow('&Order', w.bind.construct('sort', 'integer'))
+        form.addRow("&Role Name:", w.bind.construct("role_name", "basic"))
+        form.addRow("&Order", w.bind.construct("sort", "integer"))
 
         def save():
-            files = {'role': table.as_http_post_file()}
+            files = {"role": table.as_http_post_file()}
             try:
                 self.client.put(self.SRC_INSTANCE_URL, table.rows[0].id, files=files)
                 w.accept()
             except:
-                utils.exception_message(w, 'There was an error adding the role.')
+                utils.exception_message(w, "There was an error adding the role.")
 
         QDB = QtWidgets.QDialogButtonBox
         buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
@@ -339,13 +387,17 @@ class RoleList(QtWidgets.QWidget):
     def cmd_assigned_users(self, rows):
         roles = [o.id for o in rows]
 
-        w = UserRoleMapperTargetsByRole(self.client.session, self.exports_dir, None, roles)
+        w = UserRoleMapperTargetsByRole(
+            self.client.session, self.exports_dir, None, roles
+        )
         w.show()
 
     def cmd_permit_actions(self, rows):
         roles = [o.id for o in rows]
 
-        w = RoleActivityMapperTargets(self.client.session, self.exports_dir, None, roles)
+        w = RoleActivityMapperTargets(
+            self.client.session, self.exports_dir, None, roles
+        )
         w.show()
 
     def load(self):
@@ -353,12 +405,14 @@ class RoleList(QtWidgets.QWidget):
         try:
             content = yield
             self.records = content.main_table()
-            self.headers = content.keys['headers']
+            self.headers = content.keys["headers"]
 
             with self.geo.grid_reset(self.grid):
                 self.gridmgr.set_client_table(self.records)
         except:
-            apputils.exception_message(self, f'There was an error loading the {self.TITLE}.')
+            apputils.exception_message(
+                self, f"There was an error loading the {self.TITLE}."
+            )
         finally:
             self.setEnabled(True)
 
@@ -366,7 +420,7 @@ class RoleList(QtWidgets.QWidget):
         self.backgrounder(self.load, self.client.get, self.URL_TAIL)
 
     def export(self, options=None):
-        fname = self.exports_dir.user_output_filename(self.TITLE, 'xlsx')
+        fname = self.exports_dir.user_output_filename(self.TITLE, "xlsx")
 
         if fname != None:
             rtlib.server.export_view(fname, self.grid, self.headers, options=options)
@@ -381,32 +435,34 @@ class ActivitySidebar(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.html = QtWidgets.QTextBrowser()
-        #self.html.linkClicked.connect(gridmgr.show_link)
+        # self.html.linkClicked.connect(gridmgr.show_link)
         self.layout.addWidget(self.html)
 
     def highlight(self, row):
         if row == None:
-            self.html.setHtml('')
+            self.html.setHtml("")
         else:
-            self.backgrounder(self.load_sidebar, self.client, 'api/report/{}/info', row.act_name)
+            self.backgrounder(
+                self.load_sidebar, self.client, "api/report/{}/info", row.act_name
+            )
 
     def load_sidebar(self):
         try:
             content = yield
         except Exception as e:
-            self.html.setHtml(f'<html><body>Error:  {str(e)}</body></html>')
+            self.html.setHtml(f"<html><body>Error:  {str(e)}</body></html>")
             return
 
         acttable = content.main_table()
         activity = acttable.rows[0]
 
         if activity.prompts is None:
-            reportgunk = ''
+            reportgunk = ""
         else:
-            gui_url = f'rtx:report/{activity.act_name}?prompt1=value1'
+            gui_url = f"rtx:report/{activity.act_name}?prompt1=value1"
             self.prompts = rtlib.PromptList(activity.prompts)
 
-            cols = ['label', 'attr', 'type_']
+            cols = ["label", "attr", "type_"]
             table = rtlib.ClientTable([(c, None) for c in cols], [])
             table.rows = self.prompts
 
@@ -420,7 +476,11 @@ class ActivitySidebar(QtWidgets.QWidget):
 <h3>Prompts</h3>
 
 {}
-""".format(gui_url, self.client.session.server_url, table.as_html(border='1', cellspacing='0'))
+""".format(
+                gui_url,
+                self.client.session.server_url,
+                table.as_html(border="1", cellspacing="0"),
+            )
 
         html = f"""<html>
 <body>
@@ -438,13 +498,14 @@ class ActivitySidebar(QtWidgets.QWidget):
 </html>"""
         self.html.setHtml(html)
 
-        #self.html.page().setLinkDelegationPolicy(QtWebEngineWidgets.QWebEnginePage.DelegateAllLinks)
+        # self.html.page().setLinkDelegationPolicy(QtWebEngineWidgets.QWebEnginePage.DelegateAllLinks)
+
 
 class ActivityList(QtWidgets.QWidget):
-    ID = 'administrative/activities'
-    TITLE = 'Activity List'
-    URL_TAIL = 'api/activities/list'
-    SRC_INSTANCE_URL = 'api/activity/{}'
+    ID = "administrative/activities"
+    TITLE = "Activity List"
+    URL_TAIL = "api/activities/list"
+    SRC_INSTANCE_URL = "api/activity/{}"
 
     def __init__(self, session, exports_dir, parent=None):
         super(ActivityList, self).__init__(parent)
@@ -459,11 +520,11 @@ class ActivityList(QtWidgets.QWidget):
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
         self.grid = widgets.TableView()
-        self.grid.setObjectName('content')
+        self.grid.setObjectName("content")
         self.grid.setSortingEnabled(True)
         self.gridmgr = qt.GridManager(self.grid, self)
-        self.gridmgr.add_action('Add &New Activity', triggered=self.cmd_addnew_activity)
-        self.gridmgr.add_action('&Edit Activity', triggered=self.cmd_edit_activity)
+        self.gridmgr.add_action("Add &New Activity", triggered=self.cmd_addnew_activity)
+        self.gridmgr.add_action("&Edit Activity", triggered=self.cmd_edit_activity)
         self.splitter.addWidget(self.grid)
 
         self.sidebar = ActivitySidebar()
@@ -487,11 +548,13 @@ class ActivityList(QtWidgets.QWidget):
 
         QDB = QtWidgets.QDialogButtonBox
         self.buttons = QDB(QtCore.Qt.Horizontal)
-        self.buttons.addButton('&Refresh', QDB.ApplyRole).clicked.connect(self.refresh)
-        self.buttons.addButton('&Export', QDB.ApplyRole).clicked.connect(self.export)
+        self.buttons.addButton("&Refresh", QDB.ApplyRole).clicked.connect(self.refresh)
+        self.buttons.addButton("&Export", QDB.ApplyRole).clicked.connect(self.export)
         self.layout.addWidget(self.buttons)
 
-        self.geo = apputils.WindowGeometry(self, size=False, position=False, grids=[self.grid])
+        self.geo = apputils.WindowGeometry(
+            self, size=False, position=False, grids=[self.grid]
+        )
 
         self.refresh()
 
@@ -500,8 +563,10 @@ class ActivityList(QtWidgets.QWidget):
         self.sidebar.highlight(row)
 
     def cmd_addnew_activity(self):
-        activity = rtlib.ClientTable([('name', None), ('description', None), ('note', None)], [])
-        activity.rows.append(activity.DataRow('', '', ''))
+        activity = rtlib.ClientTable(
+            [("name", None), ("description", None), ("note", None)], []
+        )
+        activity.rows.append(activity.DataRow("", "", ""))
         edit_activity_dlg(self, activity)
 
     def cmd_edit_activity(self, row):
@@ -525,7 +590,7 @@ class ActivityList(QtWidgets.QWidget):
         try:
             content = yield
             self.records = content.main_table()
-            self.headers = content.keys['headers']
+            self.headers = content.keys["headers"]
 
             with self.geo.grid_reset(self.grid):
                 # TODO:  make an elegant way to filter on a GridManager
@@ -536,39 +601,42 @@ class ActivityList(QtWidgets.QWidget):
                 self.gridmgr.table = self.records
                 self.gridmgr._post_model_action()
         except:
-            apputils.exception_message(self, f'There was an error loading the {self.TITLE}.')
+            apputils.exception_message(
+                self, f"There was an error loading the {self.TITLE}."
+            )
 
     def refresh(self):
         self.backgrounder(self.load, self.client.get, self.URL_TAIL)
 
     def export(self, options=None):
-        fname = self.exports_dir.user_output_filename(self.TITLE, 'xlsx')
+        fname = self.exports_dir.user_output_filename(self.TITLE, "xlsx")
 
         if fname != None:
             rtlib.server.export_view(fname, self.grid, self.headers, options=options)
             utils.xlsx_start_file(self.window, fname)
 
+
 def edit_activity_dlg(parentwin, table):
     w = QtWidgets.QDialog(parentwin.window())
-    w.setWindowTitle('Edit Activity')
+    w.setWindowTitle("Edit Activity")
 
     w.bind = bindings.Binder(w)
     layout = QtWidgets.QVBoxLayout(w)
     form = QtWidgets.QFormLayout()
-    form.addRow('&Activity Name:', w.bind.construct('act_name', 'basic'))
-    form.addRow('&Description', w.bind.construct('description', 'basic'))
-    form.addRow('&Note', w.bind.construct('note', 'multiline'))
+    form.addRow("&Activity Name:", w.bind.construct("act_name", "basic"))
+    form.addRow("&Description", w.bind.construct("description", "basic"))
+    form.addRow("&Note", w.bind.construct("note", "multiline"))
 
-    if hasattr(table.rows[0], 'id'):
-        w.bind.widgets['act_name'].setReadOnly(True)
+    if hasattr(table.rows[0], "id"):
+        w.bind.widgets["act_name"].setReadOnly(True)
 
     def save():
-        files = {'activities': table.as_http_post_file()}
+        files = {"activities": table.as_http_post_file()}
         try:
-            parentwin.client.post('api/activities', files=files)
+            parentwin.client.post("api/activities", files=files)
             w.accept()
         except:
-            utils.exception_message(w, 'There was an error adding the activity.')
+            utils.exception_message(w, "There was an error adding the activity.")
 
     QDB = QtWidgets.QDialogButtonBox
     buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
@@ -581,43 +649,50 @@ def edit_activity_dlg(parentwin, table):
 
     return w.Accepted == w.exec_()
 
+
 def edit_user_dlg(parentwin, table, editrec):
     w = QtWidgets.QDialog(parentwin.window())
-    w.setWindowTitle('Edit User Properties' if editrec else 'Add New User')
+    w.setWindowTitle("Edit User Properties" if editrec else "Add New User")
 
     w.bind = bindings.Binder(w)
     layout = QtWidgets.QVBoxLayout(w)
     form = QtWidgets.QFormLayout()
-    form.addRow('&Full Name', w.bind.construct('full_name', 'basic'))
-    form.addRow('&User Name', w.bind.construct('username', 'basic'))
+    form.addRow("&Full Name", w.bind.construct("full_name", "basic"))
+    form.addRow("&User Name", w.bind.construct("username", "basic"))
     if not editrec:
-        form.addRow('&Password', w.bind.construct('password', 'basic'))
-        form.addRow('&Password (confirm)', w.bind.construct('password2', 'basic'))
-        w.bind.widgets['password'].setEchoMode(QtWidgets.QLineEdit.Password)
-        w.bind.widgets['password2'].setEchoMode(QtWidgets.QLineEdit.Password)
+        form.addRow("&Password", w.bind.construct("password", "basic"))
+        form.addRow("&Password (confirm)", w.bind.construct("password2", "basic"))
+        w.bind.widgets["password"].setEchoMode(QtWidgets.QLineEdit.Password)
+        w.bind.widgets["password2"].setEchoMode(QtWidgets.QLineEdit.Password)
     else:
-        form.addRow('', w.bind.construct('inactive', 'boolean', label='Inactive'))
-    form.addRow('&Description', w.bind.construct('descr', 'multiline'))
+        form.addRow("", w.bind.construct("inactive", "boolean", label="Inactive"))
+    form.addRow("&Description", w.bind.construct("descr", "multiline"))
 
     def save():
         row = table.rows[0]
         if not editrec:
             if row.password != row.password2:
-                apputils.information(w, 'Password and confirm password do not match.')
+                apputils.information(w, "Password and confirm password do not match.")
                 return False
 
         if editrec:
-            files = {'user': table.as_http_post_file(inclusions=['username', 'full_name', 'inactive', 'descr'])}
+            files = {
+                "user": table.as_http_post_file(
+                    inclusions=["username", "full_name", "inactive", "descr"]
+                )
+            }
         else:
-            files = {'user': table.as_http_post_file(exclusions=['password2'])}
+            files = {"user": table.as_http_post_file(exclusions=["password2"])}
         try:
             if editrec:
-                parentwin.client.put(parentwin.SRC_INSTANCE_URL, table.rows[0].id, files=files)
+                parentwin.client.put(
+                    parentwin.SRC_INSTANCE_URL, table.rows[0].id, files=files
+                )
             else:
-                parentwin.client.post('api/user', files=files)
+                parentwin.client.post("api/user", files=files)
             w.accept()
         except:
-            utils.exception_message(w, 'There was an error adding the user.')
+            utils.exception_message(w, "There was an error adding the user.")
 
     QDB = QtWidgets.QDialogButtonBox
     buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
@@ -630,9 +705,10 @@ def edit_user_dlg(parentwin, table, editrec):
 
     return w.Accepted == w.exec_()
 
+
 class PidCancellerTab(ReportTabEx):
     def init_view2(self):
-        self.action_cancel_backend = QtWidgets.QAction('&Cancel Backend', self)
+        self.action_cancel_backend = QtWidgets.QAction("&Cancel Backend", self)
         self.action_cancel_backend.triggered.connect(self.cancel_backend)
         self.ctxmenu.add_action(self.action_cancel_backend)
 
@@ -643,9 +719,9 @@ class PidCancellerTab(ReportTabEx):
     def cancel_backend(self):
         obj = self.ctxmenu.active_index.data(models.ObjectRole)
         try:
-            self.client.put('api/database/cancelbackend', pid=obj.pid)
+            self.client.put("api/database/cancelbackend", pid=obj.pid)
         except:
-            utils.exception_message(self.window(), 'Canceling the backend failed.')
+            utils.exception_message(self.window(), "Canceling the backend failed.")
         self.refresh()
 
     def closeEvent(self, event):
@@ -653,23 +729,19 @@ class PidCancellerTab(ReportTabEx):
         self.reload_timer = None
         return super(PidCancellerTab, self).closeEvent(event)
 
+
 class ConnectionList(PidCancellerTab):
-    ID = 'administrative/dbconnections'
-    TITLE = 'Current Database Connections'
-    URL_TAIL = 'api/database/connections'
+    ID = "administrative/dbconnections"
+    TITLE = "Current Database Connections"
+    URL_TAIL = "api/database/connections"
+
 
 class LockList(PidCancellerTab):
-    ID = 'administrative/dblocks'
-    TITLE = 'Current Database Locks'
-    URL_TAIL = 'api/database/locks'
+    ID = "administrative/dblocks"
+    TITLE = "Current Database Locks"
+    URL_TAIL = "api/database/locks"
 
 
-SIMPLE_LISTS = [ \
-        ConnectionList,
-        LockList, 
-        UserList, 
-        SessionList, 
-        RoleList,
-        ActivityList]
+SIMPLE_LISTS = [ConnectionList, LockList, UserList, SessionList, RoleList, ActivityList]
 
 SIMPLE_LIST_MAP = {K.ID: K for K in SIMPLE_LISTS}

@@ -1,21 +1,26 @@
-
 class ValidationError(Exception):
     pass
 
+
 def constraint(*flds):
     def f2(f):
-        if not f.__name__.startswith('require_'):
-            raise ValueError('valix constraint functions must start with an approved prefix')
+        if not f.__name__.startswith("require_"):
+            raise ValueError(
+                "valix constraint functions must start with an approved prefix"
+            )
         f.valix_attributes = flds
         return f
+
     return f2
+
 
 def class_constraints(cls):
     results = []
     for a in dir(cls):
-        if hasattr(getattr(cls, a), 'valix_attributes'):
+        if hasattr(getattr(cls, a), "valix_attributes"):
             results.append(getattr(cls, a))
     return results
+
 
 def class_validate_rowset(cls, rows):
     funcs = class_constraints(cls)
@@ -30,6 +35,7 @@ def class_validate_rowset(cls, rows):
                     invalids.append((row, attr, str(e)))
 
     return invalids
+
 
 def validate_cellset(constraints, cells):
     valids_pre = []

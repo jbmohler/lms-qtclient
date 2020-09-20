@@ -3,6 +3,7 @@ import rtlib
 from . import bindings
 from . import utils
 
+
 def no_op():
     pass
 
@@ -33,7 +34,7 @@ class ObjectDialog(QtWidgets.QDialog):
         if row == None:
             attrs = [a for a, _ in self.attrs]
             values = [v for _, v in self.attrs]
-            self.RowType = rtlib.fixedrecord('RowType', attrs)
+            self.RowType = rtlib.fixedrecord("RowType", attrs)
             row = self.RowType(*tuple(values))
 
         self.binder.bind(row)
@@ -51,7 +52,7 @@ class ObjectDialog(QtWidgets.QDialog):
             else:
                 abort_accept = not self.applychanges(self.binder.bound)
         except:
-            utils.exception_message(self, 'Error applying changes.')
+            utils.exception_message(self, "Error applying changes.")
             abort_accept = True
 
         if abort_accept:
@@ -66,9 +67,9 @@ class InternalLabelFormLayout(QtWidgets.QFormLayout):
         self._label_wid_list = []
 
     def addRow(self, label, widget, finalize=True):
-        if getattr(widget, 'internal_label', False):
+        if getattr(widget, "internal_label", False):
             widget.set_internal_label(label)
-            labwid = QtWidgets.QLabel('')
+            labwid = QtWidgets.QLabel("")
         else:
             labwid = QtWidgets.QLabel(label)
             labwid.setBuddy(widget)
@@ -87,6 +88,7 @@ class InternalLabelFormLayout(QtWidgets.QFormLayout):
         labwidth = max([lw.sizeHint().width() for lw in self._label_wid_list])
         for lw in self._label_wid_list:
             lw.setMinimumWidth(labwidth)
+
 
 class FormEntryDialog(ObjectDialog):
     def __init__(self, text, parent=None):

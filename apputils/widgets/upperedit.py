@@ -1,9 +1,10 @@
 from PySide2 import QtGui, QtWidgets
 
+
 class UpperValidator(QtGui.QValidator):
     def validate(self, input, pos):
         # strip & upper
-        cleaned = ''.join([a for a in input if 32 <= ord(a) < 128])
+        cleaned = "".join([a for a in input if 32 <= ord(a) < 128])
         return QtGui.QValidator.Acceptable, cleaned.upper(), pos
 
 

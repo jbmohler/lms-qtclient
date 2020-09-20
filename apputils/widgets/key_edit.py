@@ -7,7 +7,8 @@ The KeyEdit provides data sensitive editting for foreign key edits::
 
 from PySide2 import QtGui
 from .button_edit import ButtonEdit
-from . import icons # noqa: F401
+from . import icons  # noqa: F401
+
 
 class KeyEdit(ButtonEdit):
     """
@@ -15,6 +16,7 @@ class KeyEdit(ButtonEdit):
     search for rows from a database table.  KeyEdit is best used in the 
     InputYoke infrastructure with a DomainEntity derived class.
     """
+
     def __init__(self, parent=None):
         super(KeyEdit, self).__init__(parent)
-        self.button.setIcon(QtGui.QIcon(':/apputils/widgets/edit-find-6.ico'))
+        self.button.setIcon(QtGui.QIcon(":/apputils/widgets/edit-find-6.ico"))

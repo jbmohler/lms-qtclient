@@ -6,6 +6,7 @@ from client.qt import valqt
 from client.qt import winlist
 from client.qt import gridmgr
 
+
 class UserRoleMapperRowMixin:
     tracker = None
 
@@ -24,6 +25,7 @@ class UserRoleMapperRowMixin:
         self.tracker.set_dirty(self, attr)
         super(UserRoleMapperRowMixin, self).__setattr__(attr, value)
 
+
 class UserIndexer(object):
     def __init__(self, user_aid):
         self.user_aid = user_aid
@@ -34,25 +36,27 @@ class UserIndexer(object):
     def __set__(self, obj, value):
         obj.set_by_useraid(self.user_aid, value)
 
+
 class UserRoleMapperLineTracker(valqt.SaveButtonDocumentTracker):
     def set_dirty(self, row, attr):
         if not self.load_lockout:
-            if not hasattr(self, '_mods'):
+            if not hasattr(self, "_mods"):
                 self._mods = set()
             self._mods.add(row)
         super(UserRoleMapperLineTracker, self).set_dirty(row, attr)
 
     @property
     def modified(self):
-        if hasattr(self, '_mods'):
+        if hasattr(self, "_mods"):
             return self._mods
         else:
             return []
 
+
 class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
-    ID = 'admin_userrole_mapper'
-    TITLE = 'Set User Roles'
-    SRC_URL = 'api/userroles/by-users'
+    ID = "admin_userrole_mapper"
+    TITLE = "Set User Roles"
+    SRC_URL = "api/userroles/by-users"
 
     def __init__(self, session, exports_dir, parent=None, users=None):
         super(UserRoleMapperTargetsByUser, self).__init__(parent)
@@ -67,7 +71,7 @@ class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
         self.setCentralWidget(self.center)
         self.layout = QtWidgets.QVBoxLayout(self.center)
         self.grid = widgets.EditableTableView()
-        self.grid.setObjectName('content')
+        self.grid.setObjectName("content")
         self.grid.setSortingEnabled(True)
         QDB = QtWidgets.QDialogButtonBox
         self.buttons = QDB(QtCore.Qt.Horizontal)
@@ -83,37 +87,51 @@ class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
         self.tracker = UserRoleMapperLineTracker(self.btn_save, self.save_targets)
         self.reset()
 
-        self.geo = apputils.WindowGeometry(self, size=True, position=False, grids=[self.grid])
+        self.geo = apputils.WindowGeometry(
+            self, size=True, position=False, grids=[self.grid]
+        )
 
     def reset(self):
         if not self.tracker.save(asksave=True):
             return
 
         self.model = None
-        self.backgrounder(self.load, self.client.get, self.SRC_URL, users=','.join(self.user_universe))
+        self.backgrounder(
+            self.load, self.client.get, self.SRC_URL, users=",".join(self.user_universe)
+        )
 
     def load(self):
         self.setEnabled(False)
         try:
             content = yield
 
-            fred = {'tracker': self.tracker}
+            fred = {"tracker": self.tracker}
             for u in self.user_universe:
-                fred[f'user_{u}'] = UserIndexer(u)
-            self.MyUserRoleMapperRowMixin = type('MyUserRoleMapperRowMixin', (UserRoleMapperRowMixin,), fred)
+                fred[f"user_{u}"] = UserIndexer(u)
+            self.MyUserRoleMapperRowMixin = type(
+                "MyUserRoleMapperRowMixin", (UserRoleMapperRowMixin,), fred
+            )
 
             with self.tracker.loading():
                 self.records = content.main_table(mixin=self.MyUserRoleMapperRowMixin)
-                self.users = content.named_table('usernames')
+                self.users = content.named_table("usernames")
                 self.users.rows.sort(key=lambda x: x.username)
 
                 for row in self.records.rows:
                     if row.user_list == None:
                         row.user_list = []
 
-            columns = [c for c in self.records.columns if c.attr in ['role_name']]
+            columns = [c for c in self.records.columns if c.attr in ["role_name"]]
             for u in self.users.rows:
-                columns.append(apputils.field(f'user_{u.id}', u.username, type_='boolean', checkbox=True, editable=True))
+                columns.append(
+                    apputils.field(
+                        f"user_{u.id}",
+                        u.username,
+                        type_="boolean",
+                        checkbox=True,
+                        editable=True,
+                    )
+                )
             self.model = apputils.ObjectQtModel(columns=columns)
 
             with self.geo.grid_reset(self.grid):
@@ -127,17 +145,19 @@ class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
 
             self.setEnabled(True)
         except:
-            apputils.exception_message(self, f'There was an error loading {self.TITLE}.')
+            apputils.exception_message(
+                self, f"There was an error loading {self.TITLE}."
+            )
 
     def save_targets(self):
         try:
             tosend = self.records.duplicate(rows=list(self.tracker.modified))
-            data = {'users': ','.join(self.user_universe)}
-            files = {'userroles': tosend.as_http_post_file(exclusions=['role_name'])}
+            data = {"users": ",".join(self.user_universe)}
+            files = {"userroles": tosend.as_http_post_file(exclusions=["role_name"])}
 
             self.client.put(self.SRC_URL, data=data, files=files)
         except Exception:
-            apputils.exception_message(self.window(), f'Error saving {self.TITLE}.')
+            apputils.exception_message(self.window(), f"Error saving {self.TITLE}.")
             raise
 
     def closeEvent(self, event):

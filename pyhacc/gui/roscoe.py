@@ -2,7 +2,7 @@ import xml.dom.minidom as xml
 import client.qt as qt
 import apputils
 
-URL_BASE = 'api/roscoe'
+URL_BASE = "api/roscoe"
 
 """
 Twilio params:
@@ -29,23 +29,24 @@ Twilio params:
     ('NumSegments', '1')
 """
 
-TEST_PHONES = [\
-        '+11234567890',
-        '+14843334444',
-        '+14845556666']
+TEST_PHONES = ["+11234567890", "+14843334444", "+14845556666"]
+
 
 class TwilioParams:
     def __init__(self):
         pass
 
     def get_data(self):
-        return {'Body': self.Body, 'From': self.From}
+        return {"Body": self.Body, "From": self.From}
+
 
 def test_roscoe(session):
-    dlg = qt.FormEntryDialog('PyHacc Journal')
+    dlg = qt.FormEntryDialog("PyHacc Journal")
 
-    dlg.add_form_row('Body', 'Message', 'basic')
-    dlg.add_form_row('From', 'Source phone', 'options', options=[(p, p) for p in TEST_PHONES])
+    dlg.add_form_row("Body", "Message", "basic")
+    dlg.add_form_row(
+        "From", "Source phone", "options", options=[(p, p) for p in TEST_PHONES]
+    )
 
     def apply(bound):
         nonlocal session, dlg
@@ -53,10 +54,10 @@ def test_roscoe(session):
         payload = client.post(URL_BASE, data=bound.get_data())
         root = xml.parseString(payload)
         xx = root.toprettyxml()
-        apputils.information(dlg, f'TwiML:\n\n{xx}', richtext=False)
+        apputils.information(dlg, f"TwiML:\n\n{xx}", richtext=False)
 
     obj = TwilioParams()
-    obj.Body = ''
+    obj.Body = ""
     obj.From = TEST_PHONES[1]
 
     dlg.bind(obj)

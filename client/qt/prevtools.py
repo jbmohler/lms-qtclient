@@ -2,6 +2,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 
 UI_ACTION_PAUSE = 150
 
+
 class StdActionPause(QtCore.QTimer):
     def __init__(self, parent=None):
         super(StdActionPause, self).__init__(parent)
@@ -17,9 +18,9 @@ class RevealedSplitterHandle(QtWidgets.QSplitterHandle):
     def __init__(self, orientation, parent=None):
         super(RevealedSplitterHandle, self).__init__(orientation, parent)
 
-        self._font = QtGui.QFont('SansSerif', 10)
+        self._font = QtGui.QFont("SansSerif", 10)
 
-        self._image = QtGui.QIcon(':/fidolib/drag-left-arrow.png')
+        self._image = QtGui.QIcon(":/fidolib/drag-left-arrow.png")
         self._btn1 = QtWidgets.QPushButton(self)
         self._btn1.setIcon(self._image)
         self._btn1.clicked.connect(self.flickclick.emit)
@@ -34,15 +35,15 @@ class RevealedSplitterHandle(QtWidgets.QSplitterHandle):
         r = self.rect()
         if r.width() > self.trig_width:
             width = r.width()
-            width = (width - 24)//2
+            width = (width - 24) // 2
             height = r.height()
-            height = (height - 24)/4
+            height = (height - 24) / 4
 
-            r2 = r.adjusted(width, height, -width, -3*height)
+            r2 = r.adjusted(width, height, -width, -3 * height)
             self._btn1.setGeometry(r2)
             self._btn1.show()
 
-            r2 = r.adjusted(width, 3*height, -width, -height)
+            r2 = r.adjusted(width, 3 * height, -width, -height)
             self._btn2.setGeometry(r2)
             self._btn2.show()
         else:
@@ -57,23 +58,24 @@ class RevealedSplitterHandle(QtWidgets.QSplitterHandle):
 
         if r.width() > self.trig_width:
             width = r.width()
-            width = (width - 11)//2
+            width = (width - 11) // 2
             height = r.height()
-            height = (height - 16)/4
+            height = (height - 16) / 4
 
             p.setFont(self._font)
             p.rotate(-90)
-            r2 = r.adjusted(width, 2*height-10, -width, -2*height+10)
-            p.drawText(-r2.bottom(), r2.right(), 'Preview')
+            r2 = r.adjusted(width, 2 * height - 10, -width, -2 * height + 10)
+            p.drawText(-r2.bottom(), r2.right(), "Preview")
         p.end()
+
 
 class RevealedSplitter(QtWidgets.QSplitter):
     def __init__(self, orientation, parent=None):
         super(RevealedSplitter, self).__init__(orientation, parent)
 
-        self.thin_width = int(4.)#*apputils.get_font_multiplier())
-        self.thick_width = int(30.)#*apputils.get_font_multiplier())
-        self.trig_width = (self.thick_width + self.thin_width)//2
+        self.thin_width = int(4.0)  # *apputils.get_font_multiplier())
+        self.thick_width = int(30.0)  # *apputils.get_font_multiplier())
+        self.trig_width = (self.thick_width + self.thin_width) // 2
         self.splitterMoved.connect(self.reset_width)
 
     def reset_width(self, pos, index):
@@ -86,7 +88,7 @@ class RevealedSplitter(QtWidgets.QSplitter):
             sizes[-2] -= 100
             sizes[-1] += 100
             self.setSizes(sizes)
-            self.splitterMoved.emit(sizes[-2], len(sizes)-2)
+            self.splitterMoved.emit(sizes[-2], len(sizes) - 2)
             self.reset_width(0, 0)
 
     def createHandle(self):
@@ -114,11 +116,13 @@ class SidebarInterface:
         """
         pass
 
+
 class SidebarWrapper(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         if self._libby != None and self.isVisible():
             self._libby.liberate_sidebar(by_close_button=True)
         return super(SidebarWrapper, self).closeEvent(event)
+
 
 class SidebarLiberator(QtCore.QObject):
     def __init__(self, parent, sidebar, splitter):
@@ -130,21 +134,23 @@ class SidebarLiberator(QtCore.QObject):
         self._sidebar_lock = False
         self._wrapper = None
 
-        if hasattr(self.sidebar, 'toggle_liberated'):
+        if hasattr(self.sidebar, "toggle_liberated"):
             self.sidebar.toggle_liberated.connect(self.liberate_sidebar)
 
-        self.sidebar_free_action = QtWidgets.QAction('&Liberate Sidebar', self)
+        self.sidebar_free_action = QtWidgets.QAction("&Liberate Sidebar", self)
         self.sidebar_free_action.setCheckable(True)
-        self.sidebar_free_action.setShortcut('Ctrl+.')
+        self.sidebar_free_action.setShortcut("Ctrl+.")
         self.sidebar_free_action.triggered.connect(self.liberate_sidebar)
         parent.addAction(self.sidebar_free_action)
         sidebar.addAction(self.sidebar_free_action)
 
-        if getattr(self.sidebar, 'advance_highlight', None) != None:
-            self.sidebar_advance_action = QtWidgets.QAction('&Advance Selection', self)
+        if getattr(self.sidebar, "advance_highlight", None) != None:
+            self.sidebar_advance_action = QtWidgets.QAction("&Advance Selection", self)
             self.sidebar_advance_action.setCheckable(True)
-            self.sidebar_advance_action.setShortcut('F6')
-            self.sidebar_advance_action.triggered.connect(self.sidebar.advance_highlight.emit)
+            self.sidebar_advance_action.setShortcut("F6")
+            self.sidebar_advance_action.triggered.connect(
+                self.sidebar.advance_highlight.emit
+            )
             parent.addAction(self.sidebar_advance_action)
             sidebar.addAction(self.sidebar_advance_action)
 
@@ -160,7 +166,9 @@ class SidebarLiberator(QtCore.QObject):
         self.sidebar.close()
 
     def liberated(self):
-        return self.sidebar not in [self.splitter.widget(i) for i in range(self.splitter.count())]
+        return self.sidebar not in [
+            self.splitter.widget(i) for i in range(self.splitter.count())
+        ]
 
     def liberate_sidebar(self, *args, by_close_button=False):
         if self._sidebar_lock:
@@ -173,7 +181,9 @@ class SidebarLiberator(QtCore.QObject):
                 # save relative location of wrapper
                 tr = self.parent().mapToGlobal(self.parent().rect().topRight())
                 tl = wrap.frameGeometry().topLeft()
-                self.parent().geo.save_xdata(self.objectName(), locate=(tl-tr), size=wrap.size())
+                self.parent().geo.save_xdata(
+                    self.objectName(), locate=(tl - tr), size=wrap.size()
+                )
 
                 self.splitter.addWidget(self._wrapper.centralWidget())
                 self._wrapper = None
@@ -194,10 +204,10 @@ class SidebarLiberator(QtCore.QObject):
             # retrieve relative location of wrapper
             tr = self.parent().mapToGlobal(self.parent().rect().topRight())
             xdata = self.parent().geo.read_xdata(self.objectName())
-            offset = xdata.get('locate', QtCore.QPoint(10, 0))
-            self._wrapper.move(tr+offset)
+            offset = xdata.get("locate", QtCore.QPoint(10, 0))
+            self._wrapper.move(tr + offset)
 
             def_size = self.parent().size()
             def_size.setWidth(def_size.width() // 4 * 3)
-            size = xdata.get('size', def_size)
+            size = xdata.get("size", def_size)
             self._wrapper.resize(size)

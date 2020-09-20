@@ -6,12 +6,14 @@ import apputils.widgets as base
 import apputils.models as models
 import client.qt as qt
 
-AccountMiniInfo = rtlib.fixedrecord('AccountMiniInfo', ['id', 'acc_name'])
-AccountTypeMiniInfo = rtlib.fixedrecord('AccountTypeMiniInfo', ['id', 'name'])
+AccountMiniInfo = rtlib.fixedrecord("AccountMiniInfo", ["id", "acc_name"])
+AccountTypeMiniInfo = rtlib.fixedrecord("AccountTypeMiniInfo", ["id", "name"])
+
 
 class STATIC:
-    account_types = 'account_types'
-    journals = 'journals'
+    account_types = "account_types"
+    journals = "journals"
+
 
 class UnknownKey(apputils.ModValueError):
     pass
@@ -22,8 +24,8 @@ class IdentifierEdit(base.KeyEdit):
     def __init__(self, parent=None):
         super(IdentifierEdit, self).__init__(parent)
 
-        #self._validator = base.UpperValidator(self)
-        #self.setValidator(self._validator)
+        # self._validator = base.UpperValidator(self)
+        # self.setValidator(self._validator)
         self.popup_list = None
 
         app = QtWidgets.QApplication.instance()
@@ -36,16 +38,16 @@ class IdentifierEdit(base.KeyEdit):
         self.textEdited.connect(self.update_prefix)
 
         self.action_lookup = None
-        if hasattr(self, 'LOOKUP_URL_CONSTRUCTION'):
-            self.action_lookup = QtWidgets.QAction('&Look-up...', self)
-            self.action_lookup.setShortcut(QtGui.QKeySequence('Ctrl+F4'))
+        if hasattr(self, "LOOKUP_URL_CONSTRUCTION"):
+            self.action_lookup = QtWidgets.QAction("&Look-up...", self)
+            self.action_lookup.setShortcut(QtGui.QKeySequence("Ctrl+F4"))
             self.action_lookup.setShortcutContext(QtCore.Qt.WidgetShortcut)
             self.action_lookup.triggered.connect(self.std_url_lookup)
             self.addAction(self.action_lookup)
 
         self._init_popup()
 
-    INVALID = "QLineEdit{ background: --; }".replace('--', valix.INVALID_RGBA)
+    INVALID = "QLineEdit{ background: --; }".replace("--", valix.INVALID_RGBA)
     VALID = "QLineEdit{}"
 
     def set_invalid_feedback(self, invalid=True):
@@ -57,15 +59,20 @@ class IdentifierEdit(base.KeyEdit):
         self.style().polish(self)
 
     def exact_object_match(self, objs):
-        raise NotImplementedError('override this method to determine if any of the passed objects matches the current text')
+        raise NotImplementedError(
+            "override this method to determine if any of the passed objects matches the current text"
+        )
 
     def construct_popup_model(self):
-        raise NotImplementedError('override this method to build the model for the self.popup_list')
+        raise NotImplementedError(
+            "override this method to build the model for the self.popup_list"
+        )
 
     def std_url_lookup(self):
         if self._static_key != None:
             url = self.LOOKUP_URL_CONSTRUCTION.format(self._static_key)
             import fidolib.framework.fidoglob as fg
+
             fg.show_fido_link_parented(self.window(), url)
 
     def clear_value(self):
@@ -73,16 +80,16 @@ class IdentifierEdit(base.KeyEdit):
         self.editingFinished.emit()
 
     def clear_static_key(self):
-        if hasattr(self, '_static_key'):
+        if hasattr(self, "_static_key"):
             del self._static_key
 
     def set_static_key(self, value):
         self._static_key = value
 
     def get_static_key(self):
-        if hasattr(self, '_static_key'):
+        if hasattr(self, "_static_key"):
             return self._static_key
-        raise UnknownKey('no static key matches value or value is unverified')
+        raise UnknownKey("no static key matches value or value is unverified")
 
     def _init_popup(self):
         if self.popup_list is not None:
@@ -118,7 +125,10 @@ class IdentifierEdit(base.KeyEdit):
 
     def event(self, e):
         if e.type() in [QtCore.QEvent.KeyPress]:
-            self.pause_autofill = e.key() in [QtCore.Qt.Key_Backspace, QtCore.Qt.Key_Delete]
+            self.pause_autofill = e.key() in [
+                QtCore.Qt.Key_Backspace,
+                QtCore.Qt.Key_Delete,
+            ]
         if e.type() in [QtCore.QEvent.Hide]:
             self.shutdown(self)
         if e.type() in [QtCore.QEvent.Show]:
@@ -130,7 +140,12 @@ class IdentifierEdit(base.KeyEdit):
             return super(IdentifierEdit, self).eventFilter(o, e)
 
         if e.type() == QtCore.QEvent.KeyPress:
-            if e.key() in [QtCore.Qt.Key_Escape, QtCore.Qt.Key_Return, QtCore.Qt.Key_Tab, QtCore.Qt.Key_Backtab]:
+            if e.key() in [
+                QtCore.Qt.Key_Escape,
+                QtCore.Qt.Key_Return,
+                QtCore.Qt.Key_Tab,
+                QtCore.Qt.Key_Backtab,
+            ]:
                 self.popup_list.hide()
             if e.key() in [QtCore.Qt.Key_Escape]:
                 return True
@@ -148,14 +163,16 @@ class IdentifierEdit(base.KeyEdit):
     def update_prefix(self, text):
         self.clear_static_key()
         sc = lambda prefix=text: self.show_completions(prefix)
-        self.backgrounder.named['auto-complete'](sc, self.client.get, self.PREFIX_COMPLETIONS_URL, prefix=text)
+        self.backgrounder.named["auto-complete"](
+            sc, self.client.get, self.PREFIX_COMPLETIONS_URL, prefix=text
+        )
 
     def show_completions(self, prefix):
         try:
             completions = yield
             self.refine_popup(prefix, completions)
         except:
-            qt.exception_message(self.window(), 'Completions failed')
+            qt.exception_message(self.window(), "Completions failed")
 
     def refine_popup(self, prefix, content):
         self.popup_data = content.main_table()
@@ -166,7 +183,9 @@ class IdentifierEdit(base.KeyEdit):
             self.popup_list.move(self.mapToGlobal(rect.bottomLeft()))
             self.popup_list.show()
             if self.popup_list.width() < self.width():
-                self.popup_list.resize(self.width(), self.popup_list.viewport().height())
+                self.popup_list.resize(
+                    self.width(), self.popup_list.viewport().height()
+                )
             self.popup_list.resizeColumnsToContents()
             self.setFocus(QtCore.Qt.PopupFocusReason)
         else:
@@ -178,7 +197,7 @@ class IdentifierEdit(base.KeyEdit):
         if len(prefix) == selstart and self.text()[:selstart] == prefix:
             if len(self.popup_data.rows) == 0:
                 # none available
-                #self.clear_static_key() -- already done in update_prefix
+                # self.clear_static_key() -- already done in update_prefix
                 self.set_invalid_feedback()
                 self.editingFinished.emit()
             elif self.pause_autofill:
@@ -209,7 +228,7 @@ class IdentifierEdit(base.KeyEdit):
 
     def set_static_key_public(self, key):
         if key == None:
-            self.setText('')
+            self.setText("")
             self.set_static_key(None)
         else:
             content = self.client.get(self.AUTOID_RESOLVE_URL.format(key), minimal=True)
@@ -222,7 +241,7 @@ class IdentifierEdit(base.KeyEdit):
 
 
 class AccountEdit(IdentifierEdit):
-    PREFIX_COMPLETIONS_URL = 'api/accounts/completions'
+    PREFIX_COMPLETIONS_URL = "api/accounts/completions"
 
     def __init__(self, parent=None):
         super(AccountEdit, self).__init__(parent)
@@ -231,22 +250,28 @@ class AccountEdit(IdentifierEdit):
 
     def clicked(self):
         import pyhacclib.glaccounts as glaccounts
+
         app = QtWidgets.QApplication.instance()
         v = glaccounts.AccountSearch(app.session, app.exports_dir)
         dlg = SearchShell(self.window(), v)
         dlg.show()
         if dlg.Accepted == dlg.exec_():
-            if hasattr(self, 'persister'):
-                self.persister(dlg.inside.ctxmenu.active_index.data(models.ObjectRole).account)
+            if hasattr(self, "persister"):
+                self.persister(
+                    dlg.inside.ctxmenu.active_index.data(models.ObjectRole).account
+                )
                 return
             self.set_invalid_feedback(False)
-            self.set_value_from_object(dlg.inside.ctxmenu.active_index.data(models.ObjectRole))
+            self.set_value_from_object(
+                dlg.inside.ctxmenu.active_index.data(models.ObjectRole)
+            )
 
     def construct_popup_model(self):
-        columns = [ \
-                models.Column('acc_name', 'Account'),
-                models.Column('type', 'Type'),
-                models.Column('description', 'Description')]
+        columns = [
+            models.Column("acc_name", "Account"),
+            models.Column("type", "Type"),
+            models.Column("description", "Description"),
+        ]
         return models.ObjectQtModel(columns)
 
     def exact_object_match(self, objs):
@@ -267,63 +292,74 @@ class AccountEdit(IdentifierEdit):
             self.setText(value.acc_name)
             self.set_static_key(value.id)
         else:
-            self.setText('')
+            self.setText("")
             self.clear_static_key()
 
 
 class AccountingWidgetsPlugin:
     def polish(self, attr, type_, meta):
-        if type_ == 'pyhacc_account':
-            meta['formatter'] = lambda x: x.acc_name
-            meta['coerce_edit'] = lambda x: x
-        if type_ == 'pyhacc_account.name':
-            meta['url_factory'] = lambda *args: f'pyhacc:accounts?key={args[1]}'
-        if type_ == 'pyhacc_journal.name':
-            meta['url_factory'] = lambda *args: f'pyhacc:journals?key={args[1]}'
-        if type_ == 'pyhacc_accounttype.name':
-            meta['url_factory'] = lambda *args: f'pyhacc:accounttypes?key={args[1]}'
-        if type_ == 'pyhacc_transaction.surrogate':
-            meta['url_factory'] = lambda *args: f'pyhacc:transactions?key={args[0]}'
+        if type_ == "pyhacc_account":
+            meta["formatter"] = lambda x: x.acc_name
+            meta["coerce_edit"] = lambda x: x
+        if type_ == "pyhacc_account.name":
+            meta["url_factory"] = lambda *args: f"pyhacc:accounts?key={args[1]}"
+        if type_ == "pyhacc_journal.name":
+            meta["url_factory"] = lambda *args: f"pyhacc:journals?key={args[1]}"
+        if type_ == "pyhacc_accounttype.name":
+            meta["url_factory"] = lambda *args: f"pyhacc:accounttypes?key={args[1]}"
+        if type_ == "pyhacc_transaction.surrogate":
+            meta["url_factory"] = lambda *args: f"pyhacc:transactions?key={args[0]}"
 
     def widget_map(self):
-        return { \
-            'pyhacc_account': pyhacc_account_tuple_edit,
-            'pyhacc_account.id': pyhacc_account_id_edit,
-            'pyhacc_account.name': pyhacc_account_acc_name_edit,
-            'pyhacc_accounttype.id': rtx_static_settings_value_combo(STATIC.account_types),
-            'pyhacc_journal.id': rtx_static_settings_value_combo(STATIC.journals)}
-            #'pyhacc_accounttype': rtx_static_settings_value_combo(STATIC.account_types, AccountTypeMiniInfo)}
+        return {
+            "pyhacc_account": pyhacc_account_tuple_edit,
+            "pyhacc_account.id": pyhacc_account_id_edit,
+            "pyhacc_account.name": pyhacc_account_acc_name_edit,
+            "pyhacc_accounttype.id": rtx_static_settings_value_combo(
+                STATIC.account_types
+            ),
+            "pyhacc_journal.id": rtx_static_settings_value_combo(STATIC.journals),
+        }
+        #'pyhacc_accounttype': rtx_static_settings_value_combo(STATIC.account_types, AccountTypeMiniInfo)}
 
 
 LOCAL_STATIC_SETTINGS = []
+
 
 def verify_settings_load(parent, client, widgets):
     if isinstance(widgets, qt.Binder):
         widgets = list(widgets.widgets.values())
 
     global LOCAL_STATIC_SETTINGS
-    needs_load = lambda w: getattr(w, 'STATIC_SETTINGS_NAME', None) not in [None]+LOCAL_STATIC_SETTINGS
+    needs_load = (
+        lambda w: getattr(w, "STATIC_SETTINGS_NAME", None)
+        not in [None] + LOCAL_STATIC_SETTINGS
+    )
     to_load_widgets = [w for w in widgets if needs_load(w)]
 
-    client.session.ensure_static_settings(list(set([w.STATIC_SETTINGS_NAME for w in to_load_widgets])))
+    client.session.ensure_static_settings(
+        list(set([w.STATIC_SETTINGS_NAME for w in to_load_widgets]))
+    )
 
     for w in to_load_widgets:
         w.load_static_settings()
+
 
 def static_settings(settings_name, withkey=True):
     app = QtWidgets.QApplication.instance()
     return app.session.static_settings(settings_name, withkey=withkey)
 
+
 def load_static_settings(self):
     try:
         self._combo.clear()
         items = static_settings(self.STATIC_SETTINGS_NAME, withkey=False)
-        if getattr(self, 'all_option', False):
-            self._combo.addItem('- All -', '__all__')
-        if getattr(self, 'blank_option', False):
-            self._combo.addItem('- Blank -', '__blank__')
-        if getattr(self, 'any_option', False):
-            self._combo.addItem('- Any -', '__any__')
+        if getattr(self, "all_option", False):
+            self._combo.addItem("- All -", "__all__")
+        if getattr(self, "blank_option", False):
+            self._combo.addItem("- Blank -", "__blank__")
+        if getattr(self, "any_option", False):
+            self._combo.addItem("- Any -", "__any__")
         for value in items:
             if value == None:
                 # already added
@@ -331,6 +367,7 @@ def load_static_settings(self):
             self._combo.addItem(value, value)
     except RuntimeError:
         pass
+
 
 class DualComboBoxStatic(base.DualComboBoxBase):
     def userrole_value(self):
@@ -342,7 +379,9 @@ class DualComboBoxStatic(base.DualComboBoxBase):
 
 
 def rtx_static_settings_combo(settings_name):
-    def rtx_static_settings_factory(parent, all_option=False, blank_option=False, any_option=False):
+    def rtx_static_settings_factory(
+        parent, all_option=False, blank_option=False, any_option=False
+    ):
         Klass = apputils.as_modifiable(DualComboBoxStatic)
         Klass.STATIC_SETTINGS_NAME = settings_name
         Klass.value = DualComboBoxStatic.userrole_value
@@ -356,25 +395,30 @@ def rtx_static_settings_combo(settings_name):
         w._combo.currentIndexChanged.connect(lambda *args: w.setWidgetModified(True))
         w._combo.currentIndexChanged.connect(lambda *args: w.setValueApplied())
         return w
+
     return rtx_static_settings_factory
+
 
 def load_static_settings_value(self):
     try:
         self._combo.clear()
         items = static_settings(self.STATIC_SETTINGS_NAME, withkey=True)
-        if getattr(self, 'all_option', False):
-            self._combo.addItem('- All -', '__all__')
-        if getattr(self, 'blank_option', False):
-            self._combo.addItem('- Blank -', '__blank__')
-        if getattr(self, 'any_option', False):
-            self._combo.addItem('- Any -', '__any__')
+        if getattr(self, "all_option", False):
+            self._combo.addItem("- All -", "__all__")
+        if getattr(self, "blank_option", False):
+            self._combo.addItem("- Blank -", "__blank__")
+        if getattr(self, "any_option", False):
+            self._combo.addItem("- Any -", "__any__")
         for shown, value in items:
             self._combo.addItem(shown, value)
     except RuntimeError:
         pass
 
+
 def rtx_static_settings_value_combo(settings_name):
-    def rtx_static_settings_value_factory(parent, all_option=False, blank_option=False, any_option=False):
+    def rtx_static_settings_value_factory(
+        parent, all_option=False, blank_option=False, any_option=False
+    ):
         Klass = apputils.as_modifiable(DualComboBoxStatic)
         Klass.STATIC_SETTINGS_NAME = settings_name
         Klass.value = DualComboBoxStatic.userrole_value
@@ -388,7 +432,9 @@ def rtx_static_settings_value_combo(settings_name):
         w._combo.currentIndexChanged.connect(lambda *args: w.setWidgetModified(True))
         w._combo.currentIndexChanged.connect(lambda *args: w.setValueApplied())
         return w
+
     return rtx_static_settings_value_factory
+
 
 def pyhacc_account_tuple_edit(parent):
     Klass = apputils.as_modifiable(AccountEdit)
@@ -398,6 +444,7 @@ def pyhacc_account_tuple_edit(parent):
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     return w
+
 
 def pyhacc_account_acc_name_edit(parent):
     Klass = apputils.as_modifiable(AccountEdit)
@@ -409,6 +456,7 @@ def pyhacc_account_acc_name_edit(parent):
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     return w
+
 
 def pyhacc_account_id_edit(parent):
     Klass = apputils.as_modifiable(AccountEdit)

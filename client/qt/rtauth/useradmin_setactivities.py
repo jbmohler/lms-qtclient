@@ -8,18 +8,20 @@ from client.qt import winlist
 from client.qt import valqt
 from client.qt import gridmgr
 
+
 def attr_2_label(attr):
     if attr == None:
-        return ''
-    if attr.startswith('api_'):
+        return ""
+    if attr.startswith("api_"):
         attr = attr[4:]
-    if attr.startswith('put_api_'):
+    if attr.startswith("put_api_"):
         attr = attr[8:]
-    if attr.startswith('delete_'):
+    if attr.startswith("delete_"):
         attr = attr[7:]
-    if attr.startswith('post_api_'):
+    if attr.startswith("post_api_"):
         attr = attr[9:]
-    return attr.replace('_', ' ').title()
+    return attr.replace("_", " ").title()
+
 
 class ActivitiesEditing:
     # TODO: write the setattr with tracker notify!
@@ -29,15 +31,20 @@ class ActivitiesEditing:
         self = kls()
         self.id = uuid.uuid1().hex
         self.act_name = row.act_name
-        self.description = row.description if row.description not in ['', None] else attr_2_label(row.act_name)
+        self.description = (
+            row.description
+            if row.description not in ["", None]
+            else attr_2_label(row.act_name)
+        )
         self.url = row.url
-        self.save = row.act_name not in ['', None]
+        self.save = row.act_name not in ["", None]
         return self
 
+
 class ManageActivities(QtWidgets.QMainWindow):
-    ID = 'admin_write_activities'
-    TITLE = 'Manage Activities List'
-    SRC_URL = 'api/activities'
+    ID = "admin_write_activities"
+    TITLE = "Manage Activities List"
+    SRC_URL = "api/activities"
 
     def __init__(self, session, exports_dir, parent=None, unregistered=True):
         super(ManageActivities, self).__init__(parent)
@@ -51,7 +58,7 @@ class ManageActivities(QtWidgets.QMainWindow):
         self.setCentralWidget(self.center)
         self.layout = QtWidgets.QVBoxLayout(self.center)
         self.grid = widgets.EditableTableView()
-        self.grid.setObjectName('content')
+        self.grid.setObjectName("content")
         self.grid.setSortingEnabled(True)
         self.gridmgr = gridmgr.GridManager(self.grid, self)
 
@@ -64,12 +71,21 @@ class ManageActivities(QtWidgets.QMainWindow):
         self.client = session.std_client()
         self.backgrounder = apputils.Backgrounder(self)
         self.ctxmenu = viewmenus.ContextMenu(self.grid, self)
-        self.tracker = valqt.SaveButtonDocumentTracker(self.btn_save, self.save_activities)
+        self.tracker = valqt.SaveButtonDocumentTracker(
+            self.btn_save, self.save_activities
+        )
 
-        self.geo = apputils.WindowGeometry(self, size=True, position=False, grids=[self.grid])
+        self.geo = apputils.WindowGeometry(
+            self, size=True, position=False, grids=[self.grid]
+        )
 
         if unregistered:
-            self.backgrounder(self.load_unregistered, self.client.get, 'api/endpoints', unregistered=True)
+            self.backgrounder(
+                self.load_unregistered,
+                self.client.get,
+                "api/endpoints",
+                unregistered=True,
+            )
 
     def load_unregistered(self):
         self.center.setEnabled(False)
@@ -77,11 +93,12 @@ class ManageActivities(QtWidgets.QMainWindow):
             content = yield
             loaded = content.main_table()
 
-            columns = [ \
-                    ('id', {'type': 'x_data'}),
-                    ('description', {'check_attr': 'save', 'editable': True}),
-                    ('act_name', None),
-                    ('url', None)]
+            columns = [
+                ("id", {"type": "x_data"}),
+                ("description", {"check_attr": "save", "editable": True}),
+                ("act_name", None),
+                ("url", None),
+            ]
 
             self.records = rtlib.ClientTable(columns, [], mixin=ActivitiesEditing)
 
@@ -93,16 +110,20 @@ class ManageActivities(QtWidgets.QMainWindow):
 
             self.center.setEnabled(True)
         except:
-            apputils.exception_message(self, f'There was an error loading {self.TITLE}.')
+            apputils.exception_message(
+                self, f"There was an error loading {self.TITLE}."
+            )
 
     def save_activities(self):
         try:
-            tosend = self.records.duplicate(rows=[r for r in self.records.rows if r.save])
-            files = {'activities': tosend.as_http_post_file()}
+            tosend = self.records.duplicate(
+                rows=[r for r in self.records.rows if r.save]
+            )
+            files = {"activities": tosend.as_http_post_file()}
 
             self.client.post(self.SRC_URL, files=files)
         except Exception:
-            apputils.exception_message(self.window(), f'Error saving {self.TITLE}.')
+            apputils.exception_message(self.window(), f"Error saving {self.TITLE}.")
             raise
 
     def closeEvent(self, event):

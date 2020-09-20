@@ -4,18 +4,21 @@ import apputils
 from . import columnchooser
 import apputils.models as models
 
+
 class ViewBaseMixin:
     def init_column_choose(self):
         self.header().setSectionsMovable(True)
 
-        self.choose_action = QtWidgets.QAction('&Manage Columns', self)
+        self.choose_action = QtWidgets.QAction("&Manage Columns", self)
         self.choose_action.triggered.connect(self.choose_columns)
         self.header().addAction(self.choose_action)
         self.header().setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
 
     def choose_columns(self):
         if None == apputils.base_columned_model(self.model()):
-            apputils.information(self.window(), 'Column management is not available for this list.')
+            apputils.information(
+                self.window(), "Column management is not available for this list."
+            )
             return
         m = columnchooser.ModelColumnChooser(self.window())
         m.set_view(self)
@@ -78,24 +81,28 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
             cls = index.model().cls
             if cls:
                 c = index.model().columns[index.column()]
-                userattr = getattr(cls, c.attr if hasattr(c, 'attr') else c)
-                if userattr is not None and hasattr(userattr, 'WidgetBind'):
-                    userattr.WidgetBind(editor, index.model().row_object_by_index(index))
+                userattr = getattr(cls, c.attr if hasattr(c, "attr") else c)
+                if userattr is not None and hasattr(userattr, "WidgetBind"):
+                    userattr.WidgetBind(
+                        editor, index.model().row_object_by_index(index)
+                    )
         except AttributeError:
             pass
 
-        if not hasattr(editor, '_delegate_setup_done_'):
+        if not hasattr(editor, "_delegate_setup_done_"):
             if isinstance(editor, QtWidgets.QComboBox):
-                editor.currentIndexChanged.connect(lambda _, _ed=editor: self.commit_trigger(_ed))
+                editor.currentIndexChanged.connect(
+                    lambda _, _ed=editor: self.commit_trigger(_ed)
+                )
             editor._delegate_setup_done_ = True
 
-        # http://bugreports.qt.nokia.com/browse/QTBUG-428 - combo boxes don't play nice with qdatawidget mapper 
+        # http://bugreports.qt.nokia.com/browse/QTBUG-428 - combo boxes don't play nice with qdatawidget mapper
         if apputils.is_modifiable(editor):
             editor.setValue(index.data(QtCore.Qt.EditRole))
         elif isinstance(editor, QtWidgets.QComboBox):
             text = index.data()
             if text == None:
-                text = ''
+                text = ""
             if editor.isEditable():
                 editor.setEditText(text)
             else:
@@ -110,14 +117,17 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
         self.commitData.emit(editor)
 
     def commit_current(self):
-        if getattr(self, 'current_editor', None) != None:
+        if getattr(self, "current_editor", None) != None:
             self.commit_trigger(self.current_editor)
 
     def _mass_edit_indices(self, index):
         if self.view != None:
             indices = []
             for index2 in self.view.selectedIndexes():
-                if index.parent() == index2.parent() and index.column() == index2.column():
+                if (
+                    index.parent() == index2.parent()
+                    and index.column() == index2.column()
+                ):
                     indices.append(index2)
             # This exception clause makes checking an index only
             # work en-masse if the check/uncheck action is in
@@ -135,7 +145,7 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
         yield
 
     def massEdit(self, model, index):
-        if hasattr(model, 'massEditProxies'):
+        if hasattr(model, "massEditProxies"):
             indices = self._mass_edit_indices(index)
             return model.massEditProxies(indices)
         else:
@@ -155,13 +165,17 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
                 elif isinstance(editor, QtWidgets.QComboBox):
                     model.setData(index, editor.currentText())
                 else:
-                    QtWidgets.QStyledItemDelegate.setModelData(self, editor, model, index)
+                    QtWidgets.QStyledItemDelegate.setModelData(
+                        self, editor, model, index
+                    )
             except models.ValueSetRefusal:
                 pass
 
     def editorEvent(self, event, model, option, index):
         with self.massEdit(model, index):
-            return QtWidgets.QStyledItemDelegate.editorEvent(self, event, model, option, index)
+            return QtWidgets.QStyledItemDelegate.editorEvent(
+                self, event, model, option, index
+            )
 
     def createEditor(self, parent, option, index):
         column = index.model().columns[index.column()]
@@ -181,7 +195,11 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
             self._html_paint(painter, option, index)
             return
 
-        if self.view != None and hasattr(self.view, 'gridLines') and self.view.gridLines():
+        if (
+            self.view != None
+            and hasattr(self.view, "gridLines")
+            and self.view.gridLines()
+        ):
             painter.save()
             painter.setPen(QtGui.QColor(QtCore.Qt.lightGray))
             painter.drawRect(option.rect)
@@ -200,13 +218,17 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
         pad = 0
         if option.decorationSize.width() > 0:
             pad = option.decorationSize.width()
-        return QtCore.QSize(w+pad, m.height()*2)
+        return QtCore.QSize(w + pad, m.height() * 2)
 
     def _html_paint(self, painter, option, index):
         options = QtGui.QStyleOptionViewItemV4(option)
         self.initStyleOption(options, index)
-        
-        style = QtWidgets.QApplication.style() if options.widget is None else options.widget.style()
+
+        style = (
+            QtWidgets.QApplication.style()
+            if options.widget is None
+            else options.widget.style()
+        )
 
         doc = QtGui.QTextDocument()
         doc.setHtml(options.text)
@@ -218,23 +240,25 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
         ctx = QtGui.QAbstractTextDocumentLayout.PaintContext()
 
         # Highlighting text if item is selected
-        #if (optionV4.state & QStyle::State_Selected)
+        # if (optionV4.state & QStyle::State_Selected)
         #   ctx.palette.setColor(QPalette::Text, optionV4.palette.color(QPalette::Active, QPalette::HighlightedText))
 
-        textRect = options.rect # style.subElementRect(QtWidgets.QStyle.SE_ItemViewItemText, options,)
+        textRect = (
+            options.rect
+        )  # style.subElementRect(QtWidgets.QStyle.SE_ItemViewItemText, options,)
         if index.flags() & QtCore.Qt.ItemIsUserCheckable:
             textRect = textRect.adjusted(options.decorationSize.width(), 0, 0, 0)
         painter.save()
         painter.translate(textRect.topLeft())
         painter.setClipRect(textRect.translated(-textRect.topLeft()))
         doc.documentLayout().draw(painter, ctx)
-        
+
         painter.restore()
 
     def _html_sizeHint(self, option, index):
         options = QtGui.QStyleOptionViewItemV4(option)
         self.initStyleOption(options, index)
-        
+
         doc = QtGui.QTextDocument()
         doc.setHtml(options.text)
         doc.setTextWidth(options.rect.width())
@@ -244,13 +268,14 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
 class EditableTableView(TableView):
     def __init__(self, parent=None):
         super(EditableTableView, self).__init__(parent)
-        #self.use_edit_tab_semantics = False
+        # self.use_edit_tab_semantics = False
 
         self.setEditTriggers(QtWidgets.QAbstractItemView.AllEditTriggers)
+
 
 class EditableTreeView(TreeView):
     def __init__(self, parent=None):
         super(EditableTreeView, self).__init__(parent)
-        #self.use_edit_tab_semantics = False
+        # self.use_edit_tab_semantics = False
 
         self.setEditTriggers(QtWidgets.QAbstractItemView.AllEditTriggers)

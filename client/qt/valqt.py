@@ -12,23 +12,27 @@ import apputils
 from . import bindings
 from . import utils
 
+
 class SaveError(RuntimeError):
     pass
 
 
 def commit_mayor(mayor):
     import apputils.widgets as widgets
+
     if isinstance(mayor, widgets.TableView):
         mayor.commit_editors()
     elif isinstance(mayor, bindings.Binder):
         if mayor.bound == None:
-            raise NotImplementedError('unconnected singleton mayor ... mayday')
+            raise NotImplementedError("unconnected singleton mayor ... mayday")
         mayor.save(mayor.bound)
     else:
-        raise NotImplementedError('unsupported type of mayor')
+        raise NotImplementedError("unsupported type of mayor")
+
 
 def focus_to_edit(mayor, error):
     import apputils.widgets as widgets
+
     if isinstance(mayor, widgets.TableView):
         index = mayor.model().index_object_column(error[0], error[1])
         mayor.setCurrentIndex(index)
@@ -36,12 +40,15 @@ def focus_to_edit(mayor, error):
         w = mayor.widgets[error[1]]
         w.setFocus()
     else:
-        raise NotImplementedError('unsupported type of mayor')
+        raise NotImplementedError("unsupported type of mayor")
+
 
 def highlight_errors(mayor, errors):
     import apputils.widgets as widgets
+
     if isinstance(mayor, widgets.TableView):
         mayor.model().update_invalid_fields([], errors)
+
 
 class ValidationSession:
     def __init__(self, frame):
@@ -72,11 +79,15 @@ class ValidationSession:
     def finalize(self):
         self.frame.finalize_session(self)
 
+
 VAL_FRAME_CSS = """
 QFrame {
     background: --;
 }
-""".replace('--', valix.INVALID_RGBA)
+""".replace(
+    "--", valix.INVALID_RGBA
+)
+
 
 class ValidationFrame(QtWidgets.QFrame):
     focus_error = QtCore.Signal()
@@ -90,10 +101,10 @@ class ValidationFrame(QtWidgets.QFrame):
         self.obscured.installEventFilter(self)
 
         self.layout = QtWidgets.QHBoxLayout(self)
-        self.status = QtWidgets.QLabel('no errors')
-        self.gobtn = QtWidgets.QPushButton('&Fix Error')
+        self.status = QtWidgets.QLabel("no errors")
+        self.gobtn = QtWidgets.QPushButton("&Fix Error")
         self.gobtn.clicked.connect(self.focus_error.emit)
-        self.hidebtn = QtWidgets.QPushButton('&X')
+        self.hidebtn = QtWidgets.QPushButton("&X")
         self.hidebtn.clicked.connect(self.hide)
         self.layout.addWidget(self.status)
         self.layout.addStretch(12)
@@ -104,7 +115,7 @@ class ValidationFrame(QtWidgets.QFrame):
         self._set_size()
 
         self.hide_timer = QtCore.QTimer(self)
-        self.hide_timer.setInterval(1000*5)
+        self.hide_timer.setInterval(1000 * 5)
         self.hide_timer.setSingleShot(True)
         self.hide_timer.timeout.connect(self.hide)
 
@@ -116,7 +127,7 @@ class ValidationFrame(QtWidgets.QFrame):
     def eventFilter(self, obj, ev):
         if obj == self.obscured and ev.type() == QtCore.QEvent.Resize:
             self._set_size()
-            #self.show()
+            # self.show()
         return False
 
     def hideEvent(self, event):
@@ -133,7 +144,7 @@ class ValidationFrame(QtWidgets.QFrame):
             self.show()
             self.hide_timer.start()
             focus_to_edit(mayor, error)
-            raise SaveError('validation failed')
+            raise SaveError("validation failed")
 
 
 class DocumentTracker:
@@ -178,8 +189,10 @@ class DocumentTracker:
         Returns one of 'Yes', 'No', 'Cancel'
         """
         if not self.dirty:
-            return 'No'
-        return apputils.message(parent, 'Do you want to save changes?', buttons=['Yes', 'No', 'Cancel'])
+            return "No"
+        return apputils.message(
+            parent, "Do you want to save changes?", buttons=["Yes", "No", "Cancel"]
+        )
 
     def _commit_mayors(self):
         for mayor in self._mayors:
@@ -191,18 +204,18 @@ class DocumentTracker:
 
         self._commit_mayors()
         if confirmed:
-            save = 'Yes'
+            save = "Yes"
         else:
             save = self.ask_save(parent)
-        if save == 'Yes':
+        if save == "Yes":
             try:
                 callback()
             except SaveError:
                 return False
             except:
-                utils.exception_message(parent, 'Error Saving')
+                utils.exception_message(parent, "Error Saving")
                 return False
-        if save == 'Cancel':
+        if save == "Cancel":
             return False
 
         return True
@@ -230,17 +243,17 @@ class SaveButtonDocumentTracker(DocumentTracker):
 
     def save(self, asksave):
         if self.is_dirty:
-            save = self.ask_save(self.button.window()) if asksave else 'Yes'
+            save = self.ask_save(self.button.window()) if asksave else "Yes"
         else:
             return True
         reset = False
-        if save == 'Yes':
+        if save == "Yes":
             try:
                 self.callback()
                 reset = True
             except:
                 return False
-        if save == 'Cancel':
+        if save == "Cancel":
             return False
         if reset:
             self.reset_dirty()

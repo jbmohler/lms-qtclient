@@ -10,8 +10,9 @@ from PySide2 import QtCore, QtWidgets
 
 # patterned after http://labs.qt.nokia.com/2007/06/06/lineedit-with-a-clear-button/
 
+
 class ButtonEdit(QtWidgets.QLineEdit):
-    buttonPressed = QtCore.Signal(name='buttonPressed')
+    buttonPressed = QtCore.Signal(name="buttonPressed")
 
     def __init__(self, parent=None):
         super(ButtonEdit, self).__init__(parent)
@@ -20,8 +21,8 @@ class ButtonEdit(QtWidgets.QLineEdit):
         self.button.setFocusPolicy(QtCore.Qt.NoFocus)
         # It would seem nice if I could defer this sizing issue to the
         # style-sheet rather than calculating in the resizeEvent.
-        #buttonWidth = self.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
-        #self.setStyleSheet("QLineEdit {{ padding-right: {0}px; }}".format(buttonWidth))
+        # buttonWidth = self.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
+        # self.setStyleSheet("QLineEdit {{ padding-right: {0}px; }}".format(buttonWidth))
 
         self.button.clicked.connect(self.buttonPress)
 
@@ -29,7 +30,7 @@ class ButtonEdit(QtWidgets.QLineEdit):
         rect = self.rect()
         frameWidth = self.style().pixelMetric(QtWidgets.QStyle.PM_DefaultFrameWidth)
         buttonWidth = self.style().pixelMetric(QtWidgets.QStyle.PM_ScrollBarExtent)
-        self.button.resize(buttonWidth, rect.height()-2*frameWidth)
+        self.button.resize(buttonWidth, rect.height() - 2 * frameWidth)
         self.button.move(rect.right() - buttonWidth, frameWidth)
 
     def keyPressEvent(self, event):

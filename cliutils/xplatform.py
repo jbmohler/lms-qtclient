@@ -14,14 +14,17 @@ import os
 import sys
 import platform
 
+
 def is_wsl():
     return "microsoft" in platform.uname()[3].lower()
+
 
 def is_windows():
     """
     returns True if running on windows
     """
-    return sys.platform in ('win32', 'cygwin')
+    return sys.platform in ("win32", "cygwin")
+
 
 def xdg_open(file):
     """
@@ -32,12 +35,17 @@ def xdg_open(file):
         try:
             # we try with win32api because that's cleaner (os.system flickers a command prompt)
             import win32api
+
             win32api.ShellExecute(0, None, file, None, None, 1)
         except ImportError as e:
-            xx = os.system(f'start {file}')
+            xx = os.system(f"start {file}")
             if xx != 0:
-                raise RuntimeError('could not launch file')
+                raise RuntimeError("could not launch file")
     elif is_wsl():
-        os.system('powershell.exe /c start "{0}"'.format(file.replace(';', r'\;').replace('&', r'\&')))
+        os.system(
+            'powershell.exe /c start "{0}"'.format(
+                file.replace(";", r"\;").replace("&", r"\&")
+            )
+        )
     else:
-        os.system('xdg-open "{0}"'.format(file.replace(';', r'\;').replace('&', r'\&')))
+        os.system('xdg-open "{0}"'.format(file.replace(";", r"\;").replace("&", r"\&")))

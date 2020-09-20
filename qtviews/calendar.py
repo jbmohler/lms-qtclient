@@ -50,9 +50,7 @@ class CalendarRow(object):
         self.entries_by_day = entries
         for d in range(7):
             setattr(
-                self,
-                f"day{d}",
-                f"{self.day0_date + datetime.timedelta(d)}",
+                self, f"day{d}", f"{self.day0_date + datetime.timedelta(d)}",
             )
 
     def entryList(self, index):
@@ -117,9 +115,7 @@ class CalendarDelegate(QtWidgets.QStyledItemDelegate):
         deflated = lambda x: x.adjusted(2, 1, -2, -1)
         r = options.rect.translated(-options.rect.topLeft())
         r.setHeight(event_height - 2)
-        painter.drawText(
-            deflated(r), 0, f"{this_day.strftime('%B')} {this_day.day}"
-        )
+        painter.drawText(deflated(r), 0, f"{this_day.strftime('%B')} {this_day.day}")
 
         visible_count = (options.rect.height() // event_height) - 1
         entries = index.internalPointer().entryList(index)

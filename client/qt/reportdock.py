@@ -8,6 +8,7 @@ import apputils.viewmenus as viewmenus
 from . import utils
 from . import icons
 
+
 class RoleReportHeader:
     def __init__(self, role, inners):
         self.role = role
@@ -26,7 +27,9 @@ class BranchedFilterProxyModel(QtCore.QSortFilterProxyModel):
     def filterAcceptsRow(self, sourceRow, sourceParent):
         if sourceParent.isValid():
             # only one layer deep
-            return QtCore.QSortFilterProxyModel.filterAcceptsRow(self, sourceRow, sourceParent)
+            return QtCore.QSortFilterProxyModel.filterAcceptsRow(
+                self, sourceRow, sourceParent
+            )
         else:
             # check children, include parent if including me
             p = self.sourceModel().index(sourceRow, 0, sourceParent)
@@ -37,8 +40,8 @@ class BranchedFilterProxyModel(QtCore.QSortFilterProxyModel):
 
 
 class ReportsDock(QtWidgets.QWidget):
-    ID = 'reports_dock'
-    TITLE = 'Reports'
+    ID = "reports_dock"
+    TITLE = "Reports"
 
     def __init__(self, session, exports_dir, parent=None):
         super(ReportsDock, self).__init__(parent)
@@ -54,8 +57,8 @@ class ReportsDock(QtWidgets.QWidget):
         self.backgrounder = apputils.Backgrounder(self)
 
         # 3) Make widgets
-        self.action_refresh_list = QtWidgets.QAction('Refresh', self)
-        self.action_refresh_list.setIcon(QtGui.QIcon(':/clientshell/view-refresh.png'))
+        self.action_refresh_list = QtWidgets.QAction("Refresh", self)
+        self.action_refresh_list.setIcon(QtGui.QIcon(":/clientshell/view-refresh.png"))
         self.action_refresh_list.triggered.connect(self.reload_reports)
 
         self.search_edit = widgets.SearchEdit()
@@ -78,7 +81,7 @@ class ReportsDock(QtWidgets.QWidget):
         self.model2.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.model2.setFilterKeyColumn(0)
 
-        self.action_add_fave = QtWidgets.QAction('Add &Favorite', self)
+        self.action_add_fave = QtWidgets.QAction("Add &Favorite", self)
         self.action_add_fave.triggered.connect(self.add_favorite)
         self.ctxmenu = viewmenus.ContextMenu(self.grid, self)
         self.ctxmenu.contextActionsUpdate.connect(self.update_contextmenu)
@@ -95,7 +98,7 @@ class ReportsDock(QtWidgets.QWidget):
         return super(ReportsDock, self).closeEvent(event)
 
     def reload_reports(self):
-        url = 'api/user/logged-in/reports'
+        url = "api/user/logged-in/reports"
         self.backgrounder(self.load_reports_model, self.client.get, url)
 
     def load_reports_model(self):
@@ -104,14 +107,20 @@ class ReportsDock(QtWidgets.QWidget):
             content = yield
             self.reports_data = content.main_table()
 
-            self.model = models.ObjectQtModel(descendant_attr='model_children', columns=[ \
-                                    models.field('description', 'Report')])
+            self.model = models.ObjectQtModel(
+                descendant_attr="model_children",
+                columns=[models.field("description", "Report")],
+            )
 
             for x in self.reports_data.rows:
                 x.model_children = []
 
             self.role_headers = []
-            rolekey = lambda x: (x.role_sort, x.role, x.description if x.description != None else '')
+            rolekey = lambda x: (
+                x.role_sort,
+                x.role,
+                x.description if x.description != None else "",
+            )
             self.reports_data.rows.sort(key=rolekey)
             rolekey = lambda x: (x.role_sort, x.role)
             for k, g in itertools.groupby(self.reports_data.rows, key=rolekey):
@@ -128,7 +137,9 @@ class ReportsDock(QtWidgets.QWidget):
 
             self.setEnabled(True)
         except:
-            utils.exception_message(self.window(), f'There was an error loading the {self.TITLE}.')
+            utils.exception_message(
+                self.window(), f"There was an error loading the {self.TITLE}."
+            )
 
     def refilter(self, newText):
         self.model2.setFilterFixedString(newText)
@@ -141,13 +152,18 @@ class ReportsDock(QtWidgets.QWidget):
 
     def add_favorite(self):
         row = self.ctxmenu.active_index.data(models.ObjectRole)
-        favetable = rtlib.ClientTable([('activityid', None)], [])
+        favetable = rtlib.ClientTable([("activityid", None)], [])
         favetable.rows.append(favetable.DataRow(row.id))
         try:
-            self.client.put('api/user/logged-in/faves', files={'faves': favetable.as_http_post_file()})
-            self.main_window.dashboard.reload_reports('faves')
+            self.client.put(
+                "api/user/logged-in/faves",
+                files={"faves": favetable.as_http_post_file()},
+            )
+            self.main_window.dashboard.reload_reports("faves")
         except:
-            utils.exception_message(self.window(), 'There was an error saving the favorite.')
+            utils.exception_message(
+                self.window(), "There was an error saving the favorite."
+            )
 
     def update_selection(self, current, previous):
         row = current.data(models.ObjectRole)

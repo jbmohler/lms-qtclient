@@ -5,6 +5,7 @@ from . import validators
 from . import date_edit
 from . import search_edit
 
+
 def date_value(self):
     try:
         d = self.date
@@ -14,9 +15,10 @@ def date_value(self):
         return None
     return d.toPython()
 
+
 def date(parent, skinny=False, informational=False):
     Klass = apputils.as_modifiable(date_edit.DateEdit)
-    Klass.INVALID = "QLineEdit{ background: --; }".replace('--', valix.INVALID_RGBA)
+    Klass.INVALID = "QLineEdit{ background: --; }".replace("--", valix.INVALID_RGBA)
     Klass.VALID = "QLineEdit{}"
     Klass.value = date_value
     Klass.setValue = lambda self, value: self.setDate(value)
@@ -25,33 +27,39 @@ def date(parent, skinny=False, informational=False):
         w.button.hide()
     if skinny:
         w.setFrame(False)
-        w.setMaximumWidth(15*10)
+        w.setMaximumWidth(15 * 10)
     else:
-        w.setMaximumWidth(16*10)
+        w.setMaximumWidth(16 * 10)
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
     w.textChanged.connect(lambda *args: w.clear_invalid())
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     w.editingFinished.connect(lambda *args: w.test_invalid())
     return w
 
+
 def datetimewid(parent):
     Klass = apputils.as_modifiable(QtWidgets.QLineEdit)
-    Klass.INVALID = "QLineEdit{ background: --; }".replace('--', valix.INVALID_RGBA)
+    Klass.INVALID = "QLineEdit{ background: --; }".replace("--", valix.INVALID_RGBA)
     Klass.VALID = "QLineEdit{}"
     Klass.value = lambda: apputils.not_implemented_error()
-    Klass.setValue = lambda self, value: self.setText('' if value == None else f'{value:%m/%d/%Y %I:%M:%S %p}')
+    Klass.setValue = lambda self, value: self.setText(
+        "" if value == None else f"{value:%m/%d/%Y %I:%M:%S %p}"
+    )
     w = Klass(parent)
-    w.setMaximumWidth(24*10)
+    w.setMaximumWidth(24 * 10)
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
     w.textChanged.connect(lambda *args: w.clear_invalid())
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     w.editingFinished.connect(lambda *args: w.test_invalid())
     return w
+
 
 def checkbox(parent, label=None):
     Klass = apputils.as_modifiable(QtWidgets.QCheckBox)
     Klass.value = lambda self: self.isChecked()
-    Klass.setValue = lambda self, value: self.setChecked(value if value != None else False)
+    Klass.setValue = lambda self, value: self.setChecked(
+        value if value != None else False
+    )
     Klass.setReadOnly = lambda self, ro: self.setEnabled(not ro)
     Klass.internal_label = True
     Klass.set_internal_label = lambda self, label: self.setText(label)
@@ -62,11 +70,14 @@ def checkbox(parent, label=None):
     w.toggled.connect(lambda *args: w.setValueApplied())
     return w
 
+
 def none_as_blank(v):
-    return '' if v == None else str(v)
+    return "" if v == None else str(v)
+
 
 def int_none_allowed(t):
-    return None if t == '' else int(t)
+    return None if t == "" else int(t)
+
 
 def integer(parent):
     Klass = apputils.as_modifiable(QtWidgets.QLineEdit)
@@ -78,19 +89,22 @@ def integer(parent):
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     return w
 
+
 def float_none_allowed(value):
-    if value in ['', None]:
+    if value in ["", None]:
         return None
-    if isinstance(value, str) and ',' in value:
-        value = value.replace(',', '')
+    if isinstance(value, str) and "," in value:
+        value = value.replace(",", "")
     return float(value)
+
 
 def QLineEdit_setText_fromDouble(self, value, decimals):
     if value == None:
-        s = ''
+        s = ""
     else:
-        s = f'{{:.{decimals}f}}'.format(value)
+        s = f"{{:.{decimals}f}}".format(value)
     self.setText(s)
+
 
 def quantity_value(self):
     try:
@@ -98,17 +112,20 @@ def quantity_value(self):
     except (NotImplementedError, ValueError) as e:
         raise apputils.ModValueError(str(e)) from e
 
+
 def quantity(parent, decimals=None):
     Klass = apputils.as_modifiable(QtWidgets.QLineEdit)
-    Klass.INVALID = "QLineEdit{ background: --; }".replace('--', valix.INVALID_RGBA)
+    Klass.INVALID = "QLineEdit{ background: --; }".replace("--", valix.INVALID_RGBA)
     Klass.VALID = "QLineEdit{}"
     Klass.value = quantity_value
     if decimals == None:
         Klass.setValue = lambda self, value: self.setText(none_as_blank(value))
     else:
-        Klass.setValue = lambda self, value, d=decimals: QLineEdit_setText_fromDouble(self, value, d)
+        Klass.setValue = lambda self, value, d=decimals: QLineEdit_setText_fromDouble(
+            self, value, d
+        )
     w = Klass(parent)
-    w.setMaximumWidth(12*10)
+    w.setMaximumWidth(12 * 10)
     w.setValidator(validators.BlankableFloatValidator(w))
     w.setAlignment(QtCore.Qt.AlignRight)
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
@@ -117,35 +134,40 @@ def quantity(parent, decimals=None):
     w.editingFinished.connect(lambda *args: w.test_invalid())
     return w
 
+
 def QLineEdit_setText_fromPercent(self, value, decimals):
     if value == None:
-        s = ''
+        s = ""
     else:
-        s = f'{{:.{decimals}f}}'.format(value*100.)
+        s = f"{{:.{decimals}f}}".format(value * 100.0)
     self.setText(s)
+
 
 def percent_value(self):
     try:
         base = float_none_allowed(self.text())
         if base == None:
-            return ''
-        return base / 100.
+            return ""
+        return base / 100.0
     except (NotImplementedError, ValueError) as e:
         raise apputils.ModValueError(str(e)) from e
+
 
 def percent(parent, decimals=None):
     if decimals == None:
         decimals = 1
     Klass = apputils.as_modifiable(QtWidgets.QLineEdit)
-    Klass.INVALID = "QLineEdit{ background: --; }".replace('--', valix.INVALID_RGBA)
+    Klass.INVALID = "QLineEdit{ background: --; }".replace("--", valix.INVALID_RGBA)
     Klass.VALID = "QLineEdit{}"
     Klass.value = percent_value
     if decimals == None:
         Klass.setValue = lambda self, value: self.setText(none_as_blank(value))
     else:
-        Klass.setValue = lambda self, value, d=decimals: QLineEdit_setText_fromPercent(self, value, d)
+        Klass.setValue = lambda self, value, d=decimals: QLineEdit_setText_fromPercent(
+            self, value, d
+        )
     w = Klass(parent)
-    w.setMaximumWidth(12*10)
+    w.setMaximumWidth(12 * 10)
     w.setValidator(validators.BlankableFloatValidator(w))
     w.setAlignment(QtCore.Qt.AlignRight)
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
@@ -153,6 +175,7 @@ def percent(parent, decimals=None):
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     w.editingFinished.connect(lambda *args: w.test_invalid())
     return w
+
 
 def radio(parent, options, hotkey=False):
     def set_value(grp, value):
@@ -172,7 +195,7 @@ def radio(parent, options, hotkey=False):
     w.radios = {}
     for shown, value in options:
         if hotkey:
-            shown = '&'+shown
+            shown = "&" + shown
         r = QtWidgets.QRadioButton(shown)
         r._value = value
         w.radios[value] = r
@@ -209,6 +232,7 @@ class DualComboBoxBase(QtWidgets.QStackedWidget):
     def setReadOnly(self, ro):
         self.setCurrentIndex(0 if not ro else 1)
 
+
 class DualComboBox(DualComboBoxBase):
     def value(self):
         return self._combo.itemData(self._combo.currentIndex(), QtCore.Qt.UserRole)
@@ -222,6 +246,7 @@ class DualComboBox(DualComboBoxBase):
         for shown, value in options:
             self._combo.addItem(shown, value)
 
+
 def combo(parent, options=None):
     Klass = apputils.as_modifiable(DualComboBox)
     w = Klass(parent)
@@ -230,6 +255,7 @@ def combo(parent, options=None):
     w._combo.currentIndexChanged.connect(lambda *args: w.setWidgetModified(True))
     w._combo.currentIndexChanged.connect(lambda *args: w.setValueApplied())
     return w
+
 
 def basic(parent, characters=None, uppercase=False, alignment=None, skinny=False):
     Klass = apputils.as_modifiable(QtWidgets.QLineEdit)
@@ -242,12 +268,13 @@ def basic(parent, characters=None, uppercase=False, alignment=None, skinny=False
     if skinny:
         w.setFrame(False)
     if characters != None:
-        w.setMaximumWidth(characters*11)
-    if alignment == 'right':
+        w.setMaximumWidth(characters * 11)
+    if alignment == "right":
         w.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignRight)
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     return w
+
 
 def search(parent, characters=None):
     Klass = apputils.as_modifiable(search_edit.SearchEdit)
@@ -255,10 +282,11 @@ def search(parent, characters=None):
     Klass.setValue = lambda self, value: self.setText(value)
     w = Klass(parent)
     if characters != None:
-        w.setMaximumWidth(characters*11)
+        w.setMaximumWidth(characters * 11)
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     return w
+
 
 class TextEdit2(QtWidgets.QTextEdit):
     editingFinished = QtCore.Signal()
@@ -266,6 +294,7 @@ class TextEdit2(QtWidgets.QTextEdit):
     def focusOutEvent(self, event):
         self.editingFinished.emit()
         super(TextEdit2, self).focusOutEvent(event)
+
 
 def multiline(parent):
     Klass = apputils.as_modifiable(TextEdit2)
@@ -276,6 +305,7 @@ def multiline(parent):
     w.textChanged.connect(lambda *args: w.setWidgetModified(True))
     w.editingFinished.connect(lambda *args: w.setValueApplied())
     return w
+
 
 def richtext(parent):
     Klass = apputils.as_modifiable(TextEdit2)

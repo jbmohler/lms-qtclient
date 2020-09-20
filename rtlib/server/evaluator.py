@@ -2,6 +2,7 @@ import io
 import ast
 import tokenize
 
+
 class PreparedEvaluator:
     """
     The evaluate method of this object take plain old Python object like `t` in
@@ -51,22 +52,27 @@ class PreparedEvaluator:
     >>> PreparedEvaluator('20 < age < 40').evaluate(t)
     True
     """
+
     def __init__(self, expr):
         rl = io.StringIO(expr).readline
-        assignments = [t[2] for t in tokenize.generate_tokens(rl) if t.type == tokenize.OP and t.string == '=']
+        assignments = [
+            t[2]
+            for t in tokenize.generate_tokens(rl)
+            if t.type == tokenize.OP and t.string == "="
+        ]
         for a in reversed(assignments):
             if a[0] != 1:
-                raise ValueError('the expression must be one line')
-            expr = expr[:a[1]] + '==' + expr[a[1]+1:]
+                raise ValueError("the expression must be one line")
+            expr = expr[: a[1]] + "==" + expr[a[1] + 1 :]
 
-        self._code = compile(expr, '<string>', 'eval')
+        self._code = compile(expr, "<string>", "eval")
 
         self._names = []
         t = ast.parse(expr)
         for n in ast.walk(t):
-            if n.__class__.__name__ == 'Name':
+            if n.__class__.__name__ == "Name":
                 self._names.append(n.id)
-                
+
     def evaluate(self, obj):
         evaldict = {n: getattr(obj, n) for n in self._names}
         return eval(self._code, evaldict)

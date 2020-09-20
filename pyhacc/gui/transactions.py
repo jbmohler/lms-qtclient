@@ -6,10 +6,12 @@ import apputils.widgets as widgets
 from . import widgets as pywid
 from . import mxc
 
-URL_BASE = 'api/transaction/{}'
+URL_BASE = "api/transaction/{}"
+
 
 def null0(v):
-    return v if v != None else 0.
+    return v if v != None else 0.0
+
 
 class SplitsTable(mxc.ModelRow):
     def _rtlib_init_(self):
@@ -57,6 +59,7 @@ class SplitsTable(mxc.ModelRow):
         self._credit = v
         self.sum = null0(self._debit) - null0(self._credit)
 
+
 class TransactionCore:
     def __init__(self):
         pass
@@ -64,10 +67,10 @@ class TransactionCore:
     @classmethod
     def from_endpoint(cls, controller, content):
         self = cls()
-        self.trantable = content.named_table('trans', mixin=mxc.ModelRow)
+        self.trantable = content.named_table("trans", mixin=mxc.ModelRow)
         self.trantable.DataRow.controller = controller
         self.tranrow = self.trantable.rows[0]
-        self.splittable = content.named_table('splits', mixin=SplitsTable)
+        self.splittable = content.named_table("splits", mixin=SplitsTable)
         self.splittable.DataRow.controller = controller
         return self
 
@@ -79,24 +82,26 @@ class TransactionCore:
             if row is not split:
                 balance -= row.sum
         kwargs = {
-                'debit': balance if balance >= 0. else None,
-                'credit': -balance if balance < 0. else None,
+            "debit": balance if balance >= 0.0 else None,
+            "credit": -balance if balance < 0.0 else None,
         }
         split.multiset(**kwargs)
 
     def cmd_reverse(self):
         for row in self.splittable.rows:
             kwargs = {
-                    'debit': row.credit,
-                    'credit': row.debit,
+                "debit": row.credit,
+                "credit": row.debit,
             }
             row.multiset(**kwargs)
 
     def http_files(self):
-        return {\
-                'trans': self.trantable.as_http_post_file(),
-                'splits':
-                self.splittable.as_http_post_file(inclusions=['account_id', 'sum', 'sid'])}
+        return {
+            "trans": self.trantable.as_http_post_file(),
+            "splits": self.splittable.as_http_post_file(
+                inclusions=["account_id", "sum", "sid"]
+            ),
+        }
 
     def ascii_repr(self):
         lines = []
@@ -108,14 +113,15 @@ class TransactionCore:
             lines.append(f"Payee:  {self.tranrow.payee}")
         if self.tranrow.memo not in [None, ""]:
             lines.append(f"Memo:  {self.tranrow.memo}")
-        lines.append("-"*(20+1+12+1+12))
+        lines.append("-" * (20 + 1 + 12 + 1 + 12))
         for x in self.splittable.rows:
-            debstr = " "*12 if x.debit == None else f"{x.debit:12.2f}"
-            credstr = " "*12 if x.credit == None else f"{x.credit:12.2f}"
+            debstr = " " * 12 if x.debit == None else f"{x.debit:12.2f}"
+            credstr = " " * 12 if x.credit == None else f"{x.credit:12.2f}"
             lines.append(f"{x.account.acc_name:<20} {debstr} {credstr}")
-        lines.append("-"*(20+1+12+1+12))
+        lines.append("-" * (20 + 1 + 12 + 1 + 12))
 
-        return '\n'.join(lines)
+        return "\n".join(lines)
+
 
 class TransactionEditor(qt.ObjectDialog):
     """
@@ -125,8 +131,8 @@ class TransactionEditor(qt.ObjectDialog):
     1
     """
 
-    ID = 'transaction-editor'
-    TITLE = 'PyHacc Transaction'
+    ID = "transaction-editor"
+    TITLE = "PyHacc Transaction"
 
     def __init__(self, parent=None):
         super(TransactionEditor, self).__init__(parent)
@@ -140,21 +146,21 @@ class TransactionEditor(qt.ObjectDialog):
 
         self.binder = qt.Binder(self)
         sb = self.binder
-        sb.construct('trandate', 'date')
-        sb.construct('tranref', 'basic')
-        sb.construct('payee', 'basic')
-        sb.construct('memo', 'basic')
-        sb.construct('receipt', 'richtext')
+        sb.construct("trandate", "date")
+        sb.construct("tranref", "basic")
+        sb.construct("payee", "basic")
+        sb.construct("memo", "basic")
+        sb.construct("receipt", "richtext")
 
         self.topgrid = QtWidgets.QGridLayout()
-        self.topgrid.addWidget(qt.buddied('&Date', sb.widgets['trandate']), 0, 0)
-        self.topgrid.addWidget(sb.widgets['trandate'], 0, 1)
-        self.topgrid.addWidget(qt.buddied('&Reference', sb.widgets['tranref']), 0, 2)
-        self.topgrid.addWidget(sb.widgets['tranref'], 0, 3)
-        self.topgrid.addWidget(qt.buddied('&Payee', sb.widgets['payee']), 1, 0)
-        self.topgrid.addWidget(sb.widgets['payee'], 1, 1, 1, 3)
-        self.topgrid.addWidget(qt.buddied('&Memo', sb.widgets['memo']), 2, 0)
-        self.topgrid.addWidget(sb.widgets['memo'], 2, 1, 1, 3)
+        self.topgrid.addWidget(qt.buddied("&Date", sb.widgets["trandate"]), 0, 0)
+        self.topgrid.addWidget(sb.widgets["trandate"], 0, 1)
+        self.topgrid.addWidget(qt.buddied("&Reference", sb.widgets["tranref"]), 0, 2)
+        self.topgrid.addWidget(sb.widgets["tranref"], 0, 3)
+        self.topgrid.addWidget(qt.buddied("&Payee", sb.widgets["payee"]), 1, 0)
+        self.topgrid.addWidget(sb.widgets["payee"], 1, 1, 1, 3)
+        self.topgrid.addWidget(qt.buddied("&Memo", sb.widgets["memo"]), 2, 0)
+        self.topgrid.addWidget(sb.widgets["memo"], 2, 1, 1, 3)
 
         self.tab = QtWidgets.QTabWidget()
 
@@ -164,11 +170,11 @@ class TransactionEditor(qt.ObjectDialog):
         # first tab: transactions
         self.splitme = QtWidgets.QSplitter()
         self.splitme.addWidget(self.trans_grid)
-        #self.splitme.addWidget(self.tags_table)
+        # self.splitme.addWidget(self.tags_table)
         self.tab.addTab(self.splitme, "&Transactions")
 
         # second tab:  receipt memo
-        self.tab.addTab(sb.widgets['receipt'], "&Receipt")
+        self.tab.addTab(sb.widgets["receipt"], "&Receipt")
 
         self.layout.addLayout(self.topgrid)
         self.layout.addWidget(self.tab)
@@ -176,8 +182,9 @@ class TransactionEditor(qt.ObjectDialog):
 
         self.action_balance = QtWidgets.QAction("&Balance on Current Line", self)
         self.action_balance.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_B)
-        self.action_balance.triggered.connect(lambda:
-                self.data.cmd_balance(self.trans_gridmgr.selected_row()))
+        self.action_balance.triggered.connect(
+            lambda: self.data.cmd_balance(self.trans_gridmgr.selected_row())
+        )
         self.addAction(self.action_balance)
 
         self.action_reverse = QtWidgets.QAction("&Reverse Transaction", self)
@@ -197,7 +204,9 @@ class TransactionEditor(qt.ObjectDialog):
         self.menu_more.addAction(self.action_copyplain)
         btn_menu.setMenu(self.menu_more)
 
-        self.geo = apputils.WindowGeometry(self, position=False, tabs=[self.tab], splitters=[self.splitme])
+        self.geo = apputils.WindowGeometry(
+            self, position=False, tabs=[self.tab], splitters=[self.splitme]
+        )
 
     def bind(self, trancore):
         self.data = trancore
@@ -205,10 +214,13 @@ class TransactionEditor(qt.ObjectDialog):
 
         with self.geo.grid_reset(self.trans_grid):
             columns = [
-                    apputils.field('account', 'Account', type_='pyhacc_account', editable=True),
-                    apputils.field('debit', 'Debit', type_='currency_usd', editable=True),
-                    apputils.field('credit', 'Credit', type_='currency_usd', editable=True),
-                    self.data.splittable.DataRow.model_columns['jrn_name']]
+                apputils.field(
+                    "account", "Account", type_="pyhacc_account", editable=True
+                ),
+                apputils.field("debit", "Debit", type_="currency_usd", editable=True),
+                apputils.field("credit", "Credit", type_="currency_usd", editable=True),
+                self.data.splittable.DataRow.model_columns["jrn_name"],
+            ]
             self.trans_grid.setModel(apputils.ObjectQtModel(columns, []))
             self.trans_gridmgr.set_client_table_no_model(self.data.splittable)
 
@@ -230,7 +242,7 @@ class TransactionEditor(qt.ObjectDialog):
 
         if isinstance(row, self.data.splittable.DataRow):
             # read the journal
-            if 'account_id' in fields:
+            if "account_id" in fields:
                 payload = self.client.get("api/account/{}", row.account_id)
                 row.jrn_name = payload.main_table().rows[0].jrn_name
 
@@ -246,7 +258,7 @@ class TransactionEditor(qt.ObjectDialog):
             model.object_changed(row)
 
 
-def edit_transaction(session, tranid='new', copy=False):
+def edit_transaction(session, tranid="new", copy=False):
     dlg = TransactionEditor()
 
     client = session.std_client()
@@ -277,4 +289,4 @@ def edit_transaction(session, tranid='new', copy=False):
     dlg.exec_()
 
 
-__all__ = ['edit_transaction', 'TransactionCore', 'TransactionEditor']
+__all__ = ["edit_transaction", "TransactionCore", "TransactionEditor"]
