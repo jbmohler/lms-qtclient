@@ -49,9 +49,7 @@ class CalendarRow(object):
         self.day0_date = day0_date
         self.entries_by_day = entries
         for d in range(7):
-            setattr(
-                self, f"day{d}", f"{self.day0_date + datetime.timedelta(d)}",
-            )
+            setattr(self, f"day{d}", f"{self.day0_date + datetime.timedelta(d)}")
 
     def entryList(self, index):
         """

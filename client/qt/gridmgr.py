@@ -144,11 +144,13 @@ def apply_column_url_views(ctxmenu, model, no_default=False):
                     if col.url_factory != None:
                         action = QtWidgets.QAction(ctxmenu.parent())
                         action.triggered.connect(url_handler(col, ctxmenu))
-                        action.should_appear = lambda index, column=col: callable_should_appear(
-                            index, column
+                        action.should_appear = (
+                            lambda index, column=col: callable_should_appear(
+                                index, column
+                            )
                         )
-                        action.is_enabled = lambda index, column=col: callable_is_enabled(
-                            index, column
+                        action.is_enabled = (
+                            lambda index, column=col: callable_is_enabled(index, column)
                         )
                 else:
                     action = QtWidgets.QAction(ctxmenu.parent())
