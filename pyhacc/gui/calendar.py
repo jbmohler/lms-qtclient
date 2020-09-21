@@ -1,45 +1,10 @@
 import datetime
-import uuid
 from PySide2 import QtCore, QtGui, QtWidgets
 import qtviews
 import apputils
 import apputils.models as models
 import apputils.widgets as widgets
 import client.qt as qt
-
-
-class ChangeListener:
-    def __init__(self, backgrounder, client, loadfunc, channel):
-        self.client = client
-        self.backgrounder = backgrounder
-        self.loadfunc = loadfunc
-        self.channel = channel
-
-        self.chain_index = 0
-        self.chain_key = uuid.uuid1().hex
-        self.chained_listen()
-
-    def chained_listen(self):
-        kwargs = {
-            "key": self.chain_key,
-            "channel": self.channel,
-            "index": self.chain_index,
-        }
-        self.backgrounder(
-            self.chained_reload, self.client.get, "api/sql/changequeue", **kwargs
-        )
-
-    def chained_reload(self):
-        changes = yield
-
-        chlist = changes.main_table()
-        if len(chlist.rows) > 0:
-            for row in chlist.rows:
-                self.chain_index = row.index
-
-            self.loadfunc()
-
-        self.chained_listen()
 
 
 class CalendarAdaptor(QtCore.QObject):
@@ -216,7 +181,7 @@ class TransactionCalendar(QtWidgets.QWidget):
         self.mainlayout.addWidget(self.calnav)
         self.mainlayout.addWidget(self.calendar)
 
-        self.change_listener = ChangeListener(
+        self.change_listener = qt.ChangeListener(
             self.backgrounder, self.client, self.load_current, "transactions"
         )
 
@@ -298,7 +263,7 @@ class TransactionRecent(QtWidgets.QWidget):
             self, position=False, size=False, grids=[self.grid]
         )
 
-        self.change_listener = ChangeListener(
+        self.change_listener = qt.ChangeListener(
             self.backgrounder, self.client, self.initial_load, "transactions"
         )
 

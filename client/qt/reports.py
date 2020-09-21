@@ -610,6 +610,19 @@ class ReportPreview(QtWidgets.QWidget):
             self.export_button.setMenu(menu)
             self.rpt_export_menu = menu
 
+        if "report-refresh" in self.run.content.keys:
+            triggers = self.run.content.keys["report-refresh"]
+
+            if len(triggers) == 1 and "channel" in triggers[0]:
+                self.change_listener = utils.ChangeListener(
+                    self.backgrounder,
+                    self.client,
+                    self.launch_report,
+                    triggers[0]["channel"],
+                )
+            elif len(triggers) > 1:
+                assert False, "we do not yet support multiple triggers"
+
         augmented_head = self.header_strings.copy()
         augmented_head.append(f"{len(self.model.rows):,} rows")
         self.headers.setStyleSheet("QLabel {background: white; padding: 5px}")
