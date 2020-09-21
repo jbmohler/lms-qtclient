@@ -4,7 +4,6 @@ import apputils
 import apputils.models as models
 import apputils.viewmenus as viewmenus
 import apputils.widgets as widgets
-from client.qt import utils
 from client.qt import bindings
 from client.qt import reporttab
 import client.qt as qt
@@ -106,7 +105,7 @@ class UserListSidebar(QtCore.QObject):
                 self.client.delete(self.SRC_INSTANCE_URL, row.id)
                 self.refresh.emit()
             except:
-                utils.exception_message(self.window(), "The user could not be deleted.")
+                qt.exception_message(self.window(), "The user could not be deleted.")
 
 
 class UserList(QtWidgets.QWidget):
@@ -193,7 +192,7 @@ class UserList(QtWidgets.QWidget):
                 self.client.delete(self.SRC_INSTANCE_URL, row.id)
                 self.refresh()
             except:
-                utils.exception_message(self.window(), "The user could not be deleted.")
+                qt.exception_message(self.window(), "The user could not be deleted.")
 
     def load(self):
         self.setEnabled(False)
@@ -205,8 +204,8 @@ class UserList(QtWidgets.QWidget):
             with self.geo.grid_reset(self.grid):
                 self.gridmgr.set_client_table(self.records)
         except:
-            apputils.exception_message(
-                self, f"There was an error loading the {self.TITLE}."
+            qt.exception_message(
+                self.window(), f"There was an error loading the {self.TITLE}."
             )
         finally:
             self.setEnabled(True)
@@ -219,7 +218,7 @@ class UserList(QtWidgets.QWidget):
 
         if fname != None:
             rtlib.server.export_view(fname, self.grid, self.headers, options=options)
-            utils.xlsx_start_file(self.window, fname)
+            qt.xlsx_start_file(self.window, fname)
 
 
 class RoleSidebar(QtWidgets.QWidget):
@@ -258,7 +257,7 @@ class RoleSidebar(QtWidgets.QWidget):
         try:
             content = yield
         except:
-            utils.exception_message(self.window(), "Error loading users")
+            qt.exception_message(self.window(), "Error loading users")
             return
 
         with self.geo.grid_reset(self.user_grid):
@@ -269,7 +268,7 @@ class RoleSidebar(QtWidgets.QWidget):
         try:
             content = yield
         except:
-            utils.exception_message(self.window(), "Error loading activities")
+            qt.exception_message(self.window(), "Error loading activities")
             return
 
         with self.geo.grid_reset(self.act_grid):
@@ -346,7 +345,7 @@ class RoleList(QtWidgets.QWidget):
         try:
             self.client.delete(self.SRC_INSTANCE_URL, row.id)
         except:
-            utils.exception_message(self.window(), "The role could not be deleted.")
+            qt.exception_message(self.window(), "The role could not be deleted.")
 
         self.refresh()
 
@@ -369,7 +368,7 @@ class RoleList(QtWidgets.QWidget):
                 self.client.put(self.SRC_INSTANCE_URL, table.rows[0].id, files=files)
                 w.accept()
             except:
-                utils.exception_message(w, "There was an error adding the role.")
+                qt.exception_message(w, "There was an error adding the role.")
 
         QDB = QtWidgets.QDialogButtonBox
         buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
@@ -410,8 +409,8 @@ class RoleList(QtWidgets.QWidget):
             with self.geo.grid_reset(self.grid):
                 self.gridmgr.set_client_table(self.records)
         except:
-            apputils.exception_message(
-                self, f"There was an error loading the {self.TITLE}."
+            qt.exception_message(
+                self.window(), f"There was an error loading the {self.TITLE}."
             )
         finally:
             self.setEnabled(True)
@@ -424,7 +423,7 @@ class RoleList(QtWidgets.QWidget):
 
         if fname != None:
             rtlib.server.export_view(fname, self.grid, self.headers, options=options)
-            utils.xlsx_start_file(self.window, fname)
+            qt.xlsx_start_file(self.window, fname)
 
 
 class ActivitySidebar(QtWidgets.QWidget):
@@ -613,7 +612,7 @@ class ActivityList(QtWidgets.QWidget):
 
         if fname != None:
             rtlib.server.export_view(fname, self.grid, self.headers, options=options)
-            utils.xlsx_start_file(self.window, fname)
+            qt.xlsx_start_file(self.window, fname)
 
 
 def edit_activity_dlg(parentwin, table):
@@ -636,7 +635,7 @@ def edit_activity_dlg(parentwin, table):
             parentwin.client.post("api/activities", files=files)
             w.accept()
         except:
-            utils.exception_message(w, "There was an error adding the activity.")
+            qt.exception_message(w, "There was an error adding the activity.")
 
     QDB = QtWidgets.QDialogButtonBox
     buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
@@ -692,7 +691,7 @@ def edit_user_dlg(parentwin, table, editrec):
                 parentwin.client.post("api/user", files=files)
             w.accept()
         except:
-            utils.exception_message(w, "There was an error adding the user.")
+            qt.exception_message(w, "There was an error adding the user.")
 
     QDB = QtWidgets.QDialogButtonBox
     buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
@@ -721,7 +720,7 @@ class PidCancellerTab(ReportTabEx):
         try:
             self.client.put("api/database/cancelbackend", pid=obj.pid)
         except:
-            utils.exception_message(self.window(), "Canceling the backend failed.")
+            qt.exception_message(self.window(), "Canceling the backend failed.")
         self.refresh()
 
     def closeEvent(self, event):

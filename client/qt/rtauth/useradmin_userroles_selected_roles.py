@@ -2,6 +2,7 @@ from PySide2 import QtCore, QtWidgets
 import apputils
 import apputils.viewmenus as viewmenus
 import apputils.widgets as widgets
+import client.qt as qt
 from client.qt import valqt
 from client.qt import gridmgr
 from client.qt import winlist
@@ -145,8 +146,8 @@ class UserRoleMapperTargetsByRole(QtWidgets.QMainWindow):
 
             self.setEnabled(True)
         except:
-            apputils.exception_message(
-                self, f"There was an error loading {self.TITLE}."
+            qt.exception_message(
+                self.window(), f"There was an error loading {self.TITLE}."
             )
 
     def save_targets(self):
@@ -157,7 +158,7 @@ class UserRoleMapperTargetsByRole(QtWidgets.QMainWindow):
 
             self.client.put(self.SRC_URL, data=data, files=files)
         except Exception:
-            apputils.exception_message(self.window(), f"Error saving {self.TITLE}.")
+            qt.exception_message(self.window(), f"Error saving {self.TITLE}.")
             raise
 
     def closeEvent(self, event):

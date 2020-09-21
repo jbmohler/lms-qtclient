@@ -1,6 +1,6 @@
 import time
 from PySide2 import QtCore, QtWidgets
-from . import utils
+import client.qt as qt
 
 
 def show_connection_error(parent, message, r):
@@ -72,7 +72,7 @@ class ServerDiagnostics(QtWidgets.QDialog):
             self.version_edit.setText(payload.keys["version"])
             self.sql_version_edit.setText(payload.keys["sql_version"])
         except:
-            utils.exception_message(self, "Error getting server info")
+            qt.exception_message(self, "Error getting server info")
 
     def ping_server(self):
         x1 = time.time()
@@ -154,7 +154,7 @@ class RtxLoginDialog(QtWidgets.QDialog):
             self.session.authenticate(username, password)
             self.rtx_user = username.upper()
         except:
-            utils.exception_message(self, "Error logging in.")
+            qt.exception_message(self, "Error logging in.")
             self.rtx_password_edit.selectAll()
             return
 

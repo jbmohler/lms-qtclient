@@ -6,7 +6,6 @@ import apputils
 import apputils.models as models
 import apputils.widgets as widgets
 import client.qt as qt
-import client.qt.utils as utils
 
 
 class ChangeListener:
@@ -180,7 +179,7 @@ class TransactionCommandSidebar(QtCore.QObject):
                 self.client.delete(self.SRC_INSTANCE_URL, row.tid)
                 self.refresh.emit()
             except:
-                utils.exception_message(
+                qt.exception_message(
                     self.window(), "The transaction could not be deleted."
                 )
 
