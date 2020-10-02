@@ -16,6 +16,14 @@ class ChangeListener:
 
         self.chain_index = 0
         self.chain_key = uuid.uuid1().hex
+
+        kwargs = {
+            "key": self.chain_key,
+            "channel": self.channel,
+        }
+        results = self.client.put("api/sql/changequeue", **kwargs)
+        self.chain_index = results.keys["index"]
+
         self.chained_listen()
 
     def chained_listen(self):
@@ -29,16 +37,20 @@ class ChangeListener:
         )
 
     def chained_reload(self):
-        changes = yield
+        try:
+            changes = yield
 
-        chlist = changes.main_table()
-        if len(chlist.rows) > 0:
-            for row in chlist.rows:
-                self.chain_index = row.index
+            chlist = changes.main_table()
+            if len(chlist.rows) > 0:
+                for row in chlist.rows:
+                    self.chain_index = row.index
 
-            self.loadfunc()
-
-        self.chained_listen()
+                self.loadfunc()
+        except client.RtxError:
+            # print("swallowing exception on chained_reload")
+            pass
+        finally:
+            self.chained_listen()
 
 
 class RtxTrayIcon(QtWidgets.QSystemTrayIcon):

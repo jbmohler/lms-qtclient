@@ -214,6 +214,8 @@ class ReportPreview(QtWidgets.QWidget):
         self.gridmgr.ctxmenu.triggerReload.connect(self.launch_report)
         self.gridmgr.ctxmenu.statisticsUpdate.connect(self.stat_update)
 
+        self.change_listeners = {}
+
         self.layout.addWidget(self.sidebar_split)
         self.sidebar_split.addWidget(self.grid)
 
@@ -613,15 +615,17 @@ class ReportPreview(QtWidgets.QWidget):
         if "report-refresh" in self.run.content.keys:
             triggers = self.run.content.keys["report-refresh"]
 
-            if len(triggers) == 1 and "channel" in triggers[0]:
-                self.change_listener = utils.ChangeListener(
-                    self.backgrounder,
-                    self.client,
-                    self.launch_report,
-                    triggers[0]["channel"],
+            channels = [t["channel"] for t in triggers if "channel" in t]
+
+            remove = set(self.change_listeners.keys()).difference(channels)
+            add = set(channels).difference(self.change_listeners.keys())
+
+            for channel in remove:
+                del self.change_listeners[channel]
+            for channel in add:
+                self.change_listeners[channel] = utils.ChangeListener(
+                    self.backgrounder, self.client, self.launch_report, channel
                 )
-            elif len(triggers) > 1:
-                assert False, "we do not yet support multiple triggers"
 
         augmented_head = self.header_strings.copy()
         augmented_head.append(f"{len(self.model.rows):,} rows")
