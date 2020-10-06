@@ -108,8 +108,9 @@ class Column:
         widget_kwargs=None,
         background_attr=None,
         foreground_attr=None,
-        sortkey=None,
-        sortnull=None,
+        sort_proxy=None,
+        sort_key=None,
+        sort_null=None,
         actions=None,
         add_actions=None,
     ):
@@ -134,16 +135,15 @@ class Column:
             formatter = lambda x: str(x) if x != None else ""
         self.formatter = formatter
         self.is_numeric = is_numeric
-        self.sortnull = sortnull
-        if sortkey == None:
-            if label.endswith("Rank") or self.sortnull == "last":
-                # TODO: resolve design decision about null -- Pick Rank is an
-                # example where we want null to be "infinite"
-                sortkey = lambda x: ("c", "") if x == None else ("b", x)
+        self.sort_proxy = sort_proxy
+        self.sort_null = sort_null
+        if sort_key == None:
+            if self.sort_null == "last":
+                sort_key = lambda x: ("c", "") if x == None else ("b", x)
             else:
                 # null items sort high
-                sortkey = lambda x: ("a", "") if x == None else ("b", x)
-        self.sortkey = sortkey
+                sort_key = lambda x: ("a", "") if x == None else ("b", x)
+        self.sort_key = sort_key
         if actions == None:
             # callable?, templated string, (global, represents)
             actions = [ColumnAction("View &{header}", "__url__", defaulted=True)]

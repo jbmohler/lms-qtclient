@@ -80,8 +80,14 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
         else:
             sortlist = self._fltr_rows[:]
         c = self.columns[column]
+        if c.sort_proxy:
+            for c2 in self.columns:
+                if c2.attr == c.sort_proxy:
+                    c = c2
+                    break
+
         sortlist.sort(
-            key=lambda x: c.sortkey(getattr(x, c.attr)),
+            key=lambda x: c.sort_key(getattr(x, c.attr)),
             reverse=order == QtCore.Qt.DescendingOrder,
         )
         self.beginResetModel()
