@@ -17,7 +17,7 @@ class ImportColumn:
 
 class ImportIntroPage(QtWidgets.QWizardPage):
     """
-    This wizard page takes a class and displays the elements of that class for 
+    This wizard page takes a class and displays the elements of that class for
     import.
     """
 
@@ -175,8 +175,8 @@ There were {0} errors or warnings importing the data.  The first 5 are shown bel
 
 class ImportWizard(QtWidgets.QWizard):
     """
-    Returns a QWizard to take rows given by the user and create an instance 
-    of each cls from each row.  The rows may come from a csv file or via raw 
+    Returns a QWizard to take rows given by the user and create an instance
+    of each cls from each row.  The rows may come from a csv file or via raw
     entry in a table.
 
     Wizard Structure:
@@ -184,17 +184,17 @@ class ImportWizard(QtWidgets.QWizard):
     - Intro page listing accepted elements of the class cls
     - Page asking for an input csv file or allowing raw entry
     - Page with list of data or allowing entry
-    
+
     >>> from apputils.dataimport import *
     >>> import collections
     >>> from PySide import QtCore, QtGui
-    >>> 
+    >>>
     >>> columns = [
     ...     models.Column('warehouse', 'Warehouse'),
     ...     models.Column('location', 'Location'),
     ...     models.Column('inventory_id', 'Item'),
     ...     models.Column('count', 'Count')]
-    ... 
+    ...
     >>> n = collections.namedtuple('MyImport', 'warehouse location inventory_id count'.split(' '))
     >>> app = apputils.transient_app()
     >>> wiz = ImportWizard(n, columns)

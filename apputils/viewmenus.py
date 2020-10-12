@@ -62,9 +62,9 @@ def model_html_copy(model, selected):
 
 def model_tsv_copy(model, selected):
     """
-    Fill and return a QMimeData with the text in the indexes listed.  The copied 
-    data is a rectangular array of the selected cells.  Cells not selected that 
-    fall with-in a row or column of the enclosing rectangle, are indicated only by 
+    Fill and return a QMimeData with the text in the indexes listed.  The copied
+    data is a rectangular array of the selected cells.  Cells not selected that
+    fall with-in a row or column of the enclosing rectangle, are indicated only by
     an empty string in the tab delimited grid.
     """
 

@@ -36,8 +36,8 @@ class DateValidator(QtGui.QValidator):
 
 class DateEdit(ButtonEdit):
     """
-    DateEdit is a QLineEdit derivative that parses input strings into dates 
-    with the fuzzyparsers python package.  A QCalendarWidget is available 
+    DateEdit is a QLineEdit derivative that parses input strings into dates
+    with the fuzzyparsers python package.  A QCalendarWidget is available
     by clicking a button to the right of the edit or pressing F4.
     """
 

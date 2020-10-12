@@ -242,24 +242,24 @@ class TabMenuHolder:
 
 class WindowGeometry(QtCore.QObject):
     """
-    This class saves and restores the size and other geometry artifacts about 
-    the passed QWidget.  It hooks the closeEvent by attaching itself as an 
+    This class saves and restores the size and other geometry artifacts about
+    the passed QWidget.  It hooks the closeEvent by attaching itself as an
     eventFilter to the passed QWidget.
 
-    Table header geometry should be saved by passing an extensionId to 
+    Table header geometry should be saved by passing an extensionId to
     :func:`TableView.setModel` at this point.  This may change in the future.
 
-    The geometry is persisted with QSettings under a name that is determined 
-    by one of the following (with first items taking precedence).  This name 
-    is determined in __init__ and saved for writing the settings later under 
+    The geometry is persisted with QSettings under a name that is determined
+    by one of the following (with first items taking precedence).  This name
+    is determined in __init__ and saved for writing the settings later under
     the same name.
-    
+
     * name parameter
     * widget.objectName()  (recommended)
 
-    The QTabWidgets in the `tabs` list will have a context menu added on them 
-    with options about how the tab selection should be recalled on reload.  They 
-    can reopen the last opened, always reopen to a specific tab, or let it as 
+    The QTabWidgets in the `tabs` list will have a context menu added on them
+    with options about how the tab selection should be recalled on reload.  They
+    can reopen the last opened, always reopen to a specific tab, or let it as
     default (probably meaning the first tab is shown).
 
     :param widget: the QWidget for which to save & restore state
@@ -338,13 +338,13 @@ class WindowGeometry(QtCore.QObject):
 
     def saveState(self, splitters=True, tabs=True):
         """
-        This saves the state of all controlled elements.  Some elements are 
-        saved immediately when modified (such as splitters).  Thus we suppress 
+        This saves the state of all controlled elements.  Some elements are
+        saved immediately when modified (such as splitters).  Thus we suppress
         the state saving on close for these elements.
 
-        :param splitters:  pass False to suppress the saving of the splitter 
+        :param splitters:  pass False to suppress the saving of the splitter
             state for splitters passed in __init__
-        :param tabs:  pass False to suppress the saving of the tab 
+        :param tabs:  pass False to suppress the saving of the tab
             state for tabs passed in __init__
         """
         settings = QtCore.QSettings()

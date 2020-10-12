@@ -28,7 +28,7 @@ def is_windows():
 
 def xdg_open(file):
     """
-    Be a platform smart incarnation of xdg-open and open files in the correct 
+    Be a platform smart incarnation of xdg-open and open files in the correct
     application.
     """
     if is_windows():

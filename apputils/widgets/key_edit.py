@@ -12,8 +12,8 @@ from . import icons  # noqa: F401
 
 class KeyEdit(ButtonEdit):
     """
-    KeyEdit is a QLineEdit derivative that offers a button on the right to 
-    search for rows from a database table.  KeyEdit is best used in the 
+    KeyEdit is a QLineEdit derivative that offers a button on the right to
+    search for rows from a database table.  KeyEdit is best used in the
     InputYoke infrastructure with a DomainEntity derived class.
     """
 

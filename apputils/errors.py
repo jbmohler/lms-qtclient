@@ -7,9 +7,9 @@ import cliutils
 
 def guiexcepthook(type_, value, tb):
     """
-    Replace sys.excepthook with this function to display errors more gracefully 
+    Replace sys.excepthook with this function to display errors more gracefully
     for an application which is not associated with a console.
-    
+
     >>> import sys
     >>> import apputils
     >>> sys.excepthook = apputils.guiexcepthook
@@ -35,7 +35,7 @@ class ExceptionLogger(QtCore.QObject):
     """
     Replace sys.excepthook with this function to display errors more gracefully
     for an application which is not associated with a console.
-    
+
     >>> import sys
     >>> sys.excepthook = ExceptionLogger().excepthook
     """

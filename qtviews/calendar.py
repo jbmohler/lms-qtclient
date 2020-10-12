@@ -169,8 +169,8 @@ class CalendarView(TableView):
     >>> c = CalendarView()
     >>> c.setDateRange(datetime.date(2012, 3, 18), 6)
     >>> c.setEventList(test_calendar_entries()+[
-    ...     {"start": datetime.date(2012, 3, 21), "end": datetime.date(2012, 3, 25), "text": "vacation"}, 
-    ...     {"start": datetime.date(2012, 3, 28), "end": datetime.date(2012, 4, 4), "text": "nicer vacation"}, 
+    ...     {"start": datetime.date(2012, 3, 21), "end": datetime.date(2012, 3, 25), "text": "vacation"},
+    ...     {"start": datetime.date(2012, 3, 28), "end": datetime.date(2012, 4, 4), "text": "nicer vacation"},
     ...     {"start": datetime.date(2012, 4, 9), "end": datetime.date(2012, 4, 9), "text": "wife birthday"}],
     ...     startDate = lambda x: x["start"],
     ...     endDate = lambda x: x["end"],
