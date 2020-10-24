@@ -30,7 +30,12 @@ class ContactExtensions:
         contact_menu_schematic = [
             (
                 "ClientURLMenuItem",
-                ("Contact &List", "lmscontacts:contacts/list", "get_api_personas_list"),
+                (
+                    "Contact &List",
+                    "lmscontacts:contacts/list",
+                    "get_api_personas_list",
+                    "Ctrl+J",
+                ),
             )
         ]
         yield ("&Contacts", contact_menu_schematic)
@@ -43,4 +48,6 @@ class WidgetsPlugin:
                 "url_factory"
             ] = lambda *args: f"lmscontacts:contact/edit?key={args[1]}"
         if type_ == "lms_personas_persona.surrogate":
-            meta["url_factory"] = lambda *args: f"pyhacc:transactions?key={args[0]}"
+            meta[
+                "url_factory"
+            ] = lambda *args: f"lmscontacts:contact/edit?key={args[0]}"

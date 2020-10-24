@@ -19,14 +19,17 @@ from . import winlist
 
 
 class ClientURLMenuItem:
-    def __init__(self, item_name, client_url, auth_name):
+    def __init__(self, item_name, client_url, auth_name, shortcut=None):
         self.item_name = item_name
         self.client_url = client_url
         self.auth_name = auth_name
+        self.shortcut = shortcut
 
     def action(self, parent):
         act = QtWidgets.QAction(self.item_name, parent)
         act.triggered.connect(lambda: parent.handle_url(self.client_url))
+        if self.shortcut:
+            act.setShortcut(self.shortcut)
         return act
 
 

@@ -89,6 +89,7 @@ class AccountingExtensions:
                     "New &Transaction",
                     "pyhacc:transactions/new",
                     "get_api_transaction_new",
+                    "Ctrl+N",
                 ),
             ),
             (
@@ -97,6 +98,7 @@ class AccountingExtensions:
                     "&Recent Transactions",
                     "pyhacc:transactions/recent",
                     "get_api_transactions_list",
+                    "Ctrl+R",
                 ),
             ),
             (
