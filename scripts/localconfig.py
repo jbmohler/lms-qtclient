@@ -31,6 +31,7 @@ def qt_app_init(plugpoint):
     import client.qt.rtauth as rtauth
 
     rtlib.add_type_definition_plugin(pg.AccountingWidgetsPlugin())
+    rtlib.add_type_definition_plugin(cg.WidgetsPlugin())
     rtlib.add_type_definition_plugin(rtlib.BasicTypePlugin())
     rtlib.add_type_definition_plugin(apputils.BasicWidgetsPlugin())
 

@@ -9,14 +9,7 @@ from . import icons
 
 
 class PersonaMixin:
-    @property
-    def full_name(self):
-        names = []
-        if self.f_name not in ["", None]:
-            names.append(self.f_name)
-        if self.l_name not in ["", None]:
-            names.append(self.l_name)
-        return " ".join(names)
+    pass
 
 
 class BitMixin:
@@ -325,24 +318,77 @@ class EditPersona(QtWidgets.QDialog):
         sb = self.binder
         sb.construct("title", "basic")
         sb.construct("f_name", "basic")
-        sb.construct("l_name", "basic")
+        sb.construct("l_name#company", "basic")
+        sb.construct("l_name#individual", "basic")
         sb.construct("memo", "multiline")
         sb.construct("birthday", "date")
+        sb.construct("organization", "basic")
 
         self.tabs = QtWidgets.QTabWidget()
 
         self.tab_main_info = QtWidgets.QWidget()
-        m4 = QtWidgets.QFormLayout(self.tab_main_info)
-        m4.addRow("Title", sb.widgets["title"])
-        m4.addRow("First Name", sb.widgets["f_name"])
-        m4.addRow("Last Name", sb.widgets["l_name"])
-        m4.addRow("Memo", sb.widgets["memo"])
-        self.tab_main_info.main_form = m4
+        self.tab_main_info_layout = QtWidgets.QVBoxLayout(self.tab_main_info)
+
+        self.name_radio_company = QtWidgets.QRadioButton("&Company")
+        self.name_radio_individual = QtWidgets.QRadioButton("&Individual")
+        self.name_radio_grp = QtWidgets.QButtonGroup()
+        self.name_radio_grp.setExclusive(True)
+        self.name_radio_grp.addButton(self.name_radio_company, 1)
+        self.name_radio_grp.addButton(self.name_radio_individual, 2)
+        self.name_radio_layout = QtWidgets.QHBoxLayout()
+        self.tab_main_info_layout.addLayout(self.name_radio_layout)
+        for btn in self.name_radio_grp.buttons():
+            self.name_radio_layout.addWidget(btn)
+
+        self.namestack = QtWidgets.QStackedWidget()
+
+        self.m2w = QtWidgets.QWidget()
+        m2 = QtWidgets.QFormLayout(self.m2w)
+        m2.addRow("Name", sb.widgets["l_name#company"])
+        self.namestack.addWidget(self.m2w)
+
+        self.m3w = QtWidgets.QWidget()
+        m3 = QtWidgets.QFormLayout(self.m3w)
+        m3.addRow("Title", sb.widgets["title"])
+        m3.addRow("First Name", sb.widgets["f_name"])
+        m3.addRow("Last Name", sb.widgets["l_name#individual"])
+        self.namestack.addWidget(self.m3w)
+
+        self.tab_main_info_layout.addWidget(self.namestack)
+
+        self.editrow = None
+
+        def join_null(values, sep):
+            values = [v for v in values if v not in ["", None]]
+            return sep.join(values)
+
+        def stack_update(id_, toggled):
+            if self.editrow:
+                row = self.editrow
+                if id_ == 1:
+                    # selected corporate entity
+                    row.l_name = join_null([row.title, row.f_name, row.l_name], " ")
+                    row.f_name = None
+                    row.title = None
+                    for attr in ["l_name", "f_name", "title"]:
+                        self.binder.reset_from_row(row, attr)
+                if toggled:
+                    row.corporate_entity = {1: True, 2: False}[id_]
+            if toggled:
+                w = {1: self.m2w, 2: self.m3w}
+                self.namestack.setCurrentWidget(w[id_])
+
+        self.name_radio_grp.idToggled.connect(stack_update)
+        self.name_radio_company.setChecked(True)
+
+        m5 = QtWidgets.QFormLayout()
+        m5.addRow("Memo", sb.widgets["memo"])
+        self.tab_main_info_layout.addLayout(m5)
 
         self.tab_aux_info = QtWidgets.QWidget()
         m4 = QtWidgets.QFormLayout(self.tab_aux_info)
         m4.addRow("Birthday", sb.widgets["birthday"])
-        self.tab_aux_info.main_form = m4
+        m4.addRow("Organization", sb.widgets["organization"])
 
         self.tab_tags_info = QtWidgets.QWidget()
         m4 = QtWidgets.QVBoxLayout(self.tab_tags_info)
@@ -350,7 +396,6 @@ class EditPersona(QtWidgets.QDialog):
         self.tags_grid.header().hide()
         self.tags_gridmgr = qt.GridManager(self.tags_grid, self)
         m4.addWidget(self.tags_grid)
-        self.tab_tags_info.main_form = m4
 
         self.tabs.addTab(self.tab_main_info, "Contact")
         self.tabs.addTab(self.tab_tags_info, "Tags")
@@ -376,11 +421,18 @@ class EditPersona(QtWidgets.QDialog):
     def _load(self):
         content = yield apputils.AnimateWait(self)
 
+        self.persona = content.main_table(mixin=EntityEditMixin)
+
+        self.editrow = None
+        if self.persona.rows[0].corporate_entity:
+            self.name_radio_company.setChecked(True)
+        else:
+            self.name_radio_individual.setChecked(True)
+
+        self.editrow = self.persona.rows[0]
+
         class ThisPersonaMixin(EntityTaggerMixin):
             pass
-
-        self.persona = content.main_table(mixin=EntityEditMixin)
-        self.editrow = self.persona.rows[0]
 
         ThisPersonaMixin.ambient_persona = self.editrow
 
@@ -571,7 +623,7 @@ class ContactView(QtWidgets.QWidget):
         self.bits = content.named_table("bits", mixin=BitMixin)
 
         chunks = []
-        chunks.append(f"<h1>{self.persona.full_name}</h1>")
+        chunks.append(f"<h1>{self.persona.entity_name}</h1>")
         if self.persona.memo != None:
             chunks.append(self.persona.memo.replace("\n", "<br />"))
 
@@ -592,6 +644,54 @@ class ContactView(QtWidgets.QWidget):
                 "".join(["\n".join(["<p>", c, "</p>", ""]) for c in chunks])
             )
         )
+
+
+class PersonaCommandSidebar(QtCore.QObject):
+    SRC_INSTANCE_URL = "api/persona/{}"
+    refresh = QtCore.Signal()
+
+    def __init__(self, parent, state):
+        super(PersonaCommandSidebar, self).__init__(parent)
+        self.client = state.session.std_client()
+        self.added = False
+
+    def init_grid_menu(self, gridmgr):
+        self.gridmgr = gridmgr
+
+        if not self.added:
+            self.added = True
+            self.gridmgr.add_action("&Add Entity", triggered=self.cmd_add_persona)
+            self.gridmgr.add_action("&Edit Entity", triggered=self.cmd_edit_persona)
+            self.gridmgr.add_action("&Delete Entity", triggered=self.cmd_delete_persona)
+
+    def window(self):
+        return self.gridmgr.grid.window()
+
+    def cmd_add_persona(self):
+        dlg = EditPersona(self.window())
+        dlg.load_new(self.client)
+
+        if dlg.Accepted == dlg.exec_():
+            self.refresh.emit()
+
+    def cmd_edit_persona(self, row):
+        dlg = EditPersona(self.window())
+        dlg.load(self.client, row)
+
+        if dlg.Accepted == dlg.exec_():
+            self.refresh.emit()
+
+    def cmd_delete_persona(self, row):
+        if "Yes" == apputils.message(
+            self.window(),
+            f"Are you sure that you wish to delete the entity '{row.entity_name}'?",
+            buttons=["Yes", "No"],
+        ):
+            try:
+                self.client.delete(self.SRC_INSTANCE_URL, row.id)
+                self.refresh.emit()
+            except:
+                qt.exception_message(self.window(), "The entity could not be deleted.")
 
 
 class ContactsList(QtWidgets.QWidget):
@@ -619,6 +719,16 @@ class ContactsList(QtWidgets.QWidget):
         self.grid.verticalHeader().hide()
         self.gridmgr = qt.GridManager(self.grid, self)
         self.sublay.addWidget(self.grid)
+
+        class State:
+            pass
+
+        s = State()
+        s.session = session
+
+        self.sidebar2 = PersonaCommandSidebar(self, s)
+        if self.sidebar2 != None and hasattr(self.sidebar2, "init_grid_menu"):
+            self.sidebar2.init_grid_menu(self.gridmgr)
 
         self.sidebar = ContactView(self, session)
         self.sidebar.update_ambient.connect(self.reload_from_persona)
