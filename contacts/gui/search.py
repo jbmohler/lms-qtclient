@@ -747,6 +747,10 @@ class ContactsList(QtWidgets.QWidget):
         self.load_timer.timeout.connect(self.search_now)
         self.search_edit.applyValue.connect(self.load_timer.ui_start)
 
+        self.change_listener = qt.ChangeListener(
+            self.backgrounder, self.client, self.search_now, "personas"
+        )
+
         self.geo = apputils.WindowGeometry(
             self, size=False, position=False, grids=[self.grid]
         )
