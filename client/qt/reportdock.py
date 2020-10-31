@@ -89,6 +89,12 @@ class ReportsDock(QtWidgets.QWidget):
         # 4) Launch
         self.geo = apputils.WindowGeometry(self, grids=[self.grid])
 
+        self.refresh_timer = QtCore.QTimer(self)
+        # every two hours
+        self.refresh_timer.setInterval(1000*60*60*2)
+        self.refresh_timer.timeout.connect(self.reload_reports)
+        self.refresh_timer.start()
+
         self.reload_reports()
 
     def closeEvent(self, event):
