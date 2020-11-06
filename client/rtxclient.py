@@ -12,6 +12,10 @@ class RtxError(Exception):
     pass
 
 
+class RtxRequestCancellation(RtxError):
+    pass
+
+
 class RtxServerError(RtxError):
     pass
 
@@ -33,6 +37,8 @@ def raise_exception_ex(request, method):
         is_json = len(t) > 0 and t[0] == "[" and t[-1] == "]"
         if is_json:
             keys = json.loads(request.text)[0]
+            if "error-msg" in keys and keys["error-key"] == "cancel":
+                raise RtxRequestCancellation(keys["error-msg"])
             if "error-msg" in keys:
                 raise RtxError(keys["error-msg"])
     raise RtxServerError(exception_string(request, method))

@@ -219,6 +219,10 @@ class TransactionCalendar(QtWidgets.QWidget):
 
         self.gridmgr.set_client_table(self.table)
 
+    def closeEvent(self, event):
+        self.change_listener.close()
+        return super(TransactionCalendar, self).closeEvent(event)
+
 
 class TransactionRecent(QtWidgets.QWidget):
     ID = "transaction-recent"
@@ -286,3 +290,7 @@ class TransactionRecent(QtWidgets.QWidget):
             kwargs["date2"] = datetime.date.today() + datetime.timedelta(365)
 
         self.backgrounder(self.load_tranlist, self.client.get, self.URL, **kwargs)
+
+    def closeEvent(self, event):
+        self.change_listener.close()
+        return super(TransactionRecent, self).closeEvent(event)

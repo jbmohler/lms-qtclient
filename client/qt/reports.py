@@ -484,8 +484,9 @@ class ReportPreview(QtWidgets.QWidget):
                 apputils.information(self.window(), m.format(v[0].label, str(e)))
                 return
         self.run, tail, params = self.report.prepare_url(values)
+        # TODO: cancel should work on self.client.get, but it does not.
         self.backgrounder.named["main-report"](
-            self.run_wrapper, self.client.get, tail, **params
+            self.run_wrapper, self.client, tail, **params
         )
 
     def run_wrapper(self):
@@ -621,7 +622,10 @@ class ReportPreview(QtWidgets.QWidget):
             add = set(channels).difference(self.change_listeners.keys())
 
             for channel in remove:
-                del self.change_listeners[channel]
+                try:
+                    self.change_listeners.pop(channel).close()
+                except KeyError:
+                    pass
             for channel in add:
                 self.change_listeners[channel] = utils.ChangeListener(
                     self.backgrounder, self.client, self.launch_report, channel
@@ -663,14 +667,11 @@ class ReportPreview(QtWidgets.QWidget):
 
     def closeEvent(self, event):
         if self.is_running:
-            apputils.information(
-                self.window(),
-                "The report is running on the server.  Aborting reports is not (yet) supported.",
-            )
-            event.ignore()
-            return False
+            self.backgrounder.named["main-report"].cancel()
         if self.grid.model() != None:
             apputils.write_grid_geometry(self.grid, self.settings_key())
+        for _, v in self.change_listeners.items():
+            v.close()
         if self.sidebar_wrapper != None:
             self.sidebar_wrapper._preview = None
             self.sidebar_wrapper.close()

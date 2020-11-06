@@ -13,6 +13,7 @@ class ChangeListener:
         self.backgrounder = backgrounder
         self.loadfunc = loadfunc
         self.channel = channel
+        self.running = True
 
         self.chain_index = 0
         self.chain_key = uuid.uuid1().hex
@@ -32,8 +33,9 @@ class ChangeListener:
             "channel": self.channel,
             "index": self.chain_index,
         }
-        self.backgrounder(
-            self.chained_reload, self.client.get, "api/sql/changequeue", **kwargs
+        # TODO: cancel should work on self.client.get, but it does not.
+        self.backgrounder.named[self.chain_key](
+            self.chained_reload, self.client, "api/sql/changequeue", **kwargs
         )
 
     def chained_reload(self):
@@ -50,7 +52,12 @@ class ChangeListener:
             # print("swallowing exception on chained_reload")
             pass
         finally:
-            self.chained_listen()
+            if self.running:
+                self.chained_listen()
+
+    def close(self):
+        self.running = False
+        self.backgrounder.named[self.chain_key].cancel()
 
 
 class RtxTrayIcon(QtWidgets.QSystemTrayIcon):
@@ -78,7 +85,20 @@ def xlsx_start_file(parent, fname):
     )
 
 
+def exception_abandon():
+    type_, value, tb = sys.exc_info()
+    # Explicitly abandon these exceptions.  They happen for either explicit
+    # user abort or program close.
+    return isinstance(
+        value,
+        (client.RtxRequestCancellation, apputils.BackgrounderAbort, GeneratorExit),
+    )
+
+
 def exception_message(parent, message):
+    if exception_abandon():
+        return
+
     msgBox = QtWidgets.QMessageBox(parent)
     msgBox.setWindowTitle(QtWidgets.QApplication.applicationName())
 

@@ -786,6 +786,10 @@ class ContactsList(QtWidgets.QWidget):
                 self.grid.setCurrentIndex(i1)
                 self.sidebar.highlight(row[0])
 
+    def closeEvent(self, event):
+        self.change_listener.close()
+        return super(ContactsList, self).closeEvent(event)
+
 
 def list_widget(parent, session):
     view = ContactsList(parent, session)
