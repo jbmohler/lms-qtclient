@@ -1,7 +1,7 @@
 import sys
 import uuid
 import traceback
-from PySide2 import QtWidgets
+from PySide2 import QtCore, QtWidgets
 import cliutils
 import apputils
 import client
@@ -49,11 +49,14 @@ class ChangeListener:
 
                 self.loadfunc()
         except client.RtxError:
-            # print("swallowing exception on chained_reload")
-            pass
-        finally:
-            if self.running:
-                self.chained_listen()
+            delay = 1000.0 * 1.5
+        except Exception:
+            delay = 1000.0 * 1.5
+        else:
+            delay = 0.0
+
+        if self.running:
+            QtCore.QTimer.singleShot(int(delay), self.chained_listen)
 
     def close(self):
         self.running = False

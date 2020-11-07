@@ -91,7 +91,7 @@ class ReportsDock(QtWidgets.QWidget):
 
         self.refresh_timer = QtCore.QTimer(self)
         # every two hours
-        self.refresh_timer.setInterval(1000*60*60*2)
+        self.refresh_timer.setInterval(1000 * 60 * 60 * 2)
         self.refresh_timer.timeout.connect(self.reload_reports)
         self.refresh_timer.start()
 
