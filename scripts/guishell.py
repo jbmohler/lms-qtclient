@@ -7,6 +7,8 @@ import client.qt as cqt
 import localconfig
 
 if platform.system() != "Windows":
+    # if one wanted to support windows, it may be reasonable to start at
+    # https://stackoverflow.com/questions/48542644/python-and-windows-named-pipes
     import client.cmdserver_unix as cmdserver
 
 if __name__ == "__main__":
