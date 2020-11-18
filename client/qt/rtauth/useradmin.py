@@ -13,13 +13,13 @@ from .useradmin_roleactivities import RoleActivityMapperTargets
 
 
 class ReportTabEx(reporttab.ReportTab):
-    def __init__(self, session, exports_dir, parent=None):
+    def __init__(self, parent=None, state=None):
         super(ReportTabEx, self).__init__(parent)
 
         self.setObjectName(self.ID)
         self.setWindowTitle(self.TITLE)
-        self.exports_dir = exports_dir
-        self.client = session.std_client()
+        self.exports_dir = state.exports_dir
+        self.client = state.session.std_client()
         self.backgrounder = apputils.Backgrounder(self)
         self.ctxmenu = viewmenus.ContextMenu(self.grid, self)
         self.geo = apputils.WindowGeometry(
@@ -114,26 +114,25 @@ class UserList(QtWidgets.QWidget):
     URL_TAIL = "api/users/list"
     SRC_INSTANCE_URL = "api/user/{}"
 
-    def __init__(self, session, exports_dir, parent=None):
+    def __init__(self, parent=None, state=None):
         super(UserList, self).__init__(parent)
 
         self.setObjectName(self.ID)
         self.setWindowTitle(self.TITLE)
-        self.exports_dir = exports_dir
-        self.client = session.std_client()
+        self.exports_dir = state.exports_dir
+        self.client = state.session.std_client()
 
         self.backgrounder = apputils.Backgrounder(self)
 
         self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
 
+        self.sidebar = UserListSidebar(self, state)
+
         self.grid = widgets.TableView()
         self.grid.setObjectName("content")
         self.grid.setSortingEnabled(True)
         self.gridmgr = qt.GridManager(self.grid, self)
-        self.gridmgr.add_action("&Add User", triggered=self.cmd_add_user)
-        self.gridmgr.add_action("&Set Roles", triggered=self.cmd_set_roles)
-        self.gridmgr.add_action("&Edit User", triggered=self.cmd_edit_user)
-        self.gridmgr.add_action("&Delete User", triggered=self.cmd_delete_user)
+        self.sidebar.init_grid_menu(self.gridmgr)
         self.splitter.addWidget(self.grid)
 
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -150,49 +149,6 @@ class UserList(QtWidgets.QWidget):
         )
 
         self.refresh()
-
-    def cmd_add_user(self):
-        user = rtlib.ClientTable(
-            [
-                ("full_name", None),
-                ("username", None),
-                ("password", None),
-                ("password2", None),
-                ("descr", None),
-            ],
-            [],
-        )
-        with user.adding_row() as r2:
-            pass
-        if edit_user_dlg(self, user, editrec=False):
-            self.refresh()
-
-    def cmd_edit_user(self, row):
-        content = self.client.get(self.SRC_INSTANCE_URL, row.id)
-        user = content.main_table()
-        if edit_user_dlg(self, user, editrec=True):
-            self.refresh()
-
-    def cmd_set_roles(self, rows):
-        users = [o.id for o in rows]
-
-        w = UserRoleMapperTargetsByUser(
-            self.client.session, self.exports_dir, None, users
-        )
-        w.show()
-        self.refresh()
-
-    def cmd_delete_user(self, row):
-        if "Yes" == apputils.message(
-            self.window(),
-            f"Are you sure that you wish to delete the user {row.username}?",
-            buttons=["Yes", "No"],
-        ):
-            try:
-                self.client.delete(self.SRC_INSTANCE_URL, row.id)
-                self.refresh()
-            except:
-                qt.exception_message(self.window(), "The user could not be deleted.")
 
     def load(self):
         self.setEnabled(False)
@@ -222,8 +178,13 @@ class UserList(QtWidgets.QWidget):
 
 
 class RoleSidebar(QtWidgets.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, state=None):
         super(RoleSidebar, self).__init__(parent)
+
+        self.client = None
+        if state != None:
+            self.client = state.session.std_client()
+        self.backgrounder = apputils.Backgrounder(self)
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -282,13 +243,13 @@ class RoleList(QtWidgets.QWidget):
     URL_TAIL = "api/roles/list"
     SRC_INSTANCE_URL = "api/role/{}"
 
-    def __init__(self, session, exports_dir, parent=None):
+    def __init__(self, parent=None, state=None):
         super(RoleList, self).__init__(parent)
 
         self.setObjectName(self.ID)
         self.setWindowTitle(self.TITLE)
-        self.exports_dir = exports_dir
-        self.client = session.std_client()
+        self.exports_dir = state.exports_dir
+        self.client = state.session.std_client()
 
         self.backgrounder = apputils.Backgrounder(self)
 
@@ -305,7 +266,7 @@ class RoleList(QtWidgets.QWidget):
         self.gridmgr.add_action("Permitted &Actions", triggered=self.cmd_permit_actions)
         self.splitter.addWidget(self.grid)
 
-        self.sidebar = RoleSidebar()
+        self.sidebar = RoleSidebar(self, state)
         self.splitter.addWidget(self.sidebar)
 
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -427,8 +388,13 @@ class RoleList(QtWidgets.QWidget):
 
 
 class ActivitySidebar(QtWidgets.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, state=None):
         super(ActivitySidebar, self).__init__(parent)
+
+        self.client = None
+        if state != None:
+            self.client = state.session.std_client()
+        self.backgrounder = apputils.Backgrounder(self)
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -506,13 +472,13 @@ class ActivityList(QtWidgets.QWidget):
     URL_TAIL = "api/activities/list"
     SRC_INSTANCE_URL = "api/activity/{}"
 
-    def __init__(self, session, exports_dir, parent=None):
+    def __init__(self, parent=None, state=None):
         super(ActivityList, self).__init__(parent)
 
         self.setObjectName(self.ID)
         self.setWindowTitle(self.TITLE)
-        self.exports_dir = exports_dir
-        self.client = session.std_client()
+        self.exports_dir = state.exports_dir
+        self.client = state.session.std_client()
 
         self.backgrounder = apputils.Backgrounder(self)
 
@@ -526,7 +492,7 @@ class ActivityList(QtWidgets.QWidget):
         self.gridmgr.add_action("&Edit Activity", triggered=self.cmd_edit_activity)
         self.splitter.addWidget(self.grid)
 
-        self.sidebar = ActivitySidebar()
+        self.sidebar = ActivitySidebar(self, state)
         self.splitter.addWidget(self.sidebar)
 
         self.layout = QtWidgets.QVBoxLayout(self)

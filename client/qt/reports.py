@@ -66,6 +66,22 @@ class SidebarInterface:
         pass
 
 
+def validate_sidebars(sidebars):
+    if sidebars == None:
+        return  # no sidebars is fine
+    if len(sidebars) > 1:
+        raise NotImplementedError("only one sidebar for each report at this point")
+    if len(sidebars) == 0:
+        return  # no sidebars is fine
+    attributes = [
+        "name",
+        "on_highlight_row",
+    ]  # wishing for 'on_report_loaded' here as well
+    if not set(sidebars[0].keys()).issubset(attributes):
+        extras = set(sidebars[0].keys()).difference(attributes)
+        raise NotImplementedError("key(s) {} not supported".format(", ".join(extras)))
+
+
 class ReportClientInfo:
     # prompts
     # defaults
@@ -81,6 +97,8 @@ class ReportClientInfo:
             self.role = report.role
             self.role_sort = report.role_sort
         self.url = report.url
+        self.sidebars = report.sidebars
+        validate_sidebars(report.sidebars)
         if len(report.prompts) > 0 and not isinstance(report.prompts[0], rtlib.Column):
             self.prompts = rtlib.PromptList(report.prompts)
             self.defaults = self.prompts.defaults
@@ -221,7 +239,10 @@ class ReportPreview(QtWidgets.QWidget):
 
         self._sidebar_lock = False
         self.sidebar_wrapper = None
-        self.sidebar = rtapp_report_sidebar(self.report.name)
+        self.sidebar = None
+        if len(self.report.sidebars) > 0:
+            sbar = self.report.sidebars[0]["name"]
+            self.sidebar = rtapp_report_sidebar(sbar)
         if self.sidebar != None and isinstance(self.sidebar, QtWidgets.QWidget):
             self.sidebar_split.addWidget(self.sidebar)
             self.sidebar_split.setStretchFactor(0, 5)

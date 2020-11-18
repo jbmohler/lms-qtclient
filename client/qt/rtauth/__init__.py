@@ -9,7 +9,12 @@ class RtAuthPlugs:
 
         if url.path() in useradmin.SIMPLE_LIST_MAP:
             widclass = useradmin.SIMPLE_LIST_MAP[url.path()]
-            parent.create_or_adopt_tab(widclass)
+
+            if parent.foreground_tab(widclass.ID):
+                return True
+
+            view = widclass(parent, state)
+            parent.adopt_tab(view, widclass.ID, widclass.TITLE)
         elif url.path() == "activities/register":
             w = activities.ManageActivities(
                 state.session, state.exports_dir, parent=parent, unregistered=True
@@ -66,5 +71,9 @@ class RtAuthPlugs:
         yield ("&Administrative", admin_schematic)
 
     def load_sidebar(self, state, name):
-        if name == "get_api_users_list":
+        if name == "user_general":
             return useradmin.UserListSidebar(None, state)
+        if name == "role_general":
+            return useradmin.RoleSidebar(None, state)
+        if name == "activity_general":
+            return useradmin.ActivitySidebar(None, state)

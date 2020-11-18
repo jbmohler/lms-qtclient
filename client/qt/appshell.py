@@ -296,14 +296,6 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
                 return None, widget
         return None, None
 
-    def create_or_adopt_tab(self, widclass):
-        # TODO streamline with qtviews
-        if self.foreground_tab(widclass.ID):
-            return
-
-        w = widclass(self.session, self.exports_dir)
-        self.adopt_tab(w, widclass.ID, widclass.TITLE)
-
     def adopt_tab(self, widget, shell_id, tab_title, static=False):
         self.addWorkspaceWindow(widget, title=tab_title, settingsKey=shell_id)
         return
