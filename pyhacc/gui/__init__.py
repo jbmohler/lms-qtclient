@@ -1,10 +1,10 @@
-from .accounts import *
 from .journals import *
 from .accounttypes import *
 from .widgets import *
 
 from .roscoe import *
 
+from . import accounts
 from . import transactions
 from . import monthly
 from . import tranreports
@@ -18,9 +18,9 @@ class AccountingExtensions:
             return False
 
         if url.path() == "accounts/new":
-            edit_account(state.session, "new")
+            accounts.edit_account(state.session, "new")
         elif url.path() == "accounts":
-            edit_account(state.session, url.parameters()["key"])
+            accounts.edit_account(state.session, url.parameters()["key"])
         elif url.path() == "journals/new":
             edit_journal(state.session, "new")
         elif url.path() == "journals":
@@ -122,7 +122,8 @@ class AccountingExtensions:
         yield ("&Transactions", tran_menu_schematic)
 
     def load_sidebar(self, state, name):
-        pass
+        if name == "account_general":
+            return accounts.AccountSidebar(None, state)
 
     def report_formats(self, state, name):
         if name == "gl_summarize_by_type":
