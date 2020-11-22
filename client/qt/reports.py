@@ -32,19 +32,8 @@ from . import utils
 from . import dialogs
 from . import layoututils
 from . import gridmgr
+from . import plugpoint
 from . import icons
-
-
-def rtapp_report_sidebar(sbkey):
-    app = QtCore.QCoreApplication.instance()
-    if hasattr(app, "report_sidebar"):
-        return app.report_sidebar(sbkey, app.session, app.exports_dir)
-
-
-def rtapp_report_export(expkey):
-    app = QtCore.QCoreApplication.instance()
-    if hasattr(app, "report_export"):
-        return app.report_export(expkey, app.session, app.exports_dir)
 
 
 class SidebarInterface:
@@ -242,7 +231,7 @@ class ReportPreview(QtWidgets.QWidget):
         self.sidebar = None
         if len(self.report.sidebars) > 0:
             sbar = self.report.sidebars[0]["name"]
-            self.sidebar = rtapp_report_sidebar(sbar)
+            self.sidebar = plugpoint.get_plugin_sidebar(sbar)
         if self.sidebar != None and isinstance(self.sidebar, QtWidgets.QWidget):
             self.sidebar_split.addWidget(self.sidebar)
             self.sidebar_split.setStretchFactor(0, 5)
@@ -627,7 +616,7 @@ class ReportPreview(QtWidgets.QWidget):
         if "report-formats" in self.run.content.keys:
             menu = QtWidgets.QMenu()
             for fmt in self.run.content.keys["report-formats"]:
-                export = rtapp_report_export(fmt)
+                export = plugpoint.get_plugin_export(fmt)
                 f = functools.partial(self.export_data_custom, export)
                 menu.addAction(export.TITLE).triggered.connect(f)
             menu.addAction("&Flat Export").triggered.connect(self.export_data)

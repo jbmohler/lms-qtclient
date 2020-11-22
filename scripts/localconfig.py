@@ -40,9 +40,6 @@ def qt_app_init(plugpoint):
     plugpoint.add_extension_plug(dbg.DataBitExtensions())
     plugpoint.add_extension_plug(rtauth.RtAuthPlugs())
 
-    app.report_sidebar = plugpoint.search_sidebar
-    app.report_export = plugpoint.search_export
-
     return app
 
 

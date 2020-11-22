@@ -12,7 +12,7 @@ import apputils.rtxassets
 from . import serverdlgs
 from . import utils
 from . import about
-from . import gridmgr
+from . import plugpoint
 from . import reportdock
 from . import reports
 from . import winlist
@@ -235,7 +235,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         return self.doc_server
 
     def handle_url(self, url):
-        gridmgr.show_link_parented(self, QtCore.QUrl(url))
+        plugpoint.show_link_parented(self, QtCore.QUrl(url))
 
     def post_login(self):
         s = self.session
@@ -250,7 +250,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
             "SeparatorMenuItem": SeparatorMenuItem,
         }
 
-        for menuname, items in gridmgr.get_menus():
+        for menuname, items in plugpoint.get_plugin_menus():
             schematic = [ctors[n](*args) for n, args in items]
             self.add_schematic_menu(self.menuBar(), menuname, schematic)
 

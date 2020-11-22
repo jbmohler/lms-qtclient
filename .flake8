@@ -1,15 +1,23 @@
 [flake8]
 ignore =\
-	E501, #  line too long
-	E301,E302,E305,E306, #  expected
-	E722, # bare except
+	E116, #  unexpected indentation (comment)
 	E126, #  continuation line
+	E127,E128, #  continuation line
+	E203, #  whitespace before ':'
+	E251, #  unexpected spaces around keyword / parameter equals
+	E226, #  missing whitespace
+	E225, #  missing whitespace
+	E261, #  at least two spaces before inline comment
+	E262, #  inline comment should start with '# '
+	E265, #  block comment should start with '# '
+	E266, #  too many leading '#' for block comment
+	E301,E302,E305,E306, #  expected
+	E303,  #  too many blank lines (2)
+	E722, # bare except
 	E711, #  comparison to None should be 'if cond is not None:'
 	E711, #  comparison to None should be 'if cond is None:'
-	E265, #  block comment should start with '# '
-	E261, #  at least two spaces before inline comment
-	E127,E128, #  continuation line
-	F403, #  star import used; unable to detect undefined names
+	E712, #  comparison to False should be 'if cond is not False:' or 'if cond:'
+	E501, #  line too long
 	E502, #  the backslash is redundant between brackets
 	E731, #  do not assign a lambda expression, use a def
 	W291, #  trailing whitespace
@@ -17,12 +25,5 @@ ignore =\
 	W391, #  blank line at end of file
 	W503, #  line break before binary operator
 	F401, #  module imported but unused
-	F841, #  local  variable is assigned to but never used
-	E251, #  unexpected spaces around keyword / parameter equals
-	E226, #  missing whitespace
-	E225, #  missing whitespace
-	E262, #  inline comment should start with '# '
-	E712, #  comparison to False should be 'if cond is not False:' or 'if cond:'
-	E116, #  unexpected indentation (comment)
-	E266, #  too many leading '#' for block comment
-	E303 #  too many blank lines (2)
+	F403, #  star import used; unable to detect undefined names
+	F841 #  local  variable is assigned to but never used

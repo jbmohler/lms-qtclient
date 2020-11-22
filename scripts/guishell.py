@@ -36,5 +36,5 @@ if __name__ == "__main__":
             launch = not cmdserver.request_document(args.document)
 
     if launch:
-        app = localconfig.qt_app_init(cqt.gridmgr)
+        app = localconfig.qt_app_init(cqt.plugpoint)
         cqt.basic_shell_window(app, presession, document=args.document)

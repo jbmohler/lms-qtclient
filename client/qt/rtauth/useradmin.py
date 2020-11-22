@@ -421,6 +421,11 @@ class ActivitySidebar(QtWidgets.QWidget):
         acttable = content.main_table()
         activity = acttable.rows[0]
 
+        if activity.method:
+            httpgunk = f"""{activity.method} {activity.url}"""
+        else:
+            httpgunk = "Not available"
+
         if activity.prompts is None:
             reportgunk = ""
         else:
@@ -452,6 +457,12 @@ class ActivitySidebar(QtWidgets.QWidget):
 <h2>{activity.description}</h2>
 
 {reportgunk}
+
+<hr />
+
+<h3>HTTP Access:</h3>
+
+{httpgunk}
 
 <hr />
 

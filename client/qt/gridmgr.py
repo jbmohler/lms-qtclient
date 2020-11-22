@@ -5,90 +5,13 @@ import rtlib
 import apputils
 import apputils.models as models
 import apputils.viewmenus as viewmenus
-
-RTX_EXTENSION_PLUGS = []
-
-
-def add_extension_plug(plug):
-    global RTX_EXTENSION_PLUGS
-    RTX_EXTENSION_PLUGS.append(plug)
-
-
-def search_export(sbname, state, exports_dir):
-    state = QtWidgets.QApplication.instance()
-
-    global RTX_EXTENSION_PLUGS
-    for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, "report_formats", None)
-        if f != None:
-            sb = f(state, sbname)
-        else:
-            sb = None
-        if sb != None:
-            return sb
-
-
-def search_sidebar(sbname, state, exports_dir):
-    state = QtWidgets.QApplication.instance()
-
-    global RTX_EXTENSION_PLUGS
-    for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, "load_sidebar", None)
-        if f != None:
-            sb = f(state, sbname)
-        else:
-            sb = None
-        if sb != None:
-            return sb
-
-
-def get_menus():
-    global RTX_EXTENSION_PLUGS
-    for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, "get_menus", None)
-        for menuname, items in f():
-            yield (menuname, items)
-
-
-def url_params(url):
-    values = urllib.parse.parse_qs(url.query())
-    # dict(url.queryItems())
-    # TODO figure out correct +-decoding
-    # values = {k: v.replace('+', ' ') for k, v in values.items()}
-    # values = {k: urllib.parse.unquote(v) for k, v in values.items()}
-    values = {k: v[0] for k, v in values.items()}
-    return values
-
-
-def show_link_parented(parent, url):
-    if not isinstance(url, QtCore.QUrl):
-        url = QtCore.QUrl(url)
-
-    # prepare API on url for plugs
-    url.parameters = lambda url=url: url_params(url)
-    state = QtWidgets.QApplication.instance()
-
-    global RTX_EXTENSION_PLUGS
-    handled = False
-    for plug in RTX_EXTENSION_PLUGS:
-        if plug.show_link_parented(state, parent, url):
-            handled = True
-            break
-
-    if not handled:
-        apputils.information(parent, f"Invalid URL string:  {url}")
-
-
-def show_link(url):
-    from . import winlist
-
-    show_link_parented(winlist.main_window(), url)
+from . import plugpoint
 
 
 def url_handler(col, ctxmenu):
     def view_item():
         row = ctxmenu.active_index.data(models.ObjectRole)
-        show_link(QtCore.QUrl(rtlib.column_url(col, row)))
+        plugpoint.show_link(QtCore.QUrl(rtlib.column_url(col, row)))
 
     return view_item
 
@@ -196,7 +119,7 @@ class ReportClientRowRelateds:
         params.update(dynparams)
         p2 = urllib.parse.urlencode(params)
         url = f"{self.url_base}?{p2}"
-        show_link(url)
+        plugpoint.show_link(url)
 
 
 def apply_client_row_relateds(ctxmenu, content):
@@ -213,7 +136,7 @@ def apply_client_relateds(ctxmenu, content):
         act = QtWidgets.QAction(label, ctxmenu.parent())
 
         def action(xlink=link):
-            show_link(xlink)
+            plugpoint.show_link(xlink)
 
         act.triggered.connect(lambda: action())
         actions.append(act)
