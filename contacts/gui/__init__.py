@@ -40,6 +40,10 @@ class ContactExtensions:
         ]
         yield ("&Contacts", contact_menu_schematic)
 
+    def load_sidebar(self, state, name):
+        if name == "persona_general":
+            return search.ContactView(None, state)
+
 
 class WidgetsPlugin:
     def polish(self, attr, type_, meta):

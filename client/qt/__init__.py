@@ -8,4 +8,5 @@ from .prevtools import *  # noqa: F401
 from .layoututils import *  # noqa: F401
 from .gridmgr import *  # noqa: F401
 from .valqt import *  # noqa: F401
+from .plugpoint import url_params
 from . import plugpoint

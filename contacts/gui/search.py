@@ -486,13 +486,13 @@ class ContactView(QtWidgets.QWidget):
 
     update_ambient = QtCore.Signal(str)
 
-    def __init__(self, parent, session):
+    def __init__(self, parent, state):
         super(ContactView, self).__init__(parent)
 
         self.setWindowTitle(self.TITLE)
         self.setObjectName(self.ID)
         self.backgrounder = apputils.Backgrounder(self)
-        self.client = session.std_client()
+        self.client = state.session.std_client()
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -730,7 +730,9 @@ class ContactsList(QtWidgets.QWidget):
         if self.sidebar2 != None and hasattr(self.sidebar2, "init_grid_menu"):
             self.sidebar2.init_grid_menu(self.gridmgr)
 
-        self.sidebar = ContactView(self, session)
+        import rtlib.boa
+        state = rtlib.boa.inline_object(session=session)
+        self.sidebar = ContactView(self, state)
         self.sidebar.update_ambient.connect(self.reload_from_persona)
         self.sublay.addWidget(self.sidebar)
         self.layout.addWidget(self.sublay)

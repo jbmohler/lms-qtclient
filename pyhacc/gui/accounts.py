@@ -2,6 +2,7 @@ from PySide2 import QtWidgets
 import client.qt as qt
 import apputils
 import apputils.widgets
+import rtlib.boa
 from . import widgets
 
 URL_BASE = "api/account/{}"
@@ -22,11 +23,22 @@ class AccountSidebar(QtWidgets.QWidget):
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
 
-        self.view = QtWidgets.QTextBrowser()
-        self.view.setStyleSheet("QTextEdit { font-size: 14px }")
-        self.view.setOpenLinks(False)
-        self.view.anchorClicked.connect(self.action_triggered)
-        self.layout.addWidget(self.view)
+        self.view_select = apputils.construct("options")
+        self.view_select.applyValue.connect(self.on_view_select)
+        self.layout.addWidget(self.view_select)
+
+        self.topstack = QtWidgets.QStackedWidget()
+
+        self.account_view = QtWidgets.QTextBrowser()
+        self.account_view.setStyleSheet("QTextEdit { font-size: 14px }")
+        self.account_view.setOpenLinks(False)
+        self.account_view.anchorClicked.connect(self.action_triggered)
+
+        self.contact_sidebar = qt.plugpoint.get_plugin_sidebar("persona_general")
+
+        self.topstack.addWidget(self.account_view)
+        self.topstack.addWidget(self.contact_sidebar)
+        self.layout.addWidget(self.topstack)
 
         self.grid = apputils.widgets.TableView()
         self.grid.setSortingEnabled(True)
@@ -39,11 +51,42 @@ class AccountSidebar(QtWidgets.QWidget):
         )
 
     def highlight(self, row):
+        self.contacts_table = None
+
         self.refresh_account(row.id)
         self.refresh_transactions(row.id)
 
     def action_triggered(self, url):
         pass
+
+    def prepare_view_select(self):
+        row = self.account_table.rows[0]
+
+        options = [(f"Account: {row.acc_name}", f"account:{row.id}")]
+
+        if self.contacts_table is not None:
+            for persona in self.contacts_table.rows:
+                vp = (f"Contact: {persona.entity_name}", f"contact:{persona.id}")
+                options.append(vp)
+
+        self.view_select.set_options(options)
+
+        self.on_view_select()
+
+    def on_view_select(self):
+        value = self.view_select.value()
+
+        if value is None:
+            vtype, vid = "account", None
+        else:
+            vtype, vid = value.split(":")
+
+        if vtype == "account":
+            self.topstack.setCurrentIndex(0)
+        elif vtype == "contact":
+            xx = rtlib.boa.inline_object(id=vid)
+            self.contact_sidebar.highlight(xx)
+            self.topstack.setCurrentIndex(1)
 
     def refresh_account(self, account_id):
         self.backgrounder(
@@ -54,7 +97,7 @@ class AccountSidebar(QtWidgets.QWidget):
         )
 
     def load_account(self):
-        results = yield apputils.AnimateWait(self.view)
+        results = yield apputils.AnimateWait(self.topstack)
         self.account_table = results.main_table()
 
         row = self.account_table.rows[0]
@@ -63,7 +106,7 @@ class AccountSidebar(QtWidgets.QWidget):
         else:
             acc_note = ""
 
-        self.view.setHtml(
+        self.account_view.setHtml(
             f"""
 <html>
 <body>
@@ -75,6 +118,25 @@ class AccountSidebar(QtWidgets.QWidget):
 </html>
 """
         )
+
+        self.prepare_view_select()
+
+        # trigger a load for the contacts
+        if row.contact_keywords:
+            self.refresh_contacts(row.contact_keywords)
+
+    def refresh_contacts(self, keywords):
+        # beware the cross module reach
+        self.backgrounder(
+            self.load_contacts, self.client.get, "api/personas/list", frag=keywords
+        )
+
+    def load_contacts(self):
+        results = yield apputils.AnimateWait(self.grid)
+
+        self.contacts_table = results.main_table()
+
+        self.prepare_view_select()
 
     def refresh_transactions(self, account_id):
         self.backgrounder(
@@ -104,6 +166,7 @@ def edit_account(session, acntid="new"):
     dlg.add_form_row("journal_id", "Journal", "pyhacc_journal.id")
     dlg.add_form_row("acc_note", "Account Note", "multiline")
     dlg.add_form_row("rec_note", "Reconciliation Note", "multiline")
+    dlg.add_form_row("contact_keywords", "Contact Keywords", "basic")
 
     client = session.std_client()
 
