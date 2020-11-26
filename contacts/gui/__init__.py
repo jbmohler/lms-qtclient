@@ -9,7 +9,7 @@ class ContactExtensions:
         if url.path() == "contacts/list":
             if parent.foreground_tab("contact_search"):
                 return True
-            view = search.list_widget(parent, state.session)
+            view = search.ContactsList(parent, state)
             parent.adopt_tab(view, "contact_search", "Contacts")
         elif url.path() == "contact/edit":
             dlg = search.EditPersona(parent)

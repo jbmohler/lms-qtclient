@@ -699,7 +699,7 @@ class ContactsList(QtWidgets.QWidget):
     ID = "contact-search"
     URL_SEARCH = "api/personas/list"
 
-    def __init__(self, parent, session):
+    def __init__(self, parent, state):
         super(ContactsList, self).__init__(parent)
 
         self.setWindowTitle(self.TITLE)
@@ -720,24 +720,16 @@ class ContactsList(QtWidgets.QWidget):
         self.gridmgr = qt.GridManager(self.grid, self)
         self.sublay.addWidget(self.grid)
 
-        class State:
-            pass
-
-        s = State()
-        s.session = session
-
-        self.sidebar2 = PersonaCommandSidebar(self, s)
+        self.sidebar2 = PersonaCommandSidebar(self, state)
         if self.sidebar2 != None and hasattr(self.sidebar2, "init_grid_menu"):
             self.sidebar2.init_grid_menu(self.gridmgr)
 
-        import rtlib.boa
-        state = rtlib.boa.inline_object(session=session)
         self.sidebar = ContactView(self, state)
         self.sidebar.update_ambient.connect(self.reload_from_persona)
         self.sublay.addWidget(self.sidebar)
         self.layout.addWidget(self.sublay)
 
-        self.client = session.std_client()
+        self.client = state.session.std_client()
 
         self.preview_timer = qt.StdActionPause()
         self.preview_timer.timeout.connect(
@@ -791,8 +783,3 @@ class ContactsList(QtWidgets.QWidget):
     def closeEvent(self, event):
         self.change_listener.close()
         return super(ContactsList, self).closeEvent(event)
-
-
-def list_widget(parent, session):
-    view = ContactsList(parent, session)
-    return view
