@@ -13,18 +13,27 @@ class PersonaMixin:
 
 
 class BitMixin:
-    @property
-    def html_view(self):
-        edurl = f"local:bit/edit?id={self.id}&type={self.bit_type}"
-        dturl = f"local:bit/delete?id={self.id}&type={self.bit_type}"
-        x = [
-            f'<a href="{edurl}"><img src="qrc:/contacts/default-edit.png"></a>',
-            f'<a href="{dturl}"><img src="qrc:/contacts/bit-delete.png"></a>',
-            f"<p>{self.html_chunk()}</p>",
-        ]
-        return f"<tr><td>{x[0]}{x[1]}</td><td>{x[2]}</td></tr>"
+    def html_view(self, printable=False):
+        htmlbit = f"<p>{self.html_chunk(printable)}</p>"
+        if printable:
+            bt = self.bit_type[0].upper()
+            line1 = f"<tr><td><b>{bt}</b></td><td style='border-top: 1pt solid #686868;'>{htmlbit}</td></tr>"
+            if self.memo not in ["", None]:
+                memo = self.memo.replace("\n", "<br />")
+                line2 = f"<tr><td></td><td style='margin-left: 40px; background: #E8E8E8;'>{memo}</td></tr>"
+                return "\n".join([line1, line2])
+            else:
+                return line1
+        else:
+            edurl = f"local:bit/edit?id={self.id}&type={self.bit_type}"
+            dturl = f"local:bit/delete?id={self.id}&type={self.bit_type}"
+            commands = [
+                f'<a href="{edurl}"><img src="qrc:/contacts/default-edit.png"></a>',
+                f'<a href="{dturl}"><img src="qrc:/contacts/bit-delete.png"></a>',
+            ]
+            return f"<tr><td>{commands[0]}{commands[1]}</td><td>{htmlbit}</td></tr>"
 
-    def html_chunk(self):
+    def html_chunk(self, printable):
         es = lambda x: x if x is not None else ""
         ns = lambda x: x if x != "" else None
         bd = self.bit_data
@@ -54,6 +63,8 @@ class BitMixin:
                 lines.append(("Username", un))
                 if ns(bd["password"]) is None:
                     hlink = "(empty)"
+                elif printable:
+                    hlink = f'<code>{bd["password"]}</code>'
                 else:
                     qpass = urllib.parse.quote(bd["password"])
                     localurl = f"local:bit/copy-password?password={qpass}"
@@ -68,7 +79,8 @@ class BitMixin:
             x = str(self.bit_data)
         if self.name not in ["", None]:
             x = f"<b>{self.name}: </b>" + x
-        if self.memo in ["", None]:
+        # note: when deliverying print-ready, we take the memo outside
+        if self.memo in ["", None] or printable:
             return x
         else:
             return f"{x}\n(memo)"
@@ -493,6 +505,7 @@ class ContactView(QtWidgets.QWidget):
         self.setObjectName(self.ID)
         self.backgrounder = apputils.Backgrounder(self)
         self.client = state.session.std_client()
+        self.exports_dir = state.exports_dir
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -504,6 +517,9 @@ class ContactView(QtWidgets.QWidget):
         self.btn_edit = self.buttons.addButton(
             "Edit", self.buttons.ActionRole
         ).clicked.connect(self.cmd_edit_persona)
+        self.btn_printable = self.buttons.addButton(
+            "Printable", self.buttons.ActionRole
+        ).clicked.connect(self.cmd_printable)
         self.btn_newbit = self.buttons.addButton("New Bit", self.buttons.ActionRole)
         self.bitmenu = QtWidgets.QMenu()
         self.bitmenu.addAction("URL/Login...").triggered.connect(
@@ -530,7 +546,37 @@ class ContactView(QtWidgets.QWidget):
 
         self.clear()
 
-    def cmd_new_persona(self, bittype):
+    def cmd_printable(self):
+        chunks = []
+        chunks.append(f"<h1>{self.persona.entity_name}</h1>")
+        if self.persona.memo != None:
+            chunks.append(self.persona.memo.replace("\n", "<br />"))
+
+        tablerows = []
+        for b in self.bits.rows:
+            # chunks.append(b.bit_type)
+            tablerows.append(b.html_view(printable=True))
+        chunks.append('<table cellpadding="4">' + "\n".join(tablerows) + "</table>")
+
+        joined = "".join(["\n".join(["<p>", c, "</p>", ""]) for c in chunks])
+        html = f"""
+<html>
+<body>
+{joined}
+</body>
+</html>
+"""
+
+        fname = self.exports_dir.user_output_filename(
+            f"persona-{self.persona.entity_name}", "html"
+        )
+
+        with open(fname, "w") as htmlfile:
+            htmlfile.write(html)
+
+        qt.xlsx_start_file(self.window(), fname)
+
+    def cmd_new_persona(self):
         dlg = EditPersona(self)
         dlg.load_new(self.client)
 
@@ -538,7 +584,7 @@ class ContactView(QtWidgets.QWidget):
             self.update_ambient.emit(dlg.editrow.id)
             # self.reload()
 
-    def cmd_edit_persona(self, bittype):
+    def cmd_edit_persona(self):
         dlg = EditPersona(self)
         dlg.load(self.client, self.persona)
 
@@ -630,7 +676,7 @@ class ContactView(QtWidgets.QWidget):
         tablerows = []
         for b in self.bits.rows:
             # chunks.append(b.bit_type)
-            tablerows.append(b.html_view)
+            tablerows.append(b.html_view())
         chunks.append('<table cellpadding="4">' + "\n".join(tablerows) + "</table>")
 
         self.view.setHtml(

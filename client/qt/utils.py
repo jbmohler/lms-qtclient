@@ -83,9 +83,6 @@ class RtxTrayIcon(QtWidgets.QSystemTrayIcon):
 
 def xlsx_start_file(parent, fname):
     cliutils.xdg_open(fname)
-    apputils.message(
-        parent, "Data export completed successfully.  See document in Excel."
-    )
 
 
 def exception_abandon():
