@@ -2,6 +2,7 @@ from PySide2 import QtCore, QtWidgets
 import client.qt as qt
 import apputils
 import apputils.widgets as widgets
+from . import transactions
 from . import mxc
 
 
@@ -62,14 +63,13 @@ class ReconciliationWindow(QtWidgets.QDialog):
     TITLE = "Account Reconciliation"
     URL_BASE = "api/transactions/reconcile"
 
-    def __init__(self, parent=None, session=None, **kwargs):
+    def __init__(self, parent, state, **kwargs):
         super(ReconciliationWindow, self).__init__(parent)
 
         self.setWindowTitle(self.TITLE)
         self.setObjectName(self.ID)
 
-        self.session = session
-        self.client = session.std_client()
+        self.client = state.session.std_client()
         self.backgrounder = apputils.Backgrounder(self)
 
         self.account = kwargs.get("account")
@@ -125,6 +125,10 @@ class ReconciliationWindow(QtWidgets.QDialog):
         self.lay1.addWidget(self.trans_grid)
 
         self.lay1.setStretch(1, 5)
+
+        self.sidebar = transactions.TransactionCommandSidebar(self, state)
+        if self.sidebar != None and hasattr(self.sidebar, "init_grid_menu"):
+            self.sidebar.init_grid_menu(self.trans_gridmgr)
 
         self.geo = apputils.WindowGeometry(self, grids=[self.trans_grid])
 

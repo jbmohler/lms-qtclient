@@ -30,9 +30,7 @@ class AccountingExtensions:
         elif url.path() == "accounttypes":
             edit_account_type(state.session, url.parameters()["key"])
         elif url.path() == "reconcile":
-            w = reconcile.ReconciliationWindow(
-                session=state.session, **url.parameters()
-            )
+            w = reconcile.ReconciliationWindow(parent, state, **url.parameters())
             w.show()
             w.refresh()
         elif url.path() == "transactions/new":
@@ -42,12 +40,12 @@ class AccountingExtensions:
         elif url.path() == "transactions/recent":
             if parent.foreground_tab(calendar.TransactionRecent.ID):
                 return True
-            view = calendar.TransactionRecent(parent, state.session)
+            view = calendar.TransactionRecent(parent, state)
             parent.adopt_tab(view, view.ID, view.TITLE)
         elif url.path() == "transactions/calendar":
             if parent.foreground_tab(calendar.TransactionCalendar.ID):
                 return True
-            view = calendar.TransactionCalendar(parent, state.session)
+            view = calendar.TransactionCalendar(parent, state)
             parent.adopt_tab(view, view.ID, view.TITLE)
         elif url.path() == "reporting/monthly-status":
             win = monthly.Exporter(state)

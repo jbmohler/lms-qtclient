@@ -289,4 +289,60 @@ def edit_transaction(session, tranid="new", copy=False):
     dlg.exec_()
 
 
-__all__ = ["edit_transaction", "TransactionCore", "TransactionEditor"]
+class TransactionCommandSidebar(QtCore.QObject):
+    SRC_INSTANCE_URL = "api/transaction/{}"
+    refresh = QtCore.Signal()
+
+    def __init__(self, parent, state):
+        super(TransactionCommandSidebar, self).__init__(parent)
+        self.client = state.session.std_client()
+        self.added = False
+
+    def init_grid_menu(self, gridmgr):
+        self.gridmgr = gridmgr
+
+        if not self.added:
+            self.added = True
+            self.gridmgr.add_action("&Add Transaction", triggered=self.cmd_add_trans)
+            self.gridmgr.add_action("&Copy Transaction", triggered=self.cmd_copy_trans)
+            self.gridmgr.add_action("&Edit Transaction", triggered=self.cmd_edit_trans)
+            self.gridmgr.add_action(
+                "&Delete Transaction", triggered=self.cmd_delete_trans
+            )
+
+    def window(self):
+        return self.gridmgr.grid.window()
+
+    def cmd_add_trans(self):
+        if edit_transaction(self.client.session):
+            self.refresh.emit()
+
+    def cmd_edit_trans(self, row):
+        if edit_transaction(self.client.session, row.tid):
+            self.refresh.emit()
+
+    def cmd_copy_trans(self, row):
+        if edit_transaction(self.client.session, row.tid, copy=True):
+            self.refresh.emit()
+
+    def cmd_delete_trans(self, row):
+        if "Yes" == apputils.message(
+            self.window(),
+            f"Are you sure that you wish to delete the transaction for {row.payee} and memo {row.memo}?",
+            buttons=["Yes", "No"],
+        ):
+            try:
+                self.client.delete(self.SRC_INSTANCE_URL, row.tid)
+                self.refresh.emit()
+            except:
+                qt.exception_message(
+                    self.window(), "The transaction could not be deleted."
+                )
+
+
+__all__ = [
+    "edit_transaction",
+    "TransactionCore",
+    "TransactionEditor",
+    "TransactionCommandSidebar",
+]

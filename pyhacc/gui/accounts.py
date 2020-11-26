@@ -4,6 +4,7 @@ import apputils
 import apputils.widgets
 import rtlib.boa
 from . import widgets
+from . import transactions
 
 URL_BASE = "api/account/{}"
 
@@ -45,6 +46,10 @@ class AccountSidebar(QtWidgets.QWidget):
         self.gridmgr = qt.GridManager(self.grid, self)
 
         self.layout.addWidget(self.grid)
+
+        self.tran_sidebar = transactions.TransactionCommandSidebar(self, state)
+        if self.tran_sidebar != None and hasattr(self.tran_sidebar, "init_grid_menu"):
+            self.tran_sidebar.init_grid_menu(self.gridmgr)
 
         self.geo = apputils.WindowGeometry(
             self, size=False, position=False, grids=[self.grid]
