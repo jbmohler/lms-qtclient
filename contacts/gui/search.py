@@ -511,15 +511,18 @@ class ContactView(QtWidgets.QWidget):
         self.layout.setContentsMargins(0, 0, 0, 0)
 
         self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
-        self.btn_new = self.buttons.addButton(
-            "New", self.buttons.ActionRole
-        ).clicked.connect(self.cmd_new_persona)
-        self.btn_edit = self.buttons.addButton(
-            "Edit", self.buttons.ActionRole
-        ).clicked.connect(self.cmd_edit_persona)
-        self.btn_printable = self.buttons.addButton(
-            "Printable", self.buttons.ActionRole
-        ).clicked.connect(self.cmd_printable)
+
+        # Entity Button with menu
+        self.btn_entity = self.buttons.addButton("Entity", self.buttons.ActionRole)
+        self.entmenu = QtWidgets.QMenu()
+        self.entmenu.addAction("New").triggered.connect(self.cmd_new_persona)
+        self.entmenu.addSeparator()
+        self.entmenu.addAction("Edit").triggered.connect(self.cmd_edit_persona)
+        self.entmenu.addAction("Printable").triggered.connect(self.cmd_printable)
+        self.entmenu.addAction("Delete").triggered.connect(self.cmd_delete_persona)
+        self.btn_entity.setMenu(self.entmenu)
+
+        # Bit Button with menu
         self.btn_newbit = self.buttons.addButton("New Bit", self.buttons.ActionRole)
         self.bitmenu = QtWidgets.QMenu()
         self.bitmenu.addAction("URL/Login...").triggered.connect(
@@ -591,6 +594,19 @@ class ContactView(QtWidgets.QWidget):
         if dlg.Accepted == dlg.exec_():
             self.update_ambient.emit(dlg.editrow.id)
             self.reload()
+
+    def cmd_delete_persona(self):
+        row = self.persona
+        if "Yes" == apputils.message(
+            self.window(),
+            f"Are you sure that you wish to delete the entity '{row.entity_name}'?",
+            buttons=["Yes", "No"],
+        ):
+            try:
+                self.client.delete(self.URL_PERSONA, row.id)
+                self.reload()
+            except:
+                qt.exception_message(self.window(), "The entity could not be deleted.")
 
     def cmd_newbit(self, bittype):
         dlgclass = {
