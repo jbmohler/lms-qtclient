@@ -140,12 +140,12 @@ class ReportsDock(QtWidgets.QWidget):
 
             self.selmodel = self.grid.selectionModel()
             self.selmodel.currentRowChanged.connect(self.update_selection)
-
-            self.setEnabled(True)
         except:
             utils.exception_message(
                 self.window(), f"There was an error loading the {self.TITLE}."
             )
+        finally:
+            self.setEnabled(True)
 
     def refilter(self, newText):
         self.model2.setFilterFixedString(newText)
