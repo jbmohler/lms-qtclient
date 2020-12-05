@@ -1,3 +1,4 @@
+import datetime
 from PySide2 import QtWidgets
 import client.qt as qt
 import apputils
@@ -144,12 +145,16 @@ class AccountSidebar(QtWidgets.QWidget):
         self.prepare_view_select()
 
     def refresh_transactions(self, account_id):
+        today = datetime.date.today()
+        d1 = today + datetime.timedelta(days=-365)
+        d2 = today + datetime.timedelta(days=10 * 365)
+
         self.backgrounder(
             self.load_transactions,
             self.client.get,
             "api/transactions/tran-detail",
-            date1="2020-01-01",
-            date2="2020-12-31",
+            date1=d1.isoformat(),
+            date2=d2.isoformat(),
             account=account_id,
         )
 

@@ -176,9 +176,6 @@ class ReconciliationWindow(QtWidgets.QDialog):
                         col.mutate(editable=True)
                     columns.append(col)
                 self.trans_grid.setModel(apputils.ObjectQtModel(columns, []))
-                # This is a hack to force the column reset to re-sort if other
-                # than default record order from server
-                self.trans_grid.sortByColumn(0, QtCore.Qt.AscendingOrder)
                 self.trans_gridmgr.set_client_table_no_model(self.data.trans)
 
                 self.tracker.set_mayor_list([self.binder, self.trans_grid])

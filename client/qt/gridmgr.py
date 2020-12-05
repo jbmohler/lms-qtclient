@@ -228,17 +228,10 @@ class GridManager(QtCore.QObject):
             self.ctxmenu.add_action(act)
 
     def set_client_table(self, table):
-        self.table = table
-        m = client_table_as_model(self.table, self.parent(), include_data=False)
+        m = client_table_as_model(table, self.parent(), include_data=False)
         self.grid.setModel(m)
 
-        rset = list(self.table.rows)
-        f = None
-        if not self.fixed_rowset:
-            f = self.table.flipper_row()
-        m.set_rows(rset, flipper=f)
-
-        self._post_model_action()
+        self.set_client_table_no_model(table)
 
     def set_client_table_no_model(self, table):
         self.table = table
@@ -249,6 +242,9 @@ class GridManager(QtCore.QObject):
         if not self.fixed_rowset:
             f = self.table.flipper_row()
         m.set_rows(rset, flipper=f)
+        if self.grid.isSortingEnabled():
+            h = self.grid.horizontalHeader()
+            m.sort(h.sortIndicatorSection(), h.sortIndicatorOrder())
 
         self._post_model_action()
 
