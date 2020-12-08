@@ -5,12 +5,7 @@ import rtlib.server
 import apputils
 import client
 from client.qt import winlist
-
-
-def rtapp_report_export(reportname):
-    app = QtCore.QCoreApplication.instance()
-    if hasattr(app, "report_export"):
-        return app.report_export(reportname, app.session, app.exports_dir)
+from client.qt import plugpoint
 
 
 class Exporter(QtWidgets.QDialog):
@@ -133,7 +128,7 @@ class Exporter(QtWidgets.QDialog):
             view = rtlib.server.uview_from_client_table(content.main_table())
             rform = content.keys.get("report-formats", [])
             if len(rform) > 0:
-                export = rtapp_report_export(rform[0])
+                export = plugpoint.get_plugin_export(rform[0])
                 export.export(fname, view, content, hyperlinks=False)
             else:
                 rtlib.server.export_view(
