@@ -3,3 +3,4 @@ fuzzyparsers
 xlsxwriter
 PySide2
 curtsies
+tzlocal

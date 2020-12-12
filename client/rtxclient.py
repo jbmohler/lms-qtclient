@@ -5,6 +5,7 @@ import uuid
 import datetime
 import urllib.parse
 import requests
+import tzlocal
 import rtlib
 
 
@@ -58,6 +59,7 @@ class RtxSession(requests.Session):
         if not self.server_url.endswith("/"):
             self.server_url += "/"
         self.mount(self.server_url, requests.adapters.HTTPAdapter(max_retries=3))
+        self.headers["X-Yenot-Timezone"] = tzlocal.get_localzone().zone
 
         self.rtx_sid = None
         self._recent_reports = []
