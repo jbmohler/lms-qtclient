@@ -1,4 +1,4 @@
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
 import apputils.models as models
@@ -684,7 +684,7 @@ def edit_user_dlg(parentwin, table, editrec):
 
 class PidCancellerTab(ReportTabEx):
     def init_view2(self):
-        self.action_cancel_backend = QtWidgets.QAction("&Cancel Backend", self)
+        self.action_cancel_backend = QtGui.QAction("&Cancel Backend", self)
         self.action_cancel_backend.triggered.connect(self.cancel_backend)
         self.ctxmenu.add_action(self.action_cancel_backend)
 

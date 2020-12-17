@@ -8,7 +8,7 @@
 
 import datetime
 import fuzzyparsers
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from apputils import ObjectQtModel, Column
 from apputils.widgets import TableView
 

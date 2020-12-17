@@ -2,7 +2,7 @@ import os
 import csv
 import decimal
 import datetime
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 import apputils
 import apputils.models as models
 import apputils.widgets as widgets

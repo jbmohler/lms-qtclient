@@ -1,5 +1,5 @@
 import datetime
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import client.qt as qt
 import apputils
 import apputils.widgets as widgets
@@ -180,19 +180,19 @@ class TransactionEditor(qt.ObjectDialog):
         self.layout.addWidget(self.tab)
         self.layout.addWidget(self.button_row())
 
-        self.action_balance = QtWidgets.QAction("&Balance on Current Line", self)
+        self.action_balance = QtGui.QAction("&Balance on Current Line", self)
         self.action_balance.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_B)
         self.action_balance.triggered.connect(
             lambda: self.data.cmd_balance(self.trans_gridmgr.selected_row())
         )
         self.addAction(self.action_balance)
 
-        self.action_reverse = QtWidgets.QAction("&Reverse Transaction", self)
+        self.action_reverse = QtGui.QAction("&Reverse Transaction", self)
         self.action_reverse.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_R)
         self.action_reverse.triggered.connect(lambda: self.data.cmd_reverse())
         self.addAction(self.action_reverse)
 
-        self.action_copyplain = QtWidgets.QAction("Copy as Plain Text", self)
+        self.action_copyplain = QtGui.QAction("Copy as Plain Text", self)
         self.action_copyplain.triggered.connect(self.cmd_copyplain)
         self.addAction(self.action_copyplain)
 

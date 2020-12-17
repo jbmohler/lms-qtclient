@@ -1,6 +1,6 @@
 requests
 fuzzyparsers
 xlsxwriter
-PySide2
+PySide6
 curtsies
 tzlocal

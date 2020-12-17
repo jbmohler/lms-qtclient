@@ -3,7 +3,7 @@ The mixin here describes a generic value getter & setter for widgets so that
 any rtlib based data type can be handled with-out precise knowledge of the
 exact widget used.
 """
-from PySide2 import QtCore
+from PySide6 import QtCore
 
 
 class ModValueError(ValueError):

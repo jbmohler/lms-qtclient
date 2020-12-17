@@ -1,5 +1,5 @@
 import json
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import rtlib
 from . import models
 from . import widgets
@@ -504,15 +504,13 @@ class ContextMenu(QtCore.QObject):
             no_shortcut = []
 
         # global grid actions
-        self.action_findfilter = QtWidgets.QAction("Find/Fil&ter...", self)
+        self.action_findfilter = QtGui.QAction("Find/Fil&ter...", self)
         if "find" not in no_shortcut:
             self.action_findfilter.setShortcut("Ctrl+F")
             self.action_findfilter.setShortcutContext(QtCore.Qt.WidgetShortcut)
         self.action_findfilter.triggered.connect(self.find_or_filter)
         self._view.addAction(self.action_findfilter)
-        self.action_copy_selection_formatted = QtWidgets.QAction(
-            "Copy &Formatted", self
-        )
+        self.action_copy_selection_formatted = QtGui.QAction("Copy &Formatted", self)
         if "copy" not in no_shortcut:
             self.action_copy_selection_formatted.setShortcut(QtGui.QKeySequence.Copy)
             self.action_copy_selection_formatted.setShortcutContext(
@@ -520,16 +518,16 @@ class ContextMenu(QtCore.QObject):
             )
         self.action_copy_selection_formatted.triggered.connect(self.copy_selected_cells)
         self._view.addAction(self.action_copy_selection_formatted)
-        self.action_copy_selection_unformatted = QtWidgets.QAction(
+        self.action_copy_selection_unformatted = QtGui.QAction(
             "Copy &Unformatted", self
         )
         self.action_copy_selection_unformatted.triggered.connect(
             self.copy_selected_cells_unformatted
         )
         self._view.addAction(self.action_copy_selection_unformatted)
-        self.action_import_clipboard = QtWidgets.QAction("&Import from Clipboard", self)
+        self.action_import_clipboard = QtGui.QAction("&Import from Clipboard", self)
         self.action_import_clipboard.triggered.connect(self.import_rows)
-        self.action_tree_collapse = QtWidgets.QAction("Collapse All", self)
+        self.action_tree_collapse = QtGui.QAction("Collapse All", self)
         self.action_tree_collapse.triggered.connect(lambda: self._view.collapseAll())
 
     def eventFilter(self, obj, event):

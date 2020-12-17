@@ -1,5 +1,5 @@
 import datetime
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 import client.qt as qt
 import apputils
 import apputils.widgets

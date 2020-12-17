@@ -1,5 +1,5 @@
 import urllib.parse
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 import apputils
 
 RTX_EXTENSION_PLUGS = []

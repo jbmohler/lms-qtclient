@@ -1,4 +1,4 @@
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
 import apputils.widgets as widgets
@@ -39,14 +39,14 @@ class ReportTab(QtWidgets.QWidget):
         self.export_menu.addAction(self.action_custom)
 
     def init_view(self):
-        self.action_custom = QtWidgets.QAction("&Customize", self)
+        self.action_custom = QtGui.QAction("&Customize", self)
         self.action_custom.triggered.connect(
             lambda: utils.to_be_implemented(
                 self.window(),
                 "Show options for inserting page breaks & filtering rows & columns.",
             )
         )
-        self.action_full_report = QtWidgets.QAction("&All", self)
+        self.action_full_report = QtGui.QAction("&All", self)
         self.action_full_report.triggered.connect(self.export)
         self.export_button.clicked.connect(self.export)
 

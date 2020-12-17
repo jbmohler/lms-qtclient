@@ -22,7 +22,7 @@ import datetime
 import functools
 import itertools
 import collections
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
 import apputils.widgets as widgets
@@ -237,7 +237,7 @@ class ReportPreview(QtWidgets.QWidget):
             self.sidebar_split.setStretchFactor(0, 5)
             self.sidebar_split.setStretchFactor(1, 1)
 
-            self.sidebar_free_action = QtWidgets.QAction("&Liberate Sidebar", self)
+            self.sidebar_free_action = QtGui.QAction("&Liberate Sidebar", self)
             self.sidebar_free_action.setCheckable(True)
             self.sidebar_free_action.setShortcut("Ctrl+Right")
             self.sidebar_free_action.triggered.connect(self.liberate_sidebar)

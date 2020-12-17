@@ -1,4 +1,4 @@
-from PySide2 import QtWidgets
+from PySide6 import QtWidgets
 import rtlib
 from . import bindings
 from . import utils

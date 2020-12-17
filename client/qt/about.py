@@ -1,6 +1,6 @@
 import sys
 import importlib
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 def module_ver(name):

@@ -5,7 +5,7 @@ The KeyEdit provides data sensitive editting for foreign key edits::
 - context menus - for what? (look up referenced entity)
 """
 
-from PySide2 import QtGui
+from PySide6 import QtGui
 from .button_edit import ButtonEdit
 from . import icons  # noqa: F401
 

@@ -1,5 +1,5 @@
 import os
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 
 def message(parent, text, buttons=None, default=None, details=None, richtext="maybe"):

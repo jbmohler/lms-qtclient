@@ -1,6 +1,6 @@
 import functools
 import urllib.parse
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 import client.qt as qt
 import cliutils
 import apputils

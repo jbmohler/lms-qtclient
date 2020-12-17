@@ -1,4 +1,4 @@
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 import apputils
 import apputils.viewmenus as viewmenus
 import apputils.widgets as widgets

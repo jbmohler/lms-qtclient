@@ -1,6 +1,6 @@
 import inspect
 import urllib.parse
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
 import apputils.models as models
@@ -65,7 +65,7 @@ def apply_column_url_views(ctxmenu, model, no_default=False):
                 action = None
                 if action_defn.callback == "__url__":
                     if col.url_factory != None:
-                        action = QtWidgets.QAction(ctxmenu.parent())
+                        action = QtGui.QAction(ctxmenu.parent())
                         action.triggered.connect(url_handler(col, ctxmenu))
                         action.should_appear = (
                             lambda index, column=col: callable_should_appear(
@@ -76,7 +76,7 @@ def apply_column_url_views(ctxmenu, model, no_default=False):
                             lambda index, column=col: callable_is_enabled(index, column)
                         )
                 else:
-                    action = QtWidgets.QAction(ctxmenu.parent())
+                    action = QtGui.QAction(ctxmenu.parent())
                     action.triggered.connect(
                         callable_handler(
                             col, ctxmenu, action_defn.callback, action_defn.reloads
@@ -108,7 +108,7 @@ class ReportClientRowRelateds:
         self.url_dyn_params = args[3]
 
     def action(self, parent, ctxmenu):
-        act = QtWidgets.QAction(self.label, parent)
+        act = QtGui.QAction(self.label, parent)
         act.triggered.connect(lambda cx=ctxmenu: self.act_on(ctxmenu))
         return act
 
@@ -133,7 +133,7 @@ def apply_client_relateds(ctxmenu, content):
     relateds = content.keys.get("client-relateds", [])
     actions = []
     for label, link in relateds:
-        act = QtWidgets.QAction(label, ctxmenu.parent())
+        act = QtGui.QAction(label, ctxmenu.parent())
 
         def action(xlink=link):
             plugpoint.show_link(xlink)
@@ -175,7 +175,7 @@ class GridManager(QtCore.QObject):
 
     def add_action(self, act, is_active=None, triggered=None):
         if isinstance(act, str):
-            act = QtWidgets.QAction(act, self.grid)
+            act = QtGui.QAction(act, self.grid)
         act.is_active = is_active
         self._core_actions.append(act)
 
@@ -265,7 +265,7 @@ class EditableGridManager(GridManager):
         self._core_actions = []
         self.fixed_rowset = fixed_rowset
 
-        self.delete_action = QtWidgets.QAction("&Delete Row", self.grid)
+        self.delete_action = QtGui.QAction("&Delete Row", self.grid)
         self.delete_action.setShortcut("Ctrl+Delete")
         self.delete_action.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.delete_action.triggered.connect(self.delete_current_row)

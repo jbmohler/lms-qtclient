@@ -1,7 +1,7 @@
 import sys
 import math
 import concurrent.futures as futures
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 
 class BackgrounderShell(object):

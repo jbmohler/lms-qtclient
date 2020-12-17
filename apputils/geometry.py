@@ -2,7 +2,7 @@ import re
 import json
 import contextlib
 import difflib
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from . import models
 
 GLOBAL_FONT_MULTIPLIER = None
@@ -219,9 +219,9 @@ class TabMenuHolder:
     def __init__(self, tab):
         self.tab = tab
 
-        self.actSaveLast = QtWidgets.QAction("&Reopen to last viewed tab", self.tab)
+        self.actSaveLast = QtGui.QAction("&Reopen to last viewed tab", self.tab)
         self.actSaveLast.setCheckable(True)
-        self.actSaveThis = QtWidgets.QAction("&Reopen to current tab", self.tab)
+        self.actSaveThis = QtGui.QAction("&Reopen to current tab", self.tab)
         self.actSaveThis.setCheckable(True)
 
         self.tab.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)

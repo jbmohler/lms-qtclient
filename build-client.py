@@ -1,14 +1,14 @@
 import os
 import sys
 import subprocess
-import PySide2
+import PySide6
 
 
 def get_qrc_compiler():
-    base_name = "pyside2-rcc"
+    base_name = "pyside6-rcc"
     if sys.platform.lower().startswith("win"):
         base_name += ".exe"
-    qrc_compiler = os.path.join(PySide2.__path__[0], base_name)
+    qrc_compiler = os.path.join(PySide6.__path__[0], base_name)
     if not os.path.exists(qrc_compiler):
         qrc_compiler = base_name
     return qrc_compiler

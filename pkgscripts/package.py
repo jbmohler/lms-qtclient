@@ -6,7 +6,7 @@ import zipfile
 import hashlib
 import cx_Freeze as cxf
 import requests
-import PySide2
+import PySide6
 
 # We need to include this import since we don't install wpsgsrc to Python
 # site-packages.
@@ -127,7 +127,7 @@ def main():
         "purchasing",
         "scanners",
     ]
-    other_exclusions = ["PySide2", "certifi", "Crypto", "sqlite3"]
+    other_exclusions = ["PySide6", "certifi", "Crypto", "sqlite3"]
 
     # Icons are created easily from .png files at http://www.xiconeditor.com/
 
@@ -173,7 +173,7 @@ def main():
         os.path.join(outroot, "binary", "lms_basic.png"),
     )
 
-    # scrubbing PySide2
+    # scrubbing PySide6
     PySideDeletes = [
         "examples",
         "glue",
@@ -183,16 +183,16 @@ def main():
         "support",
         "translations",
     ]
-    print("delete PySide2 subdirectories")
+    print("delete PySide6 subdirectories")
     for psd in PySideDeletes:
-        x = os.path.join(outroot, "binary", "lib", "PySide2", psd)
+        x = os.path.join(outroot, "binary", "lib", "PySide6", psd)
         print(x)
         shutil.rmtree(x)
-    web2 = glob.glob(os.path.join(outroot, "binary", "lib", "PySide2", "*WebEngine*.*"))
+    web2 = glob.glob(os.path.join(outroot, "binary", "lib", "PySide6", "*WebEngine*.*"))
     web2 += glob.glob(
-        os.path.join(outroot, "binary", "lib", "PySide2", "*WebChannel*.*")
+        os.path.join(outroot, "binary", "lib", "PySide6", "*WebChannel*.*")
     )
-    print("delete PySide2 Web elements:")
+    print("delete PySide6 Web elements:")
     for x in web2:
         print(x)
         os.unlink(x)
@@ -201,7 +201,7 @@ def main():
         requests.certs.where(), os.path.join(outroot, "binary", "cacert.pem")
     )
     shutil.copytree(
-        os.path.join(PySide2.__path__[0], "openssl"),
+        os.path.join(PySide6.__path__[0], "openssl"),
         os.path.join(outroot, "binary", "lib", "openssl"),
     )
     shutil.copyfile(

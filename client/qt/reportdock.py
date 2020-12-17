@@ -1,5 +1,5 @@
 import itertools
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
 import apputils.widgets as widgets
@@ -57,7 +57,7 @@ class ReportsDock(QtWidgets.QWidget):
         self.backgrounder = apputils.Backgrounder(self)
 
         # 3) Make widgets
-        self.action_refresh_list = QtWidgets.QAction("Refresh", self)
+        self.action_refresh_list = QtGui.QAction("Refresh", self)
         self.action_refresh_list.setIcon(QtGui.QIcon(":/clientshell/view-refresh.png"))
         self.action_refresh_list.triggered.connect(self.reload_reports)
 
@@ -81,7 +81,7 @@ class ReportsDock(QtWidgets.QWidget):
         self.model2.setFilterCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.model2.setFilterKeyColumn(0)
 
-        self.action_add_fave = QtWidgets.QAction("Add &Favorite", self)
+        self.action_add_fave = QtGui.QAction("Add &Favorite", self)
         self.action_add_fave.triggered.connect(self.add_favorite)
         self.ctxmenu = viewmenus.ContextMenu(self.grid, self)
         self.ctxmenu.contextActionsUpdate.connect(self.update_contextmenu)

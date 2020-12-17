@@ -6,7 +6,7 @@
 #                  http://www.gnu.org/licenses/
 ##############################################################################
 
-from PySide2 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 # patterned after http://labs.qt.nokia.com/2007/06/06/lineedit-with-a-clear-button/
 

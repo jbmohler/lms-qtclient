@@ -3,7 +3,7 @@ import sys
 import platform
 import functools
 import collections
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
 import qtviews
@@ -26,7 +26,7 @@ class ClientURLMenuItem:
         self.shortcut = shortcut
 
     def action(self, parent):
-        act = QtWidgets.QAction(self.item_name, parent)
+        act = QtGui.QAction(self.item_name, parent)
         act.triggered.connect(lambda: parent.handle_url(self.client_url))
         if self.shortcut:
             act.setShortcut(self.shortcut)
@@ -38,7 +38,7 @@ class SeparatorMenuItem:
         self.auth_name = None
 
     def action(self, parent):
-        act = QtWidgets.QAction(parent)
+        act = QtGui.QAction(parent)
         act.setSeparator(True)
         return act
 
@@ -82,7 +82,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.statistics.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
         self.statistics.actions_stattypes = collections.OrderedDict()
         for stat, label in statstypes:
-            act = QtWidgets.QAction(label, self)
+            act = QtGui.QAction(label, self)
             act.setCheckable(True)
             act.setChecked(stat == "total")
             self.statistics.actions_stattypes[stat] = act
@@ -97,8 +97,8 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         # self.server_connection.linkActivated.connect(os.startfile)
         status.addPermanentWidget(self.server_connection)
 
-        desktop = QtWidgets.QDesktopWidget()
-        screensize = desktop.availableGeometry(self)
+        screen = QtGui.QScreen()
+        screensize = screen.availableGeometry()
         self.resize(QtCore.QSize(screensize.width() * 0.7, screensize.height() * 0.7))
 
         self.geo = apputils.WindowGeometry(self)
@@ -137,15 +137,15 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
             menu.addAction(act)
 
     def construct_file_menu(self, menu):
-        self.action_exit = QtWidgets.QAction("E&xit", self)
+        self.action_exit = QtGui.QAction("E&xit", self)
         self.action_exit.triggered.connect(self.close)
 
-        self.action_exit_all = QtWidgets.QAction("Exit &All", self)
+        self.action_exit_all = QtGui.QAction("Exit &All", self)
         self.action_exit_all.setShortcut("Ctrl+F12")
         self.action_exit_all.setShortcutContext(QtCore.Qt.ApplicationShortcut)
         self.action_exit_all.triggered.connect(self.close_all)
 
-        self.action_exports = QtWidgets.QAction("View &Export Directory", self)
+        self.action_exports = QtGui.QAction("View &Export Directory", self)
         self.action_exports.triggered.connect(lambda: self.exports_dir.show_browser())
 
         self.menu_file = menu.addMenu("&File")
@@ -156,7 +156,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.menu_file.addAction(self.action_exit_all)
 
     def construct_window_menu(self, menu):
-        self.action_close_current = QtWidgets.QAction("&Close Current Tab", self)
+        self.action_close_current = QtGui.QAction("&Close Current Tab", self)
         self.action_close_current.setShortcut(QtGui.QKeySequence("Ctrl+F4"))
         self.action_close_current.triggered.connect(self.close_current)
 
@@ -168,22 +168,22 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.menu_window.aboutToShow.connect(self.update_window_menu)
 
     def construct_help_menu(self, menu):
-        self.action_about = QtWidgets.QAction("&About", self)
+        self.action_about = QtGui.QAction("&About", self)
         self.action_about.triggered.connect(lambda: about.about_box(self, "rtx shell"))
 
-        self.action_syshelp = QtWidgets.QAction("&Technical Manual", self)
+        self.action_syshelp = QtGui.QAction("&Technical Manual", self)
         self.action_syshelp.triggered.connect(
             lambda: winlist.show_link_parented(
                 self, self.session.prefix("docs/index.html")
             )
         )
 
-        self.action_serverdiag = QtWidgets.QAction("Server && &Connection", self)
+        self.action_serverdiag = QtGui.QAction("Server && &Connection", self)
         self.action_serverdiag.triggered.connect(
             lambda: serverdlgs.server_diagnostics(self, self.session)
         )
 
-        self.action_exceptions = QtWidgets.QAction("View &Exception Log", self)
+        self.action_exceptions = QtGui.QAction("View &Exception Log", self)
         app = QtCore.QCoreApplication.instance()
         self.action_exceptions.triggered.connect(app.excepter.show)
 

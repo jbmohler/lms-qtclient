@@ -1,5 +1,5 @@
 import contextlib
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import apputils
 from . import columnchooser
 import apputils.models as models
@@ -9,7 +9,7 @@ class ViewBaseMixin:
     def init_column_choose(self):
         self.header().setSectionsMovable(True)
 
-        self.choose_action = QtWidgets.QAction("&Manage Columns", self)
+        self.choose_action = QtGui.QAction("&Manage Columns", self)
         self.choose_action.triggered.connect(self.choose_columns)
         self.header().addAction(self.choose_action)
         self.header().setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
@@ -214,7 +214,7 @@ class ReportCoreModelDelegate(QtWidgets.QStyledItemDelegate):
             return self._html_sizeHint(option, index)
 
         m = QtGui.QFontMetrics(option.font)
-        w = m.width(index.data(QtCore.Qt.DisplayRole))
+        w = m.boundingRect(index.data(QtCore.Qt.DisplayRole)).width()
         pad = 0
         if option.decorationSize.width() > 0:
             pad = option.decorationSize.width()

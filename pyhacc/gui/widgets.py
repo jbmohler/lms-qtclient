@@ -1,4 +1,4 @@
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 import valix
 import rtlib
 import apputils
@@ -39,7 +39,7 @@ class IdentifierEdit(base.KeyEdit):
 
         self.action_lookup = None
         if hasattr(self, "LOOKUP_URL_CONSTRUCTION"):
-            self.action_lookup = QtWidgets.QAction("&Look-up...", self)
+            self.action_lookup = QtGui.QAction("&Look-up...", self)
             self.action_lookup.setShortcut(QtGui.QKeySequence("Ctrl+F4"))
             self.action_lookup.setShortcutContext(QtCore.Qt.WidgetShortcut)
             self.action_lookup.triggered.connect(self.std_url_lookup)
@@ -220,7 +220,7 @@ class IdentifierEdit(base.KeyEdit):
     def contextMenuEvent(self, event):
         menu = self.createStandardContextMenu()
         if self.action_lookup != None:
-            sep = QtWidgets.QAction(self)
+            sep = QtGui.QAction(self)
             sep.setSeparator(True)
             menu.addAction(sep)
             menu.addAction(self.action_lookup)

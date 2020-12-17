@@ -1,4 +1,4 @@
-from PySide2 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 UI_ACTION_PAUSE = 150
 
@@ -137,7 +137,7 @@ class SidebarLiberator(QtCore.QObject):
         if hasattr(self.sidebar, "toggle_liberated"):
             self.sidebar.toggle_liberated.connect(self.liberate_sidebar)
 
-        self.sidebar_free_action = QtWidgets.QAction("&Liberate Sidebar", self)
+        self.sidebar_free_action = QtGui.QAction("&Liberate Sidebar", self)
         self.sidebar_free_action.setCheckable(True)
         self.sidebar_free_action.setShortcut("Ctrl+.")
         self.sidebar_free_action.triggered.connect(self.liberate_sidebar)
@@ -145,7 +145,7 @@ class SidebarLiberator(QtCore.QObject):
         sidebar.addAction(self.sidebar_free_action)
 
         if getattr(self.sidebar, "advance_highlight", None) != None:
-            self.sidebar_advance_action = QtWidgets.QAction("&Advance Selection", self)
+            self.sidebar_advance_action = QtGui.QAction("&Advance Selection", self)
             self.sidebar_advance_action.setCheckable(True)
             self.sidebar_advance_action.setShortcut("F6")
             self.sidebar_advance_action.triggered.connect(
