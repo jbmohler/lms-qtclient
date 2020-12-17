@@ -140,6 +140,9 @@ class ReportsDock(QtWidgets.QWidget):
 
             self.selmodel = self.grid.selectionModel()
             self.selmodel.currentRowChanged.connect(self.update_selection)
+        except requests.exceptions.ConnectionError:
+            # avoid a message on a refresh that fails
+            pass
         except:
             utils.exception_message(
                 self.window(), f"There was an error loading the {self.TITLE}."
