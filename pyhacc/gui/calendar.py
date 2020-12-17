@@ -65,6 +65,9 @@ class CalendarAdaptor(QtCore.QObject):
     def model(self):
         return self._model
 
+    def isSortingEnabled(self):
+        return False
+
     def indexAt(self, point):
         return self._Index(self.calendar.itemAt(point), self.attr)
 
