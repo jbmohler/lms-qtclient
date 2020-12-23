@@ -109,9 +109,13 @@ class RtxLoginDialog(QtWidgets.QDialog):
         app = QtCore.QCoreApplication.instance()
         self.setWindowTitle(app.applicationName())
 
+        self.rtx_server_edit = QtWidgets.QLineEdit()
         self.rtx_user_edit = QtWidgets.QLineEdit()
         self.rtx_password_edit = QtWidgets.QLineEdit()
         self.rtx_password_edit.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.rtx_save_device_token = QtWidgets.QCheckBox(
+            "&Remember this login on this device"
+        )
 
         self.main = QtWidgets.QVBoxLayout(self)
 
@@ -127,17 +131,22 @@ class RtxLoginDialog(QtWidgets.QDialog):
 
         self.main_form = QtWidgets.QFormLayout()
 
+        self.main_form.addRow("&Server:", self.rtx_server_edit)
         self.main_form.addRow("User &Name:", self.rtx_user_edit)
         self.main_form.addRow("&Password:", self.rtx_password_edit)
+        self.main_form.addRow(self.rtx_save_device_token)
 
         self.main.addLayout(self.main_form)
         self.main.addWidget(self.buttons)
 
         settings = QtCore.QSettings()
         settings.beginGroup(self.settings_group)
+        self.rtx_server_url = settings.value("rtx_server_url")
         self.rtx_user = settings.value("rtx_user")
         self.offline = False
 
+        if self.rtx_server_url != None:
+            self.rtx_server_edit.setText(self.rtx_server_url)
         if self.rtx_user != None:
             self.rtx_user_edit.setText(self.rtx_user)
             self.rtx_password_edit.setFocus(QtCore.Qt.OtherFocusReason)
@@ -151,7 +160,13 @@ class RtxLoginDialog(QtWidgets.QDialog):
         username = self.rtx_user_edit.text()
         password = self.rtx_password_edit.text()
         try:
+            self.session.set_base_url(self.rtx_server_edit.text())
             self.session.authenticate(username, password)
+
+            devtoken = self.rtx_save_device_token.isChecked()
+            if devtoken:
+                self.session.save_device_token()
+
             self.rtx_user = username.upper()
         except:
             qt.exception_message(self, "Error logging in.")
@@ -160,6 +175,7 @@ class RtxLoginDialog(QtWidgets.QDialog):
 
         settings = QtCore.QSettings()
         settings.beginGroup(self.settings_group)
+        settings.setValue("rtx_server_url", self.session.server_url)
         settings.setValue("rtx_user", username)
 
         return super(RtxLoginDialog, self).accept()

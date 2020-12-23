@@ -23,12 +23,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    presession = climod.auto_env_url(args.server_url)
-
-    if presession == None:
-        sys.stderr.write("provide a session in --server or ~/.yenotpass")
-        parser.print_help()
-        sys.exit(2)
+    session = climod.auto_session()
 
     launch = True
     if platform.system() != "Windows":
@@ -37,4 +32,4 @@ if __name__ == "__main__":
 
     if launch:
         app = localconfig.qt_app_init(cqt.plugpoint)
-        cqt.basic_shell_window(app, presession, document=args.document)
+        cqt.basic_shell_window(app, session, document=args.document)

@@ -193,16 +193,8 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.menu_help.addAction(self.action_serverdiag)
         self.menu_help.addAction(self.action_exceptions)
 
-    def rtx_login(self, presession=None):
-        login = False
-        if presession != None:
-            try:
-                self.session.authenticate(presession.username, presession.password)
-                login = True
-            except:
-                pass
-
-        if not login:
+    def rtx_login(self):
+        if not self.session.authenticated():
             dlg = serverdlgs.RtxLoginDialog(
                 self, self.session, settings_group="Example"
             )
@@ -240,7 +232,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
     def post_login(self):
         s = self.session
         self.server_connection.setText(
-            f"<a href=\"{s.prefix('')}\">{s.server_url}</a> {s.rtx_user}"
+            f"<a href=\"{s.prefix('')}\">{s.server_url}</a> {s.rtx_username}"
         )
 
         self.construct_file_menu(self.menuBar())
@@ -355,16 +347,16 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         winlist.close_all()
 
 
-def basic_shell_window(app, presession=None, document=None):
+def basic_shell_window(app, session=None, document=None):
     sys.excepthook = apputils.guiexcepthook
-    app.session = client.RtxSession(presession.server)
+    app.session = session
 
     winlist.init(ShellWindow.ID)
 
     f = ShellWindow()
     f.exports_dir = app.exports_dir
     f.session = app.session
-    QtCore.QTimer.singleShot(0, lambda: f.rtx_login(presession))
+    QtCore.QTimer.singleShot(0, lambda: f.rtx_login())
     QtCore.QTimer.singleShot(0, lambda: f.start_doc_server())
     f.show()
 

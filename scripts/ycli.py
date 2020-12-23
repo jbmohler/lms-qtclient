@@ -69,13 +69,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    presession = climod.auto_env_url(args.server_url)
-
-    if presession == None:
-        sys.stderr.write("provide a session in --server or ~/.yenotpass\n")
-        parser.print_help()
-        sys.exit(2)
-
     histfile = os.path.join(os.path.expanduser("~"), ".yenot_history")
 
     try:
@@ -92,22 +85,26 @@ if __name__ == "__main__":
 
     atexit.register(save, h_len, histfile)
 
-    session = climod.RtxSession(presession.server)
+    session = climod.auto_session()
+
+    if not session.connected():
+        server_url = input("Server URL: ")
+        session.set_base_url(server_url)
+
     client = session.raw_client()
     client.get("api/monitor")
 
     print(f"Connected to {session.server_url} ...", file=sys.stderr)
 
-    if presession.username is None or presession.password is None:
-        username = input(f"username [{presession.username}]: ")
-        if username == "":
-            username = presession.username
+    if not session.authenticated():
+        username = input("username: ")
         password = getpass.getpass("password: ")
-    else:
-        username = presession.username
-        password = presession.password
 
-    session.authenticate(username, password)
+        session.authenticate(username, password)
+
+        remember = input("remember this device? [yn]: ")
+        if remember.lower()[0] == "y":
+            session.save_device_token()
 
     try:
         loop(session, args.command)

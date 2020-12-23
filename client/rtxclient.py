@@ -1,8 +1,10 @@
 import os
+import configparser
 import time
 import json
 import uuid
 import datetime
+import socket
 import urllib.parse
 import requests
 import tzlocal
@@ -53,18 +55,46 @@ class STATIC:
 
 
 class RtxSession(requests.Session):
-    def __init__(self, server_url):
+    def __init__(self, server_url=None):
         super(RtxSession, self).__init__()
-        self.server_url = server_url
-        if not self.server_url.endswith("/"):
-            self.server_url += "/"
-        self.mount(self.server_url, requests.adapters.HTTPAdapter(max_retries=3))
+        if server_url:
+            self.set_base_url(server_url)
+        else:
+            self.server_url = None
         self.headers["X-Yenot-Timezone"] = tzlocal.get_localzone().zone
 
         self.rtx_sid = None
         self._recent_reports = []
 
         self.settings_map = {}
+
+    def connected(self):
+        return self.server_url is not None
+
+    def authenticated(self):
+        return self.rtx_sid is not None
+
+    def set_base_url(self, server_url):
+        self.server_url = server_url
+        if self.server_url and not self.server_url.endswith("/"):
+            self.server_url += "/"
+        self.mount(self.server_url, requests.adapters.HTTPAdapter(max_retries=3))
+
+    def save_device_token(self):
+        client = self.std_client()
+        content = client.post(
+            "api/user/{}/device-token/new",
+            self.rtx_userid,
+            device_name=f"{socket.gethostname()} (Desktop client)",
+            expdays=int(365.25 * 6),
+        )
+        saved_token = content.main_table().rows[0].token
+
+        update_auth_config(
+            server_url=self.server_url,
+            username=self.rtx_username,
+            device_token=saved_token,
+        )
 
     def prefix(self, tail):
         return self.server_url + tail
@@ -148,14 +178,18 @@ class RtxSession(requests.Session):
 
         payload = json.loads(r.text)
 
-        self.rtx_user = payload["username"]
+        self.rtx_username = payload["username"]
         self.rtx_sid = payload["session"]
         self._capabilities = rtlib.ClientTable(*payload["capabilities"])
         self.headers["X-Yenot-SessionId"] = self.rtx_sid
         return True
 
-    def authenticate(self, username, password):
-        p = {"username": username, "password": password}
+    def authenticate(self, username, password=None, device_token=None):
+        p = {"username": username}
+        if password is not None:
+            p["password"] = password
+        if device_token is not None:
+            p["device_token"] = device_token
         try:
             r = self.post(self.prefix("api/session"), data=p)
         except requests.ConnectionError:
@@ -174,8 +208,9 @@ class RtxSession(requests.Session):
         payload = json.loads(r.text)
 
         # success
-        self.rtx_user = username.upper()
         self.rtx_sid = payload["session"]
+        self.rtx_userid = payload["userid"]
+        self.rtx_username = payload["username"]
         self._capabilities = rtlib.ClientTable(*payload["capabilities"])
         self.headers["X-Yenot-SessionId"] = self.rtx_sid
         return True
@@ -440,66 +475,42 @@ class StdPayload:
         return self.named_columns(mn)
 
 
-def read_yenotpass():
-    ypfile = os.path.join(os.path.expanduser("~"), ".yenotpass")
+def read_yenotpass(session):
+    ypfile = os.path.join(os.path.expanduser("~"), ".yenot", "config")
 
-    results = {}
+    config = configparser.ConfigParser()
+    config.read(ypfile)
 
-    if os.path.exists(ypfile):
-        with open(ypfile, "r") as yp:
-            lines = list(yp)
-            results = dict(s.strip().split("=") for s in lines if s.strip() != "")
+    if "login" in config.sections():
+        login = config["login"]
+        session.server_url = login.get("server_url")
 
-    return results
+        if "username" in login and "password" in login:
+            session.authenticate(login["username"], login["password"])
+
+        if "username" in login and "device_token" in login:
+            session.authenticate(login["username"], device_token=login["device_token"])
 
 
-class PreSession:
-    def __init__(self):
-        pass
+def update_auth_config(**kwargs):
+    ypfile = os.path.join(os.path.expanduser("~"), ".yenot", "config")
+    if not os.path.exists(os.path.dirname(ypfile)):
+        os.makedirs(os.path.dirname(ypfile), exist_ok=True)
 
-    @classmethod
-    def parse_url(cls, url):
-        self = cls()
+    config = configparser.ConfigParser()
+    config.read(ypfile)
 
-        raw = urllib.parse.urlparse(url)
-        nl = raw.netloc
-        username = raw.username
-        password = urllib.parse.unquote(raw.password)
-        if nl.find("@") >= 0:
-            raw = raw._replace(netloc=nl.split("@")[1])
-        server = raw.geturl()
+    if "login" not in config.sections():
+        config.add_section("login")
 
-        if not server.endswith("/"):
-            server += "/"
+    login = config["login"]
+    for k, v in kwargs.items():
+        login[k] = str(v)
 
-        self.server = server
-        self.username = username
-        self.password = password
-
-        return self
-
-    def create_session(self):
-        session = RtxSession(self.server)
-        session.authenticate(self.username, self.password)
-        return session
+    config.write(open(ypfile, "w"))
 
 
 def auto_session(arg_url=None):
-    pre = auto_env_url(arg_url)
-    return pre.create_session()
-
-
-def auto_env_url(arg_url=None):
-    url = None
-    if arg_url != None:
-        url = arg_url
-    else:
-        servers = read_yenotpass()
-
-        if "default" in servers:
-            url = servers["default"]
-
-    if url != None:
-        return PreSession.parse_url(url)
-    else:
-        return None
+    session = RtxSession()
+    read_yenotpass(session)
+    return session
