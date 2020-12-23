@@ -1,7 +1,7 @@
 """
 This module tracks two things:
 
-    - path of Python modules (aka runtime Mercurial repository)
+    - path of Python modules (aka runtime git repository)
     - Database credentials & configuration
 """
 import os
@@ -10,28 +10,26 @@ import site
 import configparser
 
 if sys.platform == "win32":
-    from .winsite import *
+    from . import winsite as xplatsite
 else:
-    from .unixsite import *
+    from . import unixsite as xplatsite
 
-source, config_file, server = get_vitals()
+source, config_file, server = xplatsite.get_vitals()
 
 if not getattr(sys, "rtx_packaged_app", False) or not getattr(sys, "frozen", False):
     if source != None:
         site.addsitedir(source)
 
 
-def add_fidolib_site(zipname, timeout=None):
+def add_rtxlib_site(zipname, timeout=None):
     global server
     import requests
 
-    p = local_appdata_path()
-    dirname = os.path.join(p, "RTXinc", "Fido Suite", "Client")
+    p = xplatsite.local_appdata_path()
+    dirname = os.path.join(p, "RTXinc", "Rtx Suite", "Client")
     if not os.path.exists(dirname):
         os.makedirs(dirname)
     zipfile = os.path.join(dirname, zipname)
-
-    questions = "If you have any questions contact Ken or Joel."
 
     kwargs = {}
     if timeout != None:
@@ -41,14 +39,14 @@ def add_fidolib_site(zipname, timeout=None):
         r = requests.get(server + "/install/" + zipname, **kwargs)
     except requests.exceptions.Timeout as e:
         if not os.path.exists(zipfile):
-            info_message(
-                f"The server {server} could not be contacted.  This program must be connected to the RTX network.  {questions}"
+            xplatsite.info_message(
+                f"The server {server} could not be contacted.  This program must be connected to the RTX network."
             )
             sys.exit(1)
     if r == None or r.status_code != 200:
         if not os.path.exists(zipfile):
-            info_message(
-                f"The file {server + '/install/' + zipname} could not be downloaded.  {questions}"
+            xplatsite.info_message(
+                f"The file {server + '/install/' + zipname} could not be downloaded."
             )
             sys.exit(1)
     else:

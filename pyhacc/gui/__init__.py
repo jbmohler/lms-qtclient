@@ -1,10 +1,10 @@
-from .journals import *
-from .accounttypes import *
 from .widgets import *
 
 from .roscoe import *
 
 from . import accounts
+from . import journals
+from . import accounttypes
 from . import transactions
 from . import monthly
 from . import tranreports
@@ -22,13 +22,13 @@ class AccountingExtensions:
         elif url.path() == "accounts":
             accounts.edit_account(state.session, url.parameters()["key"])
         elif url.path() == "journals/new":
-            edit_journal(state.session, "new")
+            journals.edit_journal(state.session, "new")
         elif url.path() == "journals":
-            edit_journal(state.session, url.parameters()["key"])
+            journals.edit_journal(state.session, url.parameters()["key"])
         elif url.path() == "accounttypes/new":
-            edit_account_type(state.session, "new")
+            accounttypes.edit_account_type(state.session, "new")
         elif url.path() == "accounttypes":
-            edit_account_type(state.session, url.parameters()["key"])
+            accounttypes.edit_account_type(state.session, url.parameters()["key"])
         elif url.path() == "reconcile":
             w = reconcile.ReconciliationWindow(None, state, **url.parameters())
             w.show()
