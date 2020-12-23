@@ -40,15 +40,63 @@ class SessionList(ReportTabEx):
     URL_TAIL = "api/sessions/active"
 
 
-class UserListSidebar(QtCore.QObject):
+class UserListSidebar(QtWidgets.QWidget):
+    TITLE = "User"
+    ID = "user-view"
     SRC_INSTANCE_URL = "api/user/{}"
     refresh = QtCore.Signal()
 
     def __init__(self, parent, state):
         super(UserListSidebar, self).__init__(parent)
+
+        self.setWindowTitle(self.TITLE)
+        self.setObjectName(self.ID)
+        self.backgrounder = apputils.Backgrounder(self)
         self.client = state.session.std_client()
         self.exports_dir = state.exports_dir
         self.added = False
+
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
+
+        # User Button with menu
+        self.btn_user = self.buttons.addButton("User", self.buttons.ActionRole)
+        self.entmenu = QtWidgets.QMenu()
+        self.entmenu.addAction("New").triggered.connect(self.cmd_add_user)
+        self.entmenu.addSeparator()
+        self.entmenu.addAction("Edit").triggered.connect(
+            self.adapt_sbcommand(self.cmd_edit_user)
+        )
+        self.entmenu.addAction("Change Password").triggered.connect(
+            self.adapt_sbcommand(self.cmd_change_password)
+        )
+        self.entmenu.addAction("Set Roles").triggered.connect(
+            lambda: self.cmd_set_roles([self.userrow])
+        )
+        self.entmenu.addAction("Delete").triggered.connect(
+            self.adapt_sbcommand(self.cmd_delete_user)
+        )
+        self.btn_user.setMenu(self.entmenu)
+
+        self.layout.addWidget(self.buttons)
+
+        # User information
+        self.html = QtWidgets.QTextBrowser()
+        # self.html.linkClicked.connect(gridmgr.show_link)
+        self.layout.addWidget(self.html)
+
+        # Roles
+
+        # Device Tokens
+        self.devtok_grid = widgets.TableView()
+        self.devtok_gridmgr = qt.GridManager(self.devtok_grid, self)
+        self.layout.addWidget(self.devtok_grid)
+
+        self.geo = apputils.WindowGeometry(
+            self, size=False, position=False, grids=[self.devtok_grid]
+        )
 
     def init_grid_menu(self, gridmgr):
         self.gridmgr = gridmgr
@@ -60,8 +108,42 @@ class UserListSidebar(QtCore.QObject):
             self.gridmgr.add_action("&Edit User", triggered=self.cmd_edit_user)
             self.gridmgr.add_action("&Delete User", triggered=self.cmd_delete_user)
 
-    def window(self):
-        return self.gridmgr.grid.window()
+    def highlight(self, row):
+        if row == None:
+            self.html.setHtml("")
+            self.devtok_grid.setModel(None)
+        else:
+            self.backgrounder(
+                self.load_users,
+                self.client.get,
+                self.SRC_INSTANCE_URL,
+                row.id,
+            )
+
+    def load_users(self):
+        try:
+            content = yield apputils.AnimateWait(self)
+
+            self.user = content.named_table("user")
+            self.userrow = self.user.rows[0]
+
+            self.html.setHtml(
+                f"""
+<b>Username: </b>{self.userrow.username}<br />
+<b>Full Name: </b>{self.userrow.full_name}<br />
+<b>Description: </b>{self.userrow.descr}<br />
+"""
+            )
+
+            with self.geo.grid_reset(self.devtok_grid):
+                self.devtokens = content.named_table("devicetokens")
+                self.devtok_gridmgr.set_client_table(self.devtokens)
+        except:
+            qt.exception_message(self.window(), "Error loading users")
+            return
+
+    def adapt_sbcommand(self, f):
+        return lambda: f(self.userrow)
 
     def cmd_add_user(self):
         user = rtlib.ClientTable(
@@ -84,6 +166,9 @@ class UserListSidebar(QtCore.QObject):
         user = content.main_table()
         if edit_user_dlg(self, user, editrec=True):
             self.refresh.emit()
+
+    def cmd_change_password(self, row):
+        utils.to_be_implemented("change password dialog")
 
     def cmd_set_roles(self, rows):
         users = [o.id for o in rows]
@@ -124,7 +209,7 @@ class UserList(QtWidgets.QWidget):
 
         self.backgrounder = apputils.Backgrounder(self)
 
-        self.splitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.splitter = qt.RevealedSplitter(QtCore.Qt.Horizontal)
 
         self.sidebar = UserListSidebar(self, state)
 
@@ -132,8 +217,10 @@ class UserList(QtWidgets.QWidget):
         self.grid.setObjectName("content")
         self.grid.setSortingEnabled(True)
         self.gridmgr = qt.GridManager(self.grid, self)
+        self.gridmgr.current_row_update.connect(self.sidebar_update)
         self.sidebar.init_grid_menu(self.gridmgr)
         self.splitter.addWidget(self.grid)
+        self.splitter.addWidget(self.sidebar)
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.splitter)
@@ -149,6 +236,10 @@ class UserList(QtWidgets.QWidget):
         )
 
         self.refresh()
+
+    def sidebar_update(self):
+        row = self.gridmgr.selected_row()
+        self.sidebar.highlight(row)
 
     def load(self):
         self.setEnabled(False)
