@@ -64,6 +64,12 @@ def show_link_parented(parent, url):
     if not isinstance(url, QtCore.QUrl):
         url = QtCore.QUrl(url)
 
+    if url.scheme() in ("https", "http"):
+        import cliutils
+
+        cliutils.xdg_open(url.url())
+        return
+
     # prepare API on url for plugs
     url.parameters = lambda url=url: url_params(url)
     state = QtWidgets.QApplication.instance()

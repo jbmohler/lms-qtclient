@@ -1,4 +1,3 @@
-import os
 import sys
 import platform
 import functools
@@ -68,6 +67,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.setObjectName(self.ID)
         winlist.register(self, self.ID)
 
+        self.pending_urls = []
         self.menu_actions = []
         self.statics = []
 
@@ -93,8 +93,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         status.addPermanentWidget(self.statistics)
         # status.addPermanentWidget(QtWidgets.QLabel('Server {}'.format(client.__version__)))
         self.server_connection = QtWidgets.QLabel("Not Connected")
-        # TODO:  fix this -- if you comment this out, it crashes
-        # self.server_connection.linkActivated.connect(os.startfile)
+        self.server_connection.linkActivated.connect(lambda url: plugpoint.show_link_parented(self, url))
         status.addPermanentWidget(self.server_connection)
 
         screen = QtGui.QScreen()
@@ -173,7 +172,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
 
         self.action_syshelp = QtGui.QAction("&Technical Manual", self)
         self.action_syshelp.triggered.connect(
-            lambda: winlist.show_link_parented(
+            lambda: plugpoint.show_link_parented(
                 self, self.session.prefix("docs/index.html")
             )
         )
@@ -230,11 +229,17 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         plugpoint.show_link_parented(self, QtCore.QUrl(url))
 
     def post_login(self):
+        self.setup_menu_bar()
+
         s = self.session
         self.server_connection.setText(
             f"<a href=\"{s.prefix('')}\">{s.server_url}</a> {s.rtx_username}"
         )
 
+        for url in self.pending_urls:
+            self.handle_url(url)
+
+    def setup_menu_bar(self):
         self.construct_file_menu(self.menuBar())
 
         ctors = {
@@ -356,6 +361,9 @@ def basic_shell_window(app, session=None, document=None):
     f = ShellWindow()
     f.exports_dir = app.exports_dir
     f.session = app.session
+
+    f.pending_urls.append(document)
+
     QtCore.QTimer.singleShot(0, lambda: f.rtx_login())
     QtCore.QTimer.singleShot(0, lambda: f.start_doc_server())
     f.show()
@@ -367,9 +375,6 @@ def basic_shell_window(app, session=None, document=None):
     app.excepter = apputils.ExceptionLogger(app)
     app.excepter.error_event.connect(tray.error_event)
     sys.excepthook = app.excepter.excepthook
-
-    if document != None:
-        QtCore.QTimer.singleShot(0, lambda url=document: f.handle_url(url))
 
     app.exec_()
 
