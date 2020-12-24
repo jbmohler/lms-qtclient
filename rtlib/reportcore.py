@@ -104,6 +104,7 @@ class Column:
         represents=False,
         primary_key=False,
         hidden=False,
+        skip_write=False,
         widget_factory=None,
         widget_kwargs=None,
         background_attr=None,
@@ -120,6 +121,7 @@ class Column:
         self.represents = bool(represents)
         self.primary_key = bool(primary_key)
         self.hidden = bool(hidden)
+        self.skip_write = bool(skip_write)
         self.editable = editable
         self.max_length = max_length
         self.widget_factory = widget_factory

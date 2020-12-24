@@ -98,9 +98,7 @@ class TransactionCore:
     def http_files(self):
         return {
             "trans": self.trantable.as_http_post_file(),
-            "splits": self.splittable.as_http_post_file(
-                inclusions=["account_id", "sum", "sid"]
-            ),
+            "splits": self.splittable.as_http_post_file(),
         }
 
     def ascii_repr(self):
@@ -176,6 +174,9 @@ class TransactionEditor(qt.ObjectDialog):
         # second tab:  receipt memo
         self.tab.addTab(sb.widgets["receipt"], "&Receipt")
 
+        self.tran_status_label = QtWidgets.QLabel()
+
+        self.layout.addWidget(self.tran_status_label)
         self.layout.addLayout(self.topgrid)
         self.layout.addWidget(self.tab)
         self.layout.addWidget(self.button_row())
@@ -211,6 +212,11 @@ class TransactionEditor(qt.ObjectDialog):
     def bind(self, trancore):
         self.data = trancore
         self.binder.bind(self.data.tranrow, self.data.trantable.columns)
+
+        self.tran_status_label.setStyleSheet(
+            f"QLabel {{ color : {self.data.tranrow.tran_status_color}; }}"
+        )
+        self.tran_status_label.setText(self.data.tranrow.tran_status)
 
         with self.geo.grid_reset(self.trans_grid):
             columns = [

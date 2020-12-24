@@ -204,6 +204,13 @@ class ClientTable:
     ):
         assert exclusions == None or inclusions == None
 
+        skipped = [c.attr for c in self.columns_full if c.skip_write]
+        # skipped is added to exclusions, but note that inclusions is evaluated first
+        if len(skipped) > 0:
+            if exclusions == None:
+                exclusions = []
+            exclusions += skipped
+
         if (
             exclusions == None
             and inclusions == None
