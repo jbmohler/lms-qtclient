@@ -93,7 +93,9 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         status.addPermanentWidget(self.statistics)
         # status.addPermanentWidget(QtWidgets.QLabel('Server {}'.format(client.__version__)))
         self.server_connection = QtWidgets.QLabel("Not Connected")
-        self.server_connection.linkActivated.connect(lambda url: plugpoint.show_link_parented(self, url))
+        self.server_connection.linkActivated.connect(
+            lambda url: plugpoint.show_link_parented(self, url)
+        )
         status.addPermanentWidget(self.server_connection)
 
         screen = QtGui.QScreen()
@@ -362,7 +364,8 @@ def basic_shell_window(app, session=None, document=None):
     f.exports_dir = app.exports_dir
     f.session = app.session
 
-    f.pending_urls.append(document)
+    if document:
+        f.pending_urls.append(document)
 
     QtCore.QTimer.singleShot(0, lambda: f.rtx_login())
     QtCore.QTimer.singleShot(0, lambda: f.start_doc_server())
