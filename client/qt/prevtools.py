@@ -20,7 +20,7 @@ class RevealedSplitterHandle(QtWidgets.QSplitterHandle):
 
         self._font = QtGui.QFont("SansSerif", 10)
 
-        self._image = QtGui.QIcon(":/fidolib/drag-left-arrow.png")
+        self._image = QtGui.QIcon(":/clientshell/drag-left-arrow.png")
         self._btn1 = QtWidgets.QPushButton(self)
         self._btn1.setIcon(self._image)
         self._btn1.clicked.connect(self.flickclick.emit)
