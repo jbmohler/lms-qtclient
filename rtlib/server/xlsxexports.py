@@ -135,20 +135,19 @@ def export_view(
     model = view.model()
     if hasattr(view, "header"):
         header = view.header()
-        columns_visible = [
+        visible = [
             (c, index)
             for index, c in enumerate(model.columns)
             if not header.isSectionHidden(index)
         ]
-        columns_visible.sort(key=lambda x: header.visualIndex(x[1]))
-        columns = [c for c, _ in columns_visible]
+        visible.sort(key=lambda x: header.visualIndex(x[1]))
     else:
-        columns_visible = [(c, index) for index, c in enumerate(model.columns)]
-        columns = [c for c in model.columns]
+        visible = [(c, index) for index, c in enumerate(model.columns)]
     if hasattr(model, "exportcolumns"):
-        columns = [c for c in columns if c.attr in model.exportcolumns]
+        visible = [(c, index) for c, index in visible if c.attr in model.exportcolumns]
     if suppress_grouped_column and "row_group" in options:
-        columns = [c for c in columns if c.attr != options["row_group"]]
+        visible = [(c, index) for c, index in visible if c.attr != options["row_group"]]
+    columns = [c for c, _ in visible]
 
     def print_headers(row):
         for index, head in enumerate(headers):
@@ -159,7 +158,7 @@ def export_view(
     grid_left = 0
     grid_top = (len(headers) + 1) if len(headers) > 0 else 0
 
-    for index, __c_index in enumerate(columns_visible):
+    for index, __c_index in enumerate(visible):
         _, c_index = __c_index
         worksheet.set_column(
             index, index, view.columnWidth(c_index) / view.logicalDpiX() * 12

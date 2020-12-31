@@ -46,12 +46,16 @@ class AccountTypeGrouped:
     TITLE = "Type Summarized Excel"
 
     def export(self, fname, v, content, hyperlinks=True):
+        if "acc_name" in [c.attr for c in v.model().columns]:
+            sort_key = "(atype_sort, jrn_name, acc_name)"
+        else:
+            sort_key = "(atype_sort, jrn_name)"
         rtserve.export_view(
             fname,
             v,
             headers=content.keys["headers"],
             options={"row_group": "atype_name"},
-            sort_key="(atype_sort, jrn_name, acc_name)",
+            sort_key=sort_key,
             suppress_grouped_column=True,
             group_start_callback=group_header_profit,
             group_end_callback=group_footer_profit,
