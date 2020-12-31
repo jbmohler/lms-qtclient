@@ -60,6 +60,30 @@ def model_html_copy(model, selected):
     return None
 
 
+def simple_selection_rectangle(model, selected):
+    if len(selected):
+        cols = {i.column(): model.data(i, models.ColumnMetaRole) for i in selected}
+
+        col_attrs = []
+        for _, col in sorted(cols.items()):
+            if col.url_key:
+                col_attrs += [(col.url_key, lambda x: x)]
+            func = lambda x: x
+            if col.type_ == "date":
+                func = str
+            col_attrs += [(col.attr, func)]
+
+        rows = {i.row(): model.data(i, models.ObjectRole) for i in selected}
+
+        tuples = []
+        for _, row in sorted(rows.items()):
+            t = tuple([func(getattr(row, attr)) for attr, func in col_attrs])
+            tuples.append(t)
+
+        return [x[0] for x in col_attrs], tuples
+    return None
+
+
 def model_tsv_copy(model, selected):
     """
     Fill and return a QMimeData with the text in the indexes listed.  The copied
@@ -525,6 +549,13 @@ class ContextMenu(QtCore.QObject):
             self.copy_selected_cells_unformatted
         )
         self._view.addAction(self.action_copy_selection_unformatted)
+        self.action_copy_selection_as_pg_values = QtGui.QAction(
+            "Copy as &PostgreSQL Values", self
+        )
+        self.action_copy_selection_as_pg_values.triggered.connect(
+            self.copy_selected_cells_as_pg_values
+        )
+        self._view.addAction(self.action_copy_selection_as_pg_values)
         self.action_import_clipboard = QtGui.QAction("&Import from Clipboard", self)
         self.action_import_clipboard.triggered.connect(self.import_rows)
         self.action_tree_collapse = QtGui.QAction("Collapse All", self)
@@ -617,6 +648,27 @@ class ContextMenu(QtCore.QObject):
         dlg = FindDialog(self._view, self._view.window())
         dlg.show()
 
+    def copy_selected_cells_as_pg_values(self):
+        m = QtCore.QMimeData()
+        headers, rows = simple_selection_rectangle(
+            self._view.model(), self.selected_indexes()
+        )
+
+        lines = []
+        lines.append("with selection({}) as (".format(", ".join(headers)))
+        lines.append("values")
+
+        trows = [repr(row) for row in rows]
+        lines.append("\t" + ",\n\t".join(trows))
+        lines.append(")")
+        lines.append("select * from selection")
+
+        text = "\n".join(lines)
+        m.setText(text)
+
+        cb = QtWidgets.QApplication.instance().clipboard()
+        cb.setMimeData(m)
+
     def copy_selected_cells_unformatted(self):
         self.copy_selected_cells(with_html=False)
 
@@ -674,6 +726,7 @@ class ContextMenu(QtCore.QObject):
             gridacts.append(self.action_findfilter)
             gridacts.append(self.action_copy_selection_formatted)
             gridacts.append(self.action_copy_selection_unformatted)
+            gridacts.append(self.action_copy_selection_as_pg_values)
         if self.importer != None:
             gridacts.append(self.action_import_clipboard)
         if isinstance(self._view, widgets.TreeView):
