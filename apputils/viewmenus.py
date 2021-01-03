@@ -654,11 +654,16 @@ class ContextMenu(QtCore.QObject):
             self._view.model(), self.selected_indexes()
         )
 
+        def to_sql(x):
+            if x is None:
+                return "null"
+            return repr(x)
+
         lines = []
         lines.append("with selection({}) as (".format(", ".join(headers)))
         lines.append("values")
 
-        trows = [repr(row) for row in rows]
+        trows = [f"({', '.join([to_sql(v) for v in row])})" for row in rows]
         lines.append("\t" + ",\n\t".join(trows))
         lines.append(")")
         lines.append("select * from selection")
