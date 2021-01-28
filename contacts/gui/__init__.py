@@ -7,7 +7,9 @@ class ContactExtensions:
             return False
 
         if url.path() == "contacts/list":
-            if parent.foreground_tab("contact_search"):
+            existing = parent.foreground_tab("contact_search")
+            if existing:
+                existing.focus_search()
                 return True
             view = search.ContactsList(parent, state)
             parent.adopt_tab(view, "contact_search", "Contacts")

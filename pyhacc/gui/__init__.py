@@ -38,7 +38,9 @@ class AccountingExtensions:
         elif url.path() == "transactions":
             transactions.edit_transaction(state.session, url.parameters()["key"])
         elif url.path() == "transactions/recent":
-            if parent.foreground_tab(calendar.TransactionRecent.ID):
+            existing = parent.foreground_tab(calendar.TransactionRecent.ID)
+            if existing:
+                existing.focus_search()
                 return True
             view = calendar.TransactionRecent(parent, state)
             parent.adopt_tab(view, view.ID, view.TITLE)

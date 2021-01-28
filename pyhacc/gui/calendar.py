@@ -226,6 +226,12 @@ class TransactionRecent(QtWidgets.QWidget):
 
         self.backgrounder(self.load_tranlist, self.client.get, self.URL, **kwargs)
 
+    def focus_search(self):
+        def _focus_search():
+            self.search_edit.setFocus(QtCore.Qt.PopupFocusReason)
+
+        QtCore.QTimer.singleShot(100, _focus_search)
+
     def closeEvent(self, event):
         self.change_listener.close()
         return super(TransactionRecent, self).closeEvent(event)

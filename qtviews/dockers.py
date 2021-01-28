@@ -261,7 +261,6 @@ class TabbedWorkspaceMixin(object):
         Remove a tabbed window from the tab widget and add it as a dock window.
         """
         w = self.workspaceWindowByKey(settingsKey)
-        print(settingsKey)
         if w is not None:
             self._addDocked(w)
 

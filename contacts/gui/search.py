@@ -835,12 +835,23 @@ class ContactsList(QtWidgets.QWidget):
         with self.geo.grid_reset(self.grid):
             self.gridmgr.set_client_table(self.table)
 
+        i1 = None
         if focused_per_id != None:
             row = [xx for xx in self.table.rows if xx.id == focused_per_id]
             if len(row) > 0:
                 i1, _ = self.grid.model().index_object(row[0])
-                self.grid.setCurrentIndex(i1)
-                self.sidebar.highlight(row[0])
+        elif len(self.table.rows) == 1:
+            row = self.table.rows[:]
+            i1, _ = self.grid.model().index_object(row[0])
+        if i1:
+            self.grid.setCurrentIndex(i1)
+            self.sidebar.highlight(row[0])
+
+    def focus_search(self):
+        def _focus_search():
+            self.search_edit.setFocus(QtCore.Qt.PopupFocusReason)
+
+        QtCore.QTimer.singleShot(100, _focus_search)
 
     def closeEvent(self, event):
         self.change_listener.close()
