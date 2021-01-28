@@ -96,7 +96,7 @@ def dump_data(session, outdir):
     ycontent = client.get("api/transactions/years")
     years = ycontent.main_table()
 
-    small_year, big_year = years.rows[0].year, years.rows[-1].year
+    small_year, big_year = int(years.rows[0].year), int(years.rows[-1].year)
 
     datadir = outdir
 
