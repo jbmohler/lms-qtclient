@@ -4,3 +4,4 @@ xlsxwriter
 PySide6
 curtsies
 tzlocal
+pywin32; sys_platform == 'win32'
