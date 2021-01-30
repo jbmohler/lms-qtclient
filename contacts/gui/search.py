@@ -158,7 +158,7 @@ class BasicBitView(QtWidgets.QDialog):
                 self.client.put,
                 "api/persona/{}/bit/{}",
                 self.editrow.persona_id,
-                self.editrow.persona_id,
+                self.editrow.id,
                 files={"bit": self.bits.as_http_post_file()},
             )
 
