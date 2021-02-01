@@ -1,6 +1,7 @@
 import os
 import subprocess
 import textwrap
+import getpass
 import curtsies
 import replicate as api
 import cliutils
@@ -67,6 +68,116 @@ def contact(cmd, args):
             keywatcher(shortcuts)
         except KeyTerm:
             pass
+
+
+@cli.command
+def new_contact_entity(cmd, args):
+    client = cli.session.std_client()
+
+    comp_ind = input("Company or Individual [ci] (default c): ")
+    if comp_ind == "":
+        comp_ind = "c"
+    comp_ind = comp_ind.lower()[0]
+
+    if comp_ind not in "ic":
+        raise NotImplementedError(f"does not gracefully deal with {comp_ind}")
+
+    payload = client.get("api/persona/new")
+    table = payload.main_table()
+
+    table.rows[0].corporate_entity = comp_ind == "c"
+    if comp_ind == "c":
+        table.rows[0].l_name = input("Company Name:  ")
+    else:
+        table.rows[0].title = input("Title:  ")
+        table.rows[0].f_name = input("First Name:  ")
+        table.rows[0].l_name = input("Last Name:  ")
+
+    client.put(
+        "api/persona/{}",
+        table.rows[0].id,
+        files={
+            "persona": table.as_http_post_file(exclusions=["entity_name", "tag_ids"])
+        },
+    )
+
+    while True:
+        # enter contact bit until exhausted
+
+        bittype = input(
+            "Contact bit type (u)rl; (p)hone; (e)-mail; (s)treet address [E(x)it]: "
+        )
+
+        if bittype == "":
+            continue
+        bittype = bittype.lower()[0]
+        if bittype not in "upesx":
+            continue
+
+        if bittype == "x":
+            break
+        elif bittype == "u":
+            payloadbit = client.get(
+                "api/persona/{}/bit/new", table.rows[0].id, bit_type="urls"
+            )
+            btable = payloadbit.main_table()
+            brow = btable.rows[0]
+
+            # url, username, password
+            brow.url = input("URL: ")
+            brow.username = input("Username: ")
+            entry = input(
+                "Password type (w)ords; (p)ronounciable; (r)andom; (m)anual: "
+            )
+            if entry == "":
+                continue
+            entry = entry.lower()[0]
+            if entry == "m":
+                p1 = getpass.getpass("Password: ")
+                p2 = getpass.getpass("Confirm Password: ")
+                if p1 != p2:
+                    continue
+                brow.password = p1
+            else:
+                mode = {"w": "words", "p": "pronounciable", "r": "random"}[entry]
+                content = client.get("api/password/generate", mode=mode, bits=60)
+                brow.password = content.keys["password"]
+                print(f"New password:  {brow.password}")
+            client.put(
+                "api/persona/{}/bit/{}",
+                brow.persona_id,
+                brow.id,
+                files={"bit": btable.as_http_post_file()},
+            )
+        elif bittype == "p":
+            payloadbit = client.get(
+                "api/persona/{}/bit/new", table.rows[0].id, bit_type="phone_numbers"
+            )
+            btable = payloadbit.main_table()
+            brow = btable.rows[0]
+            brow.number = input("Phone No: ")
+            client.put(
+                "api/persona/{}/bit/{}",
+                brow.persona_id,
+                brow.id,
+                files={"bit": btable.as_http_post_file()},
+            )
+        elif bittype == "e":
+            payloadbit = client.get(
+                "api/persona/{}/bit/new", table.rows[0].id, bit_type="email_addresses"
+            )
+            btable = payloadbit.main_table()
+            brow = btable.rows[0]
+            brow.email = input("e-Mail Address: ")
+            client.put(
+                "api/persona/{}/bit/{}",
+                brow.persona_id,
+                brow.id,
+                files={"bit": btable.as_http_post_file()},
+            )
+        elif bittype == "s":
+            print("street address entry not supported here")
+            continue
 
 
 @cli.command
