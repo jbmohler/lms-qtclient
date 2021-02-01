@@ -9,6 +9,11 @@ import replicate
 import client as climod
 import localconfig
 
+if sys.platform == "win32":
+    # pyreadline isn't quite compatible
+    readline.set_auto_history = lambda *args: None
+    readline.append_history_file = lambda *args: None
+
 
 def loop(session, commands=None):
     cli = replicate.init_global_router({"session": session})

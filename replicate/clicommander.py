@@ -48,7 +48,7 @@ class CLI_Commander:
         if exact != None:
             rt = exact
         if exact == None and len(approx) == 1:
-            rt = approx[0][1]
+            rt = approx[0][0]
 
         if rt != None:
             rt.f(cmd, args)
