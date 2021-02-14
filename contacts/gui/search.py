@@ -12,6 +12,61 @@ class PersonaMixin:
     pass
 
 
+class PasswordGenerator(QtWidgets.QDialog):
+    MODES = ["pronounciable", "words", "random", "alphanumeric"]
+
+    def __init__(self, parent):
+        super(PasswordGenerator, self).__init__(parent)
+
+        self.setWindowTitle("Password Generator")
+
+        self.layout = QtWidgets.QVBoxLayout(self)
+
+        self.load_timer = qt.StdActionPause()
+        self.load_timer.timeout.connect(self.regen4)
+
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.slider.setMinimum(20)
+        self.slider.setMaximum(120)
+        self.slider.setValue(50)
+        self.slider.valueChanged.connect(lambda _: self.load_timer.ui_start())
+
+        self.layout.addWidget(self.slider)
+
+        self.edits = {}
+
+        for m in self.MODES:
+            row = QtWidgets.QHBoxLayout()
+
+            edit = QtWidgets.QLineEdit()
+            self.edits[m] = edit
+            row.addWidget(edit)
+
+            b = QtWidgets.QPushButton(f"Choose {m.title()}")
+            b.clicked.connect(lambda *, mode=m: self.accept_mode(mode))
+            row.addWidget(b)
+
+            self.layout.addLayout(row)
+
+        self.setMinimumWidth(60 * apputils.get_char_width())
+
+    def regen4(self):
+        value = self.slider.value()
+
+        with apputils.animator(self) as p:
+            for m in self.MODES:
+                content = p.background(
+                    self.client.get, "api/password/generate", mode=m, bits=value
+                )
+
+                pwd = content.keys["password"]
+                self.edits[m].setText(pwd)
+
+    def accept_mode(self, mode):
+        self.new_password = self.edits[mode].text()
+        self.accept()
+
+
 class BitMixin:
     def html_view(self, printable=False):
         htmlbit = f"<p>{self.html_chunk(printable)}</p>"
@@ -191,40 +246,17 @@ class BitUrlView(BasicBitView):
         )
 
     def gen_new_password(self):
-        dlg = QtWidgets.QDialog()
-
-        dlg.layout = QtWidgets.QVBoxLayout(dlg)
-
-        modes = ["pronounciable", "words", "random", "alphanumeric"]
-
-        dlg.mode_edit = apputils.construct(
-            "options", options=[(m.title(), m) for m in modes]
-        )
-        dlg.bits_edit = apputils.construct("integer")
-        dlg.bits_edit.setValue(50)
-
-        dlg.form = QtWidgets.QFormLayout()
-        dlg.form.addRow("Mode", dlg.mode_edit)
-        dlg.form.addRow("Bits", dlg.bits_edit)
-
-        dlg.buttons = QtWidgets.QDialogButtonBox()
-
-        dlg.buttons.addButton(dlg.buttons.Ok).clicked.connect(dlg.accept)
-        dlg.buttons.addButton(dlg.buttons.Cancel).clicked.connect(dlg.reject)
-
-        dlg.layout.addLayout(dlg.form)
-        dlg.layout.addWidget(dlg.buttons)
+        dlg = PasswordGenerator(self)
+        dlg.client = self.client
+        dlg.regen4()
 
         if dlg.exec_() == dlg.Accepted:
-            with apputils.animator(self) as p:
-                content = p.background(
-                    self.client.get,
-                    "api/password/generate",
-                    mode=dlg.mode_edit.value(),
-                    bits=dlg.bits_edit.value(),
-                )
+            if self.editrow.password not in ["", None]:
+                m = "" if self.editrow.memo in ["", None] else self.editrow.memo
+                self.editrow.memo = f"Last password:  {self.editrow.password}\n{m}"
 
-            apputils.information(self, content.keys["password"])
+            self.editrow.password = dlg.new_password
+            self.binder.load(self.editrow)
 
 
 class BitPhoneView(BasicBitView):
