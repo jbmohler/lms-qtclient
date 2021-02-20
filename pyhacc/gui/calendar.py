@@ -229,6 +229,7 @@ class TransactionRecent(QtWidgets.QWidget):
     def focus_search(self):
         def _focus_search():
             self.search_edit.setFocus(QtCore.Qt.PopupFocusReason)
+            self.search_edit.selectAll()
 
         QtCore.QTimer.singleShot(100, _focus_search)
 

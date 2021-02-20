@@ -831,12 +831,14 @@ class ContactsList(QtWidgets.QWidget):
         )
         self.gridmgr.current_row_update.connect(self.preview_timer.ui_start)
 
+        self.last_edit = None
+
         self.load_timer = qt.StdActionPause()
         self.load_timer.timeout.connect(self.search_now)
         self.search_edit.applyValue.connect(self.load_timer.ui_start)
 
         self.change_listener = qt.ChangeListener(
-            self.backgrounder, self.client, self.search_now, "personas"
+            self.backgrounder, self.client, self.push_refresh, "personas"
         )
 
         self.geo = apputils.WindowGeometry(
@@ -844,23 +846,26 @@ class ContactsList(QtWidgets.QWidget):
         )
 
     def reload_from_persona(self, per_id):
-        self.backgrounder(
-            functools.partial(self.load_data, per_id),
-            self.client.get,
-            self.URL_SEARCH,
-            frag=self.search_edit.value(),
-            included=per_id,
-        )
+        self.last_edit = per_id
+        self.base_refresh()
 
     def search_now(self):
+        self.last_edit = None
+        self.base_refresh()
+
+    def push_refresh(self):
+        self.base_refresh()
+
+    def base_refresh(self):
         self.backgrounder(
             self.load_data,
             self.client.get,
             self.URL_SEARCH,
             frag=self.search_edit.value(),
+            included=self.last_edit,
         )
 
-    def load_data(self, focused_per_id=None):
+    def load_data(self):
         content = yield apputils.AnimateWait(self)
         self.table = content.main_table()
 
@@ -868,8 +873,8 @@ class ContactsList(QtWidgets.QWidget):
             self.gridmgr.set_client_table(self.table)
 
         i1 = None
-        if focused_per_id != None:
-            row = [xx for xx in self.table.rows if xx.id == focused_per_id]
+        if self.last_edit != None:
+            row = [xx for xx in self.table.rows if xx.id == self.last_edit]
             if len(row) > 0:
                 i1, _ = self.grid.model().index_object(row[0])
         elif len(self.table.rows) == 1:
@@ -882,6 +887,7 @@ class ContactsList(QtWidgets.QWidget):
     def focus_search(self):
         def _focus_search():
             self.search_edit.setFocus(QtCore.Qt.PopupFocusReason)
+            self.search_edit.selectAll()
 
         QtCore.QTimer.singleShot(100, _focus_search)
 
