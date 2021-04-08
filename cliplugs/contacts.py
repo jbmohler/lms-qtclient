@@ -61,10 +61,13 @@ def contact(cmd, args):
         def stop():
             raise KeyTerm("exit loop")
 
-        shortcuts = {"<Ctrl-d>": stop, "<Ctrl-j>": stop}
+        def reprint():
+            print(persona_to_text(content, static=True))
+
+        shortcuts = {"<Ctrl-d>": stop, "<Ctrl-j>": stop, "<Ctrl-r>": reprint}
         print(persona_to_text(content, shortcuts=shortcuts))
         try:
-            print("press enter to continue")
+            print("press enter to continue (ctrl+r to reprint visible)")
             keywatcher(shortcuts)
         except KeyTerm:
             pass
