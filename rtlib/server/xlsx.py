@@ -4,15 +4,21 @@ from . import xlsxexports
 
 
 class UnifiedViewModel(rtlib.ModelMixin):
+    CHAR_PIXELS = 10
+
     def model(self):
         # This is the point, they are unified!
         return self
 
     def columnWidth(self, i):
-        return 45
+        col = self.columns[i]
+        cw = col.char_width if col.char_width else 30
+        if col.max_length and col.max_length < cw:
+            cw = col.max_length
+        return cw * self.CHAR_PIXELS
 
     def logicalDpiX(self):
-        return 30
+        return self.CHAR_PIXELS * 8
 
 
 def uview_from_client_table(table):

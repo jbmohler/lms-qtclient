@@ -72,6 +72,7 @@ class BasicTypePlugin:
             if type_ == "currency_usd":
                 meta["alignment"] = "right"
                 meta["is_numeric"] = True
+                meta["char_width"] = 10
                 kw = meta.get("widget_kwargs", {})
                 if kw.get("blankzero", False):
                     meta["formatter"] = lambda v: formatters.dollar_formatter(
