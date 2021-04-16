@@ -1,5 +1,5 @@
 import time
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets, QtGui
 import client.qt as qt
 
 
@@ -99,8 +99,14 @@ def server_diagnostics(parent, session):
 
 
 class RtxLoginDialog(QtWidgets.QDialog):
+    ID = "rtx-login-dialog"
+    TITLE = "Yenot Sign-on"
+
     def __init__(self, parent, session, settings_group=None, allow_offline=False):
         super(RtxLoginDialog, self).__init__(parent)
+
+        self.setObjectName(self.ID)
+        self.setWindowTitle(self.TITLE)
 
         self.session = session
 
@@ -150,6 +156,13 @@ class RtxLoginDialog(QtWidgets.QDialog):
         if self.rtx_user != None:
             self.rtx_user_edit.setText(self.rtx_user)
             self.rtx_password_edit.setFocus(QtCore.Qt.OtherFocusReason)
+
+        QtCore.QTimer.singleShot(0, self.center_myself)
+
+    def center_myself(self):
+        screen = QtGui.QGuiApplication.primaryScreen()
+        geo = screen.geometry()
+        self.move((geo.width() - self.width()) / 2, (geo.height() - self.height()) / 2)
 
     def accept_offline(self):
         self.offline = True
