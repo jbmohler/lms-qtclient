@@ -74,6 +74,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    localconfig.set_identity()
+
     histfile = os.path.join(os.path.expanduser("~"), ".yenot_history")
 
     try:

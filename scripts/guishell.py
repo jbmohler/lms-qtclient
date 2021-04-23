@@ -23,6 +23,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    localconfig.set_identity()
     session = climod.auto_session()
 
     launch = True

@@ -9,6 +9,7 @@ import urllib.parse
 import requests
 import tzlocal
 import rtlib
+from . import identity
 
 
 class RtxError(Exception):
@@ -476,7 +477,7 @@ class StdPayload:
 
 
 def read_yenotpass(session):
-    ypfile = os.path.join(os.path.expanduser("~"), ".yenot", "config")
+    ypfile = os.path.join(identity.get_appdata_dir(), "config")
 
     config = configparser.ConfigParser()
     config.read(ypfile)
@@ -493,7 +494,7 @@ def read_yenotpass(session):
 
 
 def update_auth_config(**kwargs):
-    ypfile = os.path.join(os.path.expanduser("~"), ".yenot", "config")
+    ypfile = os.path.join(identity.get_appdata_dir(), "config")
     if not os.path.exists(os.path.dirname(ypfile)):
         os.makedirs(os.path.dirname(ypfile), exist_ok=True)
 
