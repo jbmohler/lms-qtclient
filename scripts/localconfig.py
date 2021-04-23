@@ -1,6 +1,18 @@
 # no global imports, this is a site specific file which defines the set of
 # plug-ins and styling that fleshes out the rtx client.
 
+VENDOR_SLUG = "lmsDataSuite"
+APPLICATION_SLUG = "lmsDataSuite"
+APPLICATION_NAME = "lms Data Suite"
+
+
+def set_identity():
+    import client.identity as identity
+
+    identity.update_identity(
+        vendor_slug=VENDOR_SLUG, app_slug=APPLICATION_SLUG, app_name=APPLICATION_NAME
+    )
+
 
 def qt_app_init(plugpoint):
     from PySide6 import QtWidgets, QtGui
@@ -11,10 +23,10 @@ def qt_app_init(plugpoint):
 
     app = QtWidgets.QApplication([])
     app.setOrganizationDomain("lms.kiwistrawberry.us")
-    app.setOrganizationName("Mohler")
-    app.setApplicationName("lms Data Suite")
+    app.setOrganizationName(VENDOR_SLUG)
+    app.setApplicationName(APPLICATION_NAME)
     app.icon = QtGui.QIcon(":/lms/jlm_initials.ico")
-    app.exports_dir = climod.LocalDirectory(appname="lmsDataSuite", tail="Exports")
+    app.exports_dir = climod.LocalDirectory(appname=APPLICATION_SLUG, tail="Exports")
 
     import platform
 

@@ -1,13 +1,12 @@
-# -*- coding: utf-8 -*-
 ##############################################################################
-#       Copyright (C) 2010, Joel B. Mohler <joel@kiwistrawberry.us>
+#       Copyright (C) 2010-2021, Joel B. Mohler <joel@kiwistrawberry.us>
 #
 #  Distributed under the terms of the GNU Lesser General Public License (LGPL)
 #                  http://www.gnu.org/licenses/
 ##############################################################################
 """
-For the most part, we have functions here which do something for windows 
-and something else for everything else.
+These functions recognize Windows, Linux and WSL.   They perform the
+appropriate logic for each.
 """
 
 import os
@@ -26,26 +25,53 @@ def is_windows():
     return sys.platform in ("win32", "cygwin")
 
 
-def xdg_open(file):
+def xdg_open(viewfile):
     """
     Be a platform smart incarnation of xdg-open and open files in the correct
     application.
     """
     if is_windows():
-        try:
-            # we try with win32api because that's cleaner (os.system flickers a command prompt)
-            import win32api
+        from ctypes import windll
 
-            win32api.ShellExecute(0, None, file, None, None, 1)
-        except ImportError as e:
-            xx = os.system(f"start {file}")
-            if xx != 0:
-                raise RuntimeError("could not launch file")
+        windll.shell32.ShellExecuteW(0, "open", viewfile, None, None, 1)
     elif is_wsl():
         os.system(
             'powershell.exe /c start "{0}"'.format(
-                file.replace(";", r"\;").replace("&", r"\&")
+                viewfile.replace(";", r"\;").replace("&", r"\&")
             )
         )
     else:
-        os.system('xdg-open "{0}"'.format(file.replace(";", r"\;").replace("&", r"\&")))
+        os.system(
+            'xdg-open "{0}"'.format(viewfile.replace(";", r"\;").replace("&", r"\&"))
+        )
+
+
+def local_appdata_path_win32():
+    """
+    Windows specific function to get the local appdata directory.
+    """
+    import ctypes
+    from ctypes import wintypes, windll
+
+    _SHGetFolderPath = windll.shell32.SHGetFolderPathW
+    _SHGetFolderPath.argtypes = [
+        wintypes.HWND,
+        ctypes.c_int,
+        wintypes.HANDLE,
+        wintypes.DWORD,
+        wintypes.LPCWSTR,
+    ]
+
+    CSIDL_LOCAL_APPDATA = 28
+    path_buf = ctypes.create_unicode_buffer(wintypes.MAX_PATH)
+    _ = _SHGetFolderPath(0, CSIDL_LOCAL_APPDATA, 0, 0, path_buf)
+    return path_buf.value
+
+
+def local_appdata_path_unix():
+    return os.path.join(os.environ["HOME"], ".config")
+
+
+local_appdata_path = (
+    local_appdata_path_win32 if is_windows() else local_appdata_path_unix
+)

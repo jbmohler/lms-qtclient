@@ -1,12 +1,16 @@
-#!/usr/bin/env python
 import os
 import json
 import socket
 import threading
 import select
+from . import identity
 
-PATH = os.path.expanduser("~/.rtx/gui-server")
+
 SUCCESS = b"launched"
+
+
+def get_signal_filename():
+    return os.path.join(identity.get_appdata_dir(), "gui-server")
 
 
 def launch_document_server(callback):
@@ -16,7 +20,7 @@ def launch_document_server(callback):
 
 def close_document_server():
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.connect(PATH)
+    s.connect(get_signal_filename())
     obj = {"type": "close_thread"}
 
     s.send(json.dumps(obj).encode("utf8"))
@@ -24,17 +28,19 @@ def close_document_server():
 
 
 def _server_thread(callback):
+    sigfile = get_signal_filename()
+
     launcher = callback()
 
     try:
-        sockdir = os.path.dirname(PATH)
+        sockdir = os.path.dirname(sigfile)
         os.mkdir(os.path.expanduser(sockdir))
     except FileExistsError:
         pass
-    if os.path.exists(PATH):
-        os.remove(PATH)
+    if os.path.exists(sigfile):
+        os.remove(sigfile)
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    server.bind(PATH)
+    server.bind(sigfile)
     running = True
     while running:
         server.listen(1)
@@ -50,16 +56,16 @@ def _server_thread(callback):
             else:
                 conn.send("-1")
             conn.close()
-    os.remove(PATH)
+    os.remove(sigfile)
 
 
 def is_server_running():
-    return os.path.exists(PATH)
+    return os.path.exists(get_signal_filename())
 
 
 def request_document(document):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.connect(PATH)
+    s.connect(get_signal_filename())
     obj = {"type": "open", "url": document}
 
     s.send(json.dumps(obj).encode("utf8"))
