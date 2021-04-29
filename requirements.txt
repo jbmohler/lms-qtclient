@@ -1,6 +1,7 @@
 requests
 fuzzyparsers
 xlsxwriter
+python-jose
 PySide6
 curtsies
 tzlocal

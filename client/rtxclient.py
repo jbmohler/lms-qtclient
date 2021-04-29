@@ -6,6 +6,7 @@ import uuid
 import datetime
 import socket
 import urllib.parse
+import jose.jwt
 import requests
 import tzlocal
 import rtlib
@@ -157,7 +158,8 @@ class RtxSession(requests.Session):
 
         # success
         self.rtx_sid = payload["session"]
-        self.headers["X-Yenot-SessionId"] = self.rtx_sid
+        self.access_token = payload["access_token"]
+        self.headers["Authorization"] = f"Bearer {self.access_token}"
         return self.rtx_sid
 
     def authenticate_pin2(self, pin2):
@@ -180,9 +182,10 @@ class RtxSession(requests.Session):
         payload = json.loads(r.text)
 
         self.rtx_username = payload["username"]
-        self.rtx_sid = payload["session"]
         self._capabilities = rtlib.ClientTable(*payload["capabilities"])
-        self.headers["X-Yenot-SessionId"] = self.rtx_sid
+        self.rtx_sid = payload["session"]
+        self.access_token = payload["access_token"]
+        self.headers["Authorization"] = f"Bearer {self.access_token}"
         return True
 
     def authenticate(self, username, password=None, device_token=None):
@@ -209,12 +212,19 @@ class RtxSession(requests.Session):
         payload = json.loads(r.text)
 
         # success
+        self._capabilities = rtlib.ClientTable(*payload["capabilities"])
         self.rtx_sid = payload["session"]
         self.rtx_userid = payload["userid"]
         self.rtx_username = payload["username"]
-        self._capabilities = rtlib.ClientTable(*payload["capabilities"])
-        self.headers["X-Yenot-SessionId"] = self.rtx_sid
+        self.access_token = payload["access_token"]
+        self.headers["Authorization"] = f"Bearer {self.access_token}"
         return True
+
+    def refresh_token(self):
+        claims = jose.jwt.get_unverified_claims(self.access_token)
+        if claims["exp"] <= time.time() - 3:
+            # this is with-in 3 seconds of expiration
+            read_yenotpass(self)
 
     def close(self):
         if self.rtx_sid != None:
@@ -349,6 +359,7 @@ class RtxClient:
         if "cancel_token" in kwargs:
             headers["X-Yenot-CancelToken"] = kwargs["cancel_token"]
             del kwargs["cancel_token"]
+        s.refresh_token()
         r = s.get(s.prefix(tail), params=kwargs, headers=headers, allow_redirects=True)
         # This is special rtx queued long job handling logic
         while r.status_code in [202, 303]:  # accepted, redirect
@@ -374,6 +385,7 @@ class RtxClient:
         else:
             data = None
         s = self.session
+        s.refresh_token()
         r = s.post(
             s.prefix(tail), params=kwargs, data=data, files=files, allow_redirects=True
         )
@@ -401,6 +413,7 @@ class RtxClient:
         else:
             data = None
         s = self.session
+        s.refresh_token()
         r = s.put(
             s.prefix(tail), params=kwargs, data=data, files=files, allow_redirects=True
         )
@@ -424,6 +437,7 @@ class RtxClient:
         else:
             files = None
         s = self.session
+        s.refresh_token()
         r = s.delete(s.prefix(tail), params=kwargs, files=files, allow_redirects=True)
         # This is special rtx queued long job handling logic
         while r.status_code in [202, 303]:  # accepted, redirect
