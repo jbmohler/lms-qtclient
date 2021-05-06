@@ -294,7 +294,30 @@ class BitEmailView(BasicBitView):
 
 
 class BitStreetView(BasicBitView):
-    pass
+    def prepare_form_body(self, sb):
+        sb = self.binder
+        sb.construct("name", "basic")
+        sb.construct("is_primary", "boolean", label="Primary")
+        sb.construct("address1", "basic")
+        sb.construct("address2", "basic")
+        sb.construct("city", "basic")
+        sb.construct("state", "basic")
+        sb.construct("zip", "basic")
+        sb.construct("country", "basic")
+        sb.construct("memo", "multiline")
+
+        form = QtWidgets.QFormLayout()
+        form.addRow("Name", sb.widgets["name"])
+        form.addRow(None, sb.widgets["is_primary"])
+        form.addRow("Address 1", sb.widgets["address1"])
+        form.addRow("Address 2", sb.widgets["address2"])
+        form.addRow("City", sb.widgets["city"])
+        form.addRow("State", sb.widgets["state"])
+        form.addRow("Zip", sb.widgets["zip"])
+        form.addRow("Country", sb.widgets["country"])
+        form.addRow("Memo", sb.widgets["memo"])
+
+        return form
 
 
 class EntityTaggerMixin:
