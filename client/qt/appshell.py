@@ -147,12 +147,20 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.action_exit_all.setShortcutContext(QtCore.Qt.ApplicationShortcut)
         self.action_exit_all.triggered.connect(self.close_all)
 
+        self.action_weblogin = QtGui.QAction("&Web Login", self)
+        self.action_weblogin.triggered.connect(
+            lambda: plugpoint.show_link_parented(
+                self, self.session.prefix("")
+            )
+        )
+
         self.action_exports = QtGui.QAction("View &Export Directory", self)
         self.action_exports.triggered.connect(lambda: self.exports_dir.show_browser())
 
         self.menu_file = menu.addMenu("&File")
         self.menu_file.addAction("&Reports").triggered.connect(self.show_reports)
         self.menu_file.addAction(self.action_exports)
+        self.menu_file.addAction(self.action_weblogin)
         self.menu_file.addSeparator()
         self.menu_file.addAction(self.action_exit)
         self.menu_file.addAction(self.action_exit_all)
@@ -173,10 +181,10 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.action_about = QtGui.QAction("&About", self)
         self.action_about.triggered.connect(lambda: about.about_box(self, "rtx shell"))
 
-        self.action_syshelp = QtGui.QAction("&Technical Manual", self)
+        self.action_syshelp = QtGui.QAction("&Source Code", self)
         self.action_syshelp.triggered.connect(
             lambda: plugpoint.show_link_parented(
-                self, self.session.prefix("docs/index.html")
+                self, self.session.prefix("lms/technical")
             )
         )
 
