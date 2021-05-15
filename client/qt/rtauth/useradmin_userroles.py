@@ -38,7 +38,7 @@ class UserIndexer(object):
         obj.set_by_useraid(self.user_aid, value)
 
 
-class UserRoleMapperLineTracker(valqt.SaveButtonDocumentTracker):
+class UserRoleMapperLineTracker(valqt.DocumentTracker):
     def set_dirty(self, row, attr):
         if not self.load_lockout:
             if not hasattr(self, "_mods"):
@@ -85,7 +85,8 @@ class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
         self.backgrounder = apputils.Backgrounder(self)
         self.ctxmenu = viewmenus.ContextMenu(self.grid, self)
 
-        self.tracker = UserRoleMapperLineTracker(self.btn_save, self.save_targets)
+        self.tracker = UserRoleMapperLineTracker(self, self.save_targets)
+        self.tracker.connect_button(self.btn_save)
         self.reset()
 
         self.geo = apputils.WindowGeometry(
@@ -93,7 +94,7 @@ class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
         )
 
     def reset(self):
-        if not self.tracker.save(asksave=True):
+        if not self.tracker.window_new_document(asksave=True):
             return
 
         self.model = None
@@ -138,6 +139,7 @@ class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
             with self.geo.grid_reset(self.grid):
                 self.grid.setModel(self.model)
                 self.model.set_rows(self.records.rows)
+            self.tracker.set_mayor_list([self.grid])
             self.tracker.reset_dirty()
 
             self.ctxmenu.update_model()
@@ -160,7 +162,7 @@ class UserRoleMapperTargetsByUser(QtWidgets.QMainWindow):
             raise
 
     def closeEvent(self, event):
-        if not self.tracker.save(asksave=True):
+        if not self.tracker.window_close(asksave=True):
             event.ignore()
             return
         winlist.unregister(self)

@@ -138,7 +138,8 @@ class TransactionEditor(qt.ObjectDialog):
         self.setWindowTitle(self.TITLE)
         self.setObjectName(self.ID)
 
-        self.tracker = qt.DocumentTracker()
+        # NOTE:  no save callback, this may be useless?
+        self.tracker = qt.DocumentTracker(self, None)
 
         self.layout = QtWidgets.QVBoxLayout(self)
 

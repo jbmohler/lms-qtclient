@@ -50,6 +50,21 @@ def highlight_errors(mayor, errors):
         mayor.model().update_invalid_fields([], errors)
 
 
+def containing_mayor(row, mayors):
+    for mayor in mayors:
+        import apputils.widgets as widgets
+
+        if isinstance(mayor, widgets.TableView):
+            if row in mayor.model()._main_rows:
+                return mayor
+        elif isinstance(mayor, bindings.Binder):
+            if mayor.bound == row:
+                return mayor
+        else:
+            raise NotImplementedError("unsupported type of mayor")
+    return None
+
+
 class ValidationSession:
     def __init__(self, frame):
         self.frame = frame
@@ -68,13 +83,18 @@ class ValidationSession:
         return len(self._errors)
 
     def errors(self):
-        for mayor, e in self._errors:
-            for e2 in e:
-                yield mayor, e2
+        for e in self._errors:
+            mayor = containing_mayor(e[0], self._mayors)
+            yield mayor, e
 
     def highlight_mayors(self):
-        for mayor, e in self._errors:
-            highlight_errors(mayor, e)
+        grouped = {id(m): (m, []) for m in self._mayors}
+        for e in self._errors:
+            mayor = containing_mayor(e[0], self._mayors)
+            grouped[id(mayor)][1].append(e)
+        for m, errors in grouped.items():
+            if len(errors[1]) > 0:
+                highlight_errors(*errors)
 
     def finalize(self):
         self.frame.finalize_session(self)
@@ -147,10 +167,19 @@ class ValidationFrame(QtWidgets.QFrame):
             raise SaveError("validation failed")
 
 
-class DocumentTracker:
-    def __init__(self):
+class DocumentTracker(QtCore.QObject):
+    dirty_change = QtCore.Signal(bool)  # is_dirty
+    post_save = QtCore.Signal(str)  # mode
+
+    def __init__(self, parent, save_callback):
+        super(DocumentTracker, self).__init__(parent)
+
+        self.widparent = parent
+        self.save_callback = save_callback
+
         self.dirty = False
         self._dirty_fields = set()
+        self.is_new_document = False
         self.load_lockout = False
         self._mayors = None
 
@@ -161,6 +190,16 @@ class DocumentTracker:
         self.load_lockout = False
         if reset:
             self.reset_dirty()
+
+    def connect_button(self, button):
+        button.clicked.connect(lambda: self.command_save(asksave=False))
+        self.dirty_change.connect(button.setEnabled)
+        button.setEnabled(self.dirty)
+
+    def connect_action(self, action):
+        action.triggered.connect(lambda: self.command_save(asksave=False))
+        self.dirty_change.connect(action.setEnabled)
+        action.setEnabled(self.dirty)
 
     def is_dirty(self):
         return self.dirty
@@ -178,83 +217,73 @@ class DocumentTracker:
     def reset_dirty(self):
         self.dirty = False
         self._dirty_fields = set()
+        self.dirty_change.emit(self.dirty)
 
     def set_dirty(self, row, attr):
         if not self.load_lockout:
             self.dirty = True
             self._dirty_fields.add((id(row), attr))
 
-    def ask_save(self, parent):
+            self.dirty_change.emit(self.dirty)
+
+    def ask_save(self):
         """
         Returns one of 'Yes', 'No', 'Cancel'
         """
         if not self.dirty:
             return "No"
         return apputils.message(
-            parent, "Do you want to save changes?", buttons=["Yes", "No", "Cancel"]
+            self.widparent,
+            "Do you want to save changes?",
+            buttons=["Yes", "No", "Cancel"],
         )
 
     def _commit_mayors(self):
         for mayor in self._mayors:
             commit_mayor(mayor)
 
-    def window_close(self, parent, callback, confirmed=False):
+    def _core_save(self, asksave):
         if self._mayors == None:
             return True
 
         self._commit_mayors()
-        if confirmed:
-            save = "Yes"
-        else:
-            save = self.ask_save(parent)
-        if save == "Yes":
-            try:
-                callback()
-            except SaveError:
-                return False
-            except:
-                utils.exception_message(parent, "Error Saving")
-                return False
-        if save == "Cancel":
-            return False
-
-        return True
-
-    # For the moment I do not know what would be different between a close
-    # event and a new/open-different document.  However it seems pleasant to be
-    # distinct.
-    window_new_document = window_close
-
-
-class SaveButtonDocumentTracker(DocumentTracker):
-    def __init__(self, button, save_callback):
-        super(SaveButtonDocumentTracker, self).__init__()
-        self.button = button
-        self.button.clicked.connect(lambda *args: self.save(asksave=False))
-        self.callback = save_callback
-
-    def set_dirty(self, row, attr):
-        super(SaveButtonDocumentTracker, self).set_dirty(row, attr)
-        self.button.setEnabled(self.dirty)
-
-    def reset_dirty(self):
-        super(SaveButtonDocumentTracker, self).reset_dirty()
-        self.button.setEnabled(self.dirty)
-
-    def save(self, asksave):
-        if self.is_dirty:
-            save = self.ask_save(self.button.window()) if asksave else "Yes"
-        else:
-            return True
+        save = self.ask_save() if asksave else ("Yes" if self.dirty else "No")
         reset = False
         if save == "Yes":
             try:
-                self.callback()
+                self.save_callback()
                 reset = True
+            except SaveError:
+                return False
             except:
+                utils.exception_message(
+                    self.widparent, "Error Saving", logged="unknown"
+                )
                 return False
         if save == "Cancel":
             return False
         if reset:
             self.reset_dirty()
+
         return True
+
+    def window_close(self, asksave=True):
+        result = self._core_save(asksave=asksave)
+        if result:
+            self.post_save.emit("window_close")
+        return result
+
+    def window_new_document(self, asksave=True):
+        result = self._core_save(asksave=asksave)
+        if result:
+            self.post_save.emit("window_close")
+        return result
+
+    def command_save(self, asksave=False, enforce_persist_new=False):
+        if self.is_new_document and enforce_persist_new:
+            self.set_dirty(None, "__new__")
+
+        result = self._core_save(asksave)
+        if result:
+            self.post_save.emit("command_save")
+        return result

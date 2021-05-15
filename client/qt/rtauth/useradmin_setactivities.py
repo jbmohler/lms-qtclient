@@ -30,14 +30,15 @@ class ActivitiesEditing:
     def from_unregistered(kls, row):
         self = kls()
         self.id = uuid.uuid1().hex
-        self.act_name = row.act_name
         self.description = (
             row.description
             if row.description not in ["", None]
             else attr_2_label(row.act_name)
         )
-        self.url = row.url
         self.save = row.act_name not in ["", None]
+        for attr in kls.__slots__:
+            if attr not in ["description", "id", "save"]:
+                setattr(self, attr, getattr(row, attr))
         return self
 
 
@@ -71,21 +72,24 @@ class ManageActivities(QtWidgets.QMainWindow):
         self.client = session.std_client()
         self.backgrounder = apputils.Backgrounder(self)
         self.ctxmenu = viewmenus.ContextMenu(self.grid, self)
-        self.tracker = valqt.SaveButtonDocumentTracker(
-            self.btn_save, self.save_activities
-        )
+        self.tracker = valqt.DocumentTracker(self, self.save_activities)
+        self.tracker.connect_button(self.btn_save)
+        self.tracker.post_save.connect(self.refresh)
 
         self.geo = apputils.WindowGeometry(
             self, size=True, position=False, grids=[self.grid]
         )
 
         if unregistered:
-            self.backgrounder(
-                self.load_unregistered,
-                self.client.get,
-                "api/endpoints",
-                unregistered=True,
-            )
+            self.refresh()
+
+    def refresh(self):
+        self.backgrounder(
+            self.load_unregistered,
+            self.client.get,
+            "api/endpoints",
+            unregistered=True,
+        )
 
     def load_unregistered(self):
         self.center.setEnabled(False)
@@ -94,11 +98,18 @@ class ManageActivities(QtWidgets.QMainWindow):
             loaded = content.main_table()
 
             columns = [
-                ("id", {"type": "x_data"}),
-                ("description", {"check_attr": "save", "editable": True}),
-                ("act_name", None),
-                ("url", None),
+                ("id", {"type": "yenot_activity.surrogate"}),
             ]
+
+            # create editable row from unregistered row
+            for attr, meta in content.main_columns():
+                if attr == "description":
+                    meta = meta.copy()
+                    meta["check_attr"] = "save"
+                    meta["editable"] = True
+                    columns.insert(1, (attr, meta))
+                else:
+                    columns.append((attr, meta))
 
             self.records = rtlib.ClientTable(columns, [], mixin=ActivitiesEditing)
 
@@ -107,6 +118,9 @@ class ManageActivities(QtWidgets.QMainWindow):
 
             with self.geo.grid_reset(self.grid):
                 self.gridmgr.set_client_table(self.records)
+
+            self.tracker.set_mayor_list([self.grid])
+            self.tracker.set_dirty(None, "__new__")
 
             self.center.setEnabled(True)
         except:
@@ -119,7 +133,7 @@ class ManageActivities(QtWidgets.QMainWindow):
             tosend = self.records.duplicate(
                 rows=[r for r in self.records.rows if r.save]
             )
-            files = {"activities": tosend.as_http_post_file()}
+            files = {"activities": tosend.as_http_post_file(exclusions=["method"])}
 
             self.client.post(self.SRC_URL, files=files)
         except Exception:
@@ -127,7 +141,7 @@ class ManageActivities(QtWidgets.QMainWindow):
             raise
 
     def closeEvent(self, event):
-        if not self.tracker.save(asksave=True):
+        if not self.tracker.window_close(asksave=True):
             event.ignore()
             return
         winlist.unregister(self)

@@ -75,7 +75,7 @@ class RoleIndexerPermitted(object):
         obj.set_by_roleaid_permitted(self.role_aid, value)
 
 
-class RoleActivityMapperLineTracker(valqt.SaveButtonDocumentTracker):
+class RoleActivityMapperLineTracker(valqt.DocumentTracker):
     def set_dirty(self, row, attr):
         if not self.load_lockout:
             if not hasattr(self, "_mods"):
@@ -124,7 +124,8 @@ class RoleActivityMapperTargets(QtWidgets.QMainWindow):
 
         self.grid.doubleClicked.connect(self.edit_perm_meta)
 
-        self.tracker = RoleActivityMapperLineTracker(self.btn_save, self.save_targets)
+        self.tracker = RoleActivityMapperLineTracker(self, self.save_targets)
+        self.tracker.connect_button(self.btn_save)
         self.reset()
 
         self.geo = apputils.WindowGeometry(
@@ -132,7 +133,7 @@ class RoleActivityMapperTargets(QtWidgets.QMainWindow):
         )
 
     def reset(self):
-        if not self.tracker.save(asksave=True):
+        if not self.tracker.window_new_document(asksave=True):
             return
 
         self.model = None
@@ -183,6 +184,7 @@ class RoleActivityMapperTargets(QtWidgets.QMainWindow):
             with self.geo.grid_reset(self.grid):
                 self.grid.setModel(self.model)
                 self.model.set_rows(self.records.rows)
+            self.tracker.set_mayor_list([self.grid])
             self.tracker.reset_dirty()
 
             self.ctxmenu.update_model()
@@ -220,7 +222,7 @@ class RoleActivityMapperTargets(QtWidgets.QMainWindow):
             setattr(row, c.attr, value)
 
     def closeEvent(self, event):
-        if not self.tracker.save(asksave=True):
+        if not self.tracker.window_new_document(asksave=True):
             event.ignore()
             return
         winlist.unregister(self)

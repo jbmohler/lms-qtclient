@@ -74,7 +74,7 @@ class ReconciliationWindow(QtWidgets.QDialog):
 
         self.account = kwargs.get("account")
 
-        self.tracker = qt.DocumentTracker()
+        self.tracker = qt.DocumentTracker(self, self.save)
 
         self.binder = qt.Binder(self)
         self.account_edit = apputils.construct("basic")
@@ -133,17 +133,17 @@ class ReconciliationWindow(QtWidgets.QDialog):
         self.geo = apputils.WindowGeometry(self, grids=[self.trans_grid])
 
     def cmd_save(self):
-        if self.tracker.window_new_document(self, self.save):
+        if self.tracker.window_new_document():
             self.refresh()
 
     def cmd_reconcile(self):
         self.data.flip_reconciles()
 
-        if self.tracker.window_new_document(self, self.save):
+        if self.tracker.window_new_document():
             self.refresh()
 
     def reject(self):
-        if self.tracker.window_close(self, self.save):
+        if self.tracker.window_close():
             super(ReconciliationWindow, self).reject()
 
     def save(self):
