@@ -823,10 +823,10 @@ class ContactsList(QtWidgets.QWidget):
         self.setObjectName(self.ID)
         self.backgrounder = apputils.Backgrounder(self)
 
-        self.layout = QtWidgets.QVBoxLayout(self)
+        self.mainlayout = QtWidgets.QVBoxLayout(self)
 
         self.search_edit = apputils.construct("search")
-        self.layout.addWidget(self.search_edit)
+        self.mainlayout.addWidget(self.search_edit)
         self.setFocusProxy(self.search_edit)
 
         self.sublay = qt.RevealedSplitter(QtCore.Qt.Horizontal)
@@ -844,7 +844,7 @@ class ContactsList(QtWidgets.QWidget):
         self.sidebar = ContactView(self, state)
         self.sidebar.update_ambient.connect(self.reload_from_persona)
         self.sublay.addWidget(self.sidebar)
-        self.layout.addWidget(self.sublay)
+        self.mainlayout.addWidget(self.sublay)
 
         self.client = state.session.std_client()
 

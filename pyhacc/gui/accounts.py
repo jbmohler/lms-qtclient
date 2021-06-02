@@ -1,5 +1,5 @@
 import datetime
-from PySide6 import QtWidgets
+from PySide6 import QtCore, QtWidgets
 import client.qt as qt
 import apputils
 import apputils.widgets
@@ -57,6 +57,9 @@ class AccountSidebar(QtWidgets.QWidget):
         )
 
     def highlight(self, row):
+        if row == None:
+            return
+
         self.contacts_table = None
 
         self.refresh_account(row.id)
@@ -167,13 +170,14 @@ class AccountSidebar(QtWidgets.QWidget):
             self.gridmgr.set_client_table(self.transaction_table)
 
 
-def edit_account(session, acntid="new"):
-    dlg = qt.FormEntryDialog("PyHacc Account")
+def edit_account(session, acntid="new", parent=None):
+    dlg = qt.FormEntryDialog("PyHacc Account", parent=parent)
 
     dlg.add_form_row("acc_name", "Account", "basic")
     dlg.add_form_row("description", "Description", "basic")
-    dlg.add_form_row("type_id", "Type", "pyhacc_accounttype.id")
     dlg.add_form_row("journal_id", "Journal", "pyhacc_journal.id")
+    dlg.add_form_row("type_id", "Type", "pyhacc_accounttype.id")
+    dlg.add_form_row("retearn_id", "Retained Earnings", "pyhacc_account.id")
     dlg.add_form_row("acc_note", "Account Note", "multiline")
     dlg.add_form_row("rec_note", "Reconciliation Note", "multiline")
     dlg.add_form_row("contact_keywords", "Contact Keywords", "basic")
@@ -203,4 +207,126 @@ def edit_account(session, acntid="new"):
     dlg.exec_()
 
 
-__all__ = ["edit_account"]
+class AccountCommandSidebar(QtCore.QObject):
+    SRC_INSTANCE_URL = "api/account/{}"
+    refresh = QtCore.Signal()
+
+    def __init__(self, parent, state):
+        super(AccountCommandSidebar, self).__init__(parent)
+        self.client = state.session.std_client()
+        self.added = False
+
+    def init_grid_menu(self, gridmgr):
+        self.gridmgr = gridmgr
+
+        if not self.added:
+            self.added = True
+            self.gridmgr.add_action("&Add Account", triggered=self.cmd_add_account)
+            self.gridmgr.add_action("&Edit Account", triggered=self.cmd_edit_account)
+            self.gridmgr.add_action(
+                "&Delete Account", triggered=self.cmd_delete_account
+            )
+
+    def window(self):
+        return self.gridmgr.grid.window()
+
+    def cmd_add_account(self):
+        if edit_account(self.client.session, parent=self.window()):
+            self.refresh.emit()
+
+    def cmd_edit_account(self, row):
+        if edit_account(self.client.session, acntid=row.id, parent=self.window()):
+            self.refresh.emit()
+
+    def cmd_delete_account(self, row):
+        if "Yes" == apputils.message(
+            self.window(),
+            f"Are you sure that you wish to delete the account {row.account} ({row.description})?",
+            buttons=["Yes", "No"],
+        ):
+            try:
+                self.client.delete(self.SRC_INSTANCE_URL, row.id)
+                self.refresh.emit()
+            except:
+                qt.exception_message(
+                    self.window(), "The transaction could not be deleted."
+                )
+
+
+class AccountsList(QtWidgets.QWidget):
+    ID = "accounts-list"
+    TITLE = "Accounts List"
+    URL = "api/accounts/list"
+
+    def __init__(self, parent, state):
+        super(AccountsList, self).__init__(parent)
+
+        self.setWindowTitle(self.TITLE)
+        self.setObjectName(self.ID)
+        self.backgrounder = apputils.Backgrounder(self)
+        self.client = state.session.std_client()
+
+        self.mainlayout = QtWidgets.QVBoxLayout(self)
+
+        self.journal_edit = apputils.construct("pyhacc_journal.id", all_option=True)
+        self.atype_edit = apputils.construct("pyhacc_accounttype.id", all_option=True)
+
+        self.prompts = QtWidgets.QFormLayout()
+        self.prompts.addRow("Journal", self.journal_edit)
+        self.prompts.addRow("Account Type", self.atype_edit)
+
+        self.sublay = qt.RevealedSplitter(QtCore.Qt.Horizontal)
+
+        self.grid = apputils.widgets.TableView()
+        self.grid.setSortingEnabled(True)
+        self.grid.verticalHeader().hide()
+        self.gridmgr = qt.GridManager(self.grid, self)
+        self.sublay.addWidget(self.grid)
+
+        self.sidebar2 = AccountCommandSidebar(self, state)
+        if self.sidebar2 != None and hasattr(self.sidebar2, "init_grid_menu"):
+            self.sidebar2.init_grid_menu(self.gridmgr)
+
+        self.sidebar = AccountSidebar(self, state)
+        self.sublay.addWidget(self.sidebar)
+
+        self.mainlayout.addLayout(self.prompts)
+        self.mainlayout.addWidget(self.sublay, stretch=4)
+
+        self.preview_timer = qt.StdActionPause()
+        self.preview_timer.timeout.connect(
+            lambda: self.sidebar.highlight(self.gridmgr.selected_row())
+        )
+        self.gridmgr.current_row_update.connect(self.preview_timer.ui_start)
+
+        self.load_timer = qt.StdActionPause()
+        self.load_timer.timeout.connect(self.initial_load)
+        self.journal_edit.applyValue.connect(self.load_timer.ui_start)
+        self.atype_edit.applyValue.connect(self.load_timer.ui_start)
+
+        self.geo = apputils.WindowGeometry(
+            self, position=False, size=False, grids=[self.grid]
+        )
+
+        widgets.verify_settings_load(
+            self, self.client, [self.journal_edit, self.atype_edit]
+        )
+
+        self.initial_load()
+
+    def load_mainlist(self):
+        content = yield apputils.AnimateWait(self)
+        self.table = content.main_table()
+
+        with self.geo.grid_reset(self.grid):
+            self.gridmgr.set_client_table(self.table)
+
+    def initial_load(self):
+        kwargs = {}
+        kwargs["acctype"] = self.atype_edit.value()
+        kwargs["journal"] = self.journal_edit.value()
+
+        self.backgrounder(self.load_mainlist, self.client.get, self.URL, **kwargs)
+
+
+__all__ = ["edit_account", "AccountsList"]

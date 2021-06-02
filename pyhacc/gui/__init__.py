@@ -21,6 +21,9 @@ class AccountingExtensions:
             accounts.edit_account(state.session, "new")
         elif url.path() == "accounts":
             accounts.edit_account(state.session, url.parameters()["key"])
+        elif url.path() == "accounts/list":
+            view = accounts.AccountsList(parent, state)
+            parent.adopt_tab(view, view.ID, view.TITLE)
         elif url.path() == "journals/new":
             journals.edit_journal(state.session, "new")
         elif url.path() == "journals":
@@ -60,7 +63,7 @@ class AccountingExtensions:
         account_menu_schematic = [
             (
                 "ClientURLMenuItem",
-                ("New &Account", "pyhacc:accounts/new", "get_api_account_new"),
+                ("&Account List", "pyhacc:accounts/list", "get_api_accounts_list"),
             ),
             (
                 "ClientURLMenuItem",
