@@ -7,15 +7,9 @@ def module_ver(name):
     try:
         if name == "Python":
             v = sys.version.split(" ")[0]
-        elif name == "PyQt4":
-            x = importlib.import_module("PyQt4.QtCore")
-            v = x.PYQT_VERSION_STR
         elif name == "PyQt5":
             x = importlib.import_module("PyQt5.QtCore")
             v = x.PYQT_VERSION_STR
-        elif name == "pyserial":
-            x = importlib.import_module("serial")
-            v = x.VERSION
         else:
             x = importlib.import_module(name)
             v = x.__version__
@@ -25,7 +19,13 @@ def module_ver(name):
 
 
 def about_box(parent, header):
-    modules = ["Python", QtCore.__name__.split(".")[0], "requests", "xlsxwriter"]
+    modules = [
+        "Python",
+        QtCore.__name__.split(".")[0],
+        "jose",
+        "requests",
+        "xlsxwriter",
+    ]
     vers = "<br />".join([module_ver(m) for m in modules])
     name = QtWidgets.QApplication.instance().applicationName()
     QtWidgets.QMessageBox.about(
