@@ -102,7 +102,7 @@ def QLineEdit_setText_fromDouble(self, value, decimals):
     if value == None:
         s = ""
     else:
-        s = f"{{:.{decimals}f}}".format(value)
+        s = f"{{:,.{decimals}f}}".format(value)
     self.setText(s)
 
 

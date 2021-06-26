@@ -149,9 +149,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
 
         self.action_weblogin = QtGui.QAction("&Web Login", self)
         self.action_weblogin.triggered.connect(
-            lambda: plugpoint.show_link_parented(
-                self, self.session.prefix("")
-            )
+            lambda: plugpoint.show_link_parented(self, self.session.prefix(""))
         )
 
         self.action_exports = QtGui.QAction("View &Export Directory", self)
