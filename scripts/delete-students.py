@@ -1,5 +1,6 @@
 import rtxsite
 import client
+import localconfig
 
 
 def delete_personas_by_tag(session, tagname):
@@ -17,6 +18,7 @@ def delete_personas_by_tag(session, tagname):
 
 
 if __name__ == "__main__":
+    localconfig.set_identity()
     session = client.auto_session()
 
     try:
