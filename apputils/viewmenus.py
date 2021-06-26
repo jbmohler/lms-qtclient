@@ -582,7 +582,7 @@ class ContextMenu(QtCore.QObject):
     def update_active_index(self, active):
         self.active_index = active
         for act in self.actions:
-            if act._oncurrent:
+            if act != "--" and act._oncurrent:
                 act.setEnabled(self.active_index != None)
         self.current_row_update.emit()
 
@@ -634,8 +634,12 @@ class ContextMenu(QtCore.QObject):
         if thisact != None:
             thisact.trigger()
 
-    def add_action(self, act, default=False, oncurrent=False):
-        act._oncurrent = oncurrent
+    def add_action(self, act, default=False, oncurrent=False, role_group=None):
+        assert role_group in (None, "add_remove", "doc_actions", "lookup")
+
+        if act != "--":
+            act._oncurrent = oncurrent
+            act._role_group = role_group
         self.actions.append(act)
         if default:
             self._default_action = act
@@ -716,14 +720,25 @@ class ContextMenu(QtCore.QObject):
 
         self.active_index = index
 
+        action_list = [(getattr(a, "_role_group", None), a) for a in self.actions]
+
+        sortmap = {"add_remove": 1, "doc_actions": 2, "lookup": 3}
+        sortthem = lambda x: sortmap.get(x[0], 2)
+        action_list.sort(key=sortthem)
+
         menu = QtWidgets.QMenu()
-        for a in self.actions:
+        current_role_group = None
+        for role_group, a in action_list:
             f_appear = getattr(a, "should_appear", None)
             if f_appear != None and not f_appear(index):
                 continue
             f_enabled = getattr(a, "is_enabled", None)
             if f_enabled != None:
                 a.setEnabled(f_enabled(index))
+            if current_role_group != None and role_group != current_role_group:
+                menu.addSeparator()
+            if role_group != current_role_group:
+                current_role_group = role_group
             menu.addAction(a)
         self.contextActionsUpdate.emit(index, menu)
         gridacts = []

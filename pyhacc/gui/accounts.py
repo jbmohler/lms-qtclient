@@ -221,10 +221,20 @@ class AccountCommandSidebar(QtCore.QObject):
 
         if not self.added:
             self.added = True
-            self.gridmgr.add_action("&Add Account", triggered=self.cmd_add_account)
-            self.gridmgr.add_action("&Edit Account", triggered=self.cmd_edit_account)
             self.gridmgr.add_action(
-                "&Delete Account", triggered=self.cmd_delete_account
+                "&Edit Account",
+                triggered=self.cmd_edit_account,
+                role_group="add_remove",
+            )
+            self.gridmgr.add_action(
+                "&New Account",
+                triggered=self.cmd_add_account,
+                role_group="add_remove",
+            )
+            self.gridmgr.add_action(
+                "&Delete Account",
+                triggered=self.cmd_delete_account,
+                role_group="add_remove",
             )
 
     def window(self):

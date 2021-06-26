@@ -57,10 +57,14 @@ def callable_is_enabled(index, column):
     return getattr(row, checkattr, None) != None
 
 
-def apply_column_url_views(ctxmenu, model, no_default=False):
+def apply_column_url_views(ctxmenu, model, no_default=False, skip_repr=False):
     collist = model.columns_full if hasattr(model, "columns_full") else model.columns
     for col in collist:
         for action_defn in col.actions:
+            # this allows a sidebar to specialize the representing commands
+            if skip_repr and col.represents:
+                continue
+
             if action_defn.matches_scope(col):
                 action = None
                 if action_defn.callback == "__url__":
@@ -89,7 +93,7 @@ def apply_column_url_views(ctxmenu, model, no_default=False):
                     isdefault = (
                         col.represents and action_defn.defaulted and not no_default
                     )
-                    ctxmenu.add_action(action, default=isdefault)
+                    ctxmenu.add_action(action, default=isdefault, role_group="lookup")
 
 
 class ReportClientRowRelateds:
@@ -173,10 +177,15 @@ class GridManager(QtCore.QObject):
         self.ctxmenu.current_row_update.connect(self.context_actions_update)
         self.ctxmenu.current_row_update.connect(self.current_row_update.emit)
 
-    def add_action(self, act, is_active=None, triggered=None):
+    def add_action(self, act, is_active=None, triggered=None, role_group=None):
+        assert role_group in (None, "add_remove", "doc_actions", "lookup")
+        if role_group == None:
+            role_group = "doc_actions"
+
         if isinstance(act, str):
             act = QtGui.QAction(act, self.grid)
         act.is_active = is_active
+        act._role_group = role_group
         self._core_actions.append(act)
 
         act.triggered.connect(lambda: self.call_core_func(triggered))
@@ -216,8 +225,11 @@ class GridManager(QtCore.QObject):
     def _post_model_action(self):
         self.ctxmenu.update_model()
         self.ctxmenu.reset_action_list()
+
         # add column dynamic items
-        apply_column_url_views(self.ctxmenu, self.grid.model())
+        addrem_acts = [a for a in self._core_actions if a._role_group == "add_remove"]
+        seems_repr_ed = len(addrem_acts) > 0
+        apply_column_url_views(self.ctxmenu, self.grid.model(), skip_repr=seems_repr_ed)
         # add client-row-relateds
         # TODO: support this
         # apply_client_row_relateds(self.ctxmenu, self.run.content)
@@ -225,7 +237,7 @@ class GridManager(QtCore.QObject):
         if not self.fixed_rowset:
             self.ctxmenu.add_action(self.delete_action)
         for act in self._core_actions:
-            self.ctxmenu.add_action(act)
+            self.ctxmenu.add_action(act, role_group=act._role_group)
 
     def set_client_table(self, table):
         m = client_table_as_model(table, self.parent(), include_data=False)

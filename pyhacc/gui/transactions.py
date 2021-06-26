@@ -310,11 +310,25 @@ class TransactionCommandSidebar(QtCore.QObject):
 
         if not self.added:
             self.added = True
-            self.gridmgr.add_action("&Add Transaction", triggered=self.cmd_add_trans)
-            self.gridmgr.add_action("&Copy Transaction", triggered=self.cmd_copy_trans)
-            self.gridmgr.add_action("&Edit Transaction", triggered=self.cmd_edit_trans)
             self.gridmgr.add_action(
-                "&Delete Transaction", triggered=self.cmd_delete_trans
+                "&Edit Transaction",
+                triggered=self.cmd_edit_trans,
+                role_group="add_remove",
+            )
+            self.gridmgr.add_action(
+                "&Copy Transaction",
+                triggered=self.cmd_copy_trans,
+                role_group="add_remove",
+            )
+            self.gridmgr.add_action(
+                "&New Transaction",
+                triggered=self.cmd_add_trans,
+                role_group="add_remove",
+            )
+            self.gridmgr.add_action(
+                "&Delete Transaction",
+                triggered=self.cmd_delete_trans,
+                role_group="add_remove",
             )
 
     def window(self):

@@ -777,9 +777,21 @@ class PersonaCommandSidebar(QtCore.QObject):
 
         if not self.added:
             self.added = True
-            self.gridmgr.add_action("&Add Entity", triggered=self.cmd_add_persona)
-            self.gridmgr.add_action("&Edit Entity", triggered=self.cmd_edit_persona)
-            self.gridmgr.add_action("&Delete Entity", triggered=self.cmd_delete_persona)
+            self.gridmgr.add_action(
+                "&Edit Entity",
+                triggered=self.cmd_edit_persona,
+                role_group="add_remove",
+            )
+            self.gridmgr.add_action(
+                "&New Entity",
+                triggered=self.cmd_add_persona,
+                role_group="add_remove",
+            )
+            self.gridmgr.add_action(
+                "&Delete Entity",
+                triggered=self.cmd_delete_persona,
+                role_group="add_remove",
+            )
 
     def window(self):
         return self.gridmgr.grid.window()
