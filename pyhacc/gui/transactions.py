@@ -314,6 +314,7 @@ class TransactionCommandSidebar(QtCore.QObject):
                 "&Edit Transaction",
                 triggered=self.cmd_edit_trans,
                 role_group="add_remove",
+                default=True,
             )
             self.gridmgr.add_action(
                 "&Copy Transaction",

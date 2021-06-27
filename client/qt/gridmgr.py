@@ -130,7 +130,9 @@ def apply_client_row_relateds(ctxmenu, content):
     rel = content.keys.get("client-row-relateds", [])
     ctxmenu.rcrr = [ReportClientRowRelateds(*x) for x in rel]
     for rc in ctxmenu.rcrr:
-        ctxmenu.add_action(rc.action(ctxmenu.parent(), ctxmenu))
+        ctxmenu.add_action(
+            rc.action(ctxmenu.parent(), ctxmenu), role_group="doc_actions"
+        )
 
 
 def apply_client_relateds(ctxmenu, content):
@@ -177,7 +179,9 @@ class GridManager(QtCore.QObject):
         self.ctxmenu.current_row_update.connect(self.context_actions_update)
         self.ctxmenu.current_row_update.connect(self.current_row_update.emit)
 
-    def add_action(self, act, is_active=None, triggered=None, role_group=None):
+    def add_action(
+        self, act, is_active=None, triggered=None, default=False, role_group=None
+    ):
         assert role_group in (None, "add_remove", "doc_actions", "lookup")
         if role_group == None:
             role_group = "doc_actions"
@@ -186,6 +190,7 @@ class GridManager(QtCore.QObject):
             act = QtGui.QAction(act, self.grid)
         act.is_active = is_active
         act._role_group = role_group
+        act._default = default
         self._core_actions.append(act)
 
         act.triggered.connect(lambda: self.call_core_func(triggered))
@@ -237,7 +242,9 @@ class GridManager(QtCore.QObject):
         if not self.fixed_rowset:
             self.ctxmenu.add_action(self.delete_action)
         for act in self._core_actions:
-            self.ctxmenu.add_action(act, role_group=act._role_group)
+            self.ctxmenu.add_action(
+                act, role_group=act._role_group, default=act._default
+            )
 
     def set_client_table(self, table):
         m = client_table_as_model(table, self.parent(), include_data=False)
