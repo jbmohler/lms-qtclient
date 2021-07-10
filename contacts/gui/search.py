@@ -1,5 +1,7 @@
+import datetime
 import functools
 import urllib.parse
+import fuzzyparsers
 from PySide6 import QtCore, QtWidgets
 import client.qt as qt
 import cliutils
@@ -109,13 +111,13 @@ class BitMixin:
                 if bd["url"] not in ["", None]
                 else " -- "
             )
-            lines.append(("URL", xurl))
+            lines.append(("URL:", xurl))
             if bd["username"] not in ["", None] or bd["password"] not in ["", None]:
                 if ns(bd["username"]) is None:
                     un = "(empty)"
                 else:
                     un = bd["username"]
-                lines.append(("Username", un))
+                lines.append(("Username:", un))
                 if ns(bd["password"]) is None:
                     hlink = "(empty)"
                 elif printable:
@@ -124,8 +126,13 @@ class BitMixin:
                     qpass = urllib.parse.quote(bd["password"])
                     localurl = f"local:bit/copy-password?password={qpass}"
                     hlink = f'<a href="{localurl}">Copy Password</a>'
-                lines.append(("Password", hlink))
-            x = "<br />".join(["{}: {}".format(*x) for x in lines])
+                lines.append(("Password:", hlink))
+                pwnext = bd["pw_next_reset_dt"]
+                if pwnext and fuzzyparsers.parse_date(pwnext) < datetime.date.today():
+                    lines.append(
+                        ("", "<span style='color: #CD5C5C'>Change Password</span>")
+                    )
+            x = "<br />".join(["{} {}".format(*x) for x in lines])
         elif self.bit_type == "phone_numbers":
             x = bd["number"]
         elif self.bit_type == "email_addresses":
@@ -228,6 +235,8 @@ class BitUrlView(BasicBitView):
         sb.construct("url", "basic")
         sb.construct("username", "basic")
         sb.construct("password", "basic")
+        sb.construct("pw_reset_dt", "date")
+        sb.construct("pw_next_reset_dt", "date")
         sb.construct("memo", "multiline")
 
         form = QtWidgets.QFormLayout()
@@ -236,9 +245,26 @@ class BitUrlView(BasicBitView):
         form.addRow("URL", sb.widgets["url"])
         form.addRow("Username", sb.widgets["username"])
         form.addRow("Password", sb.widgets["password"])
+        form.addRow(
+            "Password Reset",
+            qt.horizontal(
+                sb.widgets["pw_reset_dt"],
+                qt.buddied("Expires", sb.widgets["pw_next_reset_dt"]),
+                sb.widgets["pw_next_reset_dt"],
+            ),
+        )
         form.addRow("Memo", sb.widgets["memo"])
 
         return form
+
+    def _load(self):
+        yield from super(BitUrlView, self)._load()
+
+        if self.editrow.pw_next_reset_dt:
+            expired = self.editrow.pw_next_reset_dt < datetime.date.today()
+            if expired:
+                edit = self.binder.widgets["pw_next_reset_dt"]
+                edit.setStyleSheet("QLineEdit { background: #CD5C5C }")
 
     def add_buttons(self):
         self.buttons.addButton("Generate", self.buttons.ActionRole).clicked.connect(
