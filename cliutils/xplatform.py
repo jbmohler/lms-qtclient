@@ -25,25 +25,31 @@ def is_windows():
     return sys.platform in ("win32", "cygwin")
 
 
+def is_mac():
+    """
+    returns True if running on Mac
+    """
+    return platform.system() == "Darwin"
+
+
 def xdg_open(viewfile):
     """
     Be a platform smart incarnation of xdg-open and open files in the correct
     application.
     """
+
+    escaped = viewfile.replace(";", r"\;").replace("&", r"\&")
+
     if is_windows():
         from ctypes import windll
 
         windll.shell32.ShellExecuteW(0, "open", viewfile, None, None, 1)
     elif is_wsl():
-        os.system(
-            'powershell.exe /c start "{0}"'.format(
-                viewfile.replace(";", r"\;").replace("&", r"\&")
-            )
-        )
+        os.system(f'powershell.exe /c start "{escaped}"')
+    elif is_mac():
+        os.system(f'open "{escaped}"')
     else:
-        os.system(
-            'xdg-open "{0}"'.format(viewfile.replace(";", r"\;").replace("&", r"\&"))
-        )
+        os.system(f'xdg-open "{escaped}"')
 
 
 def local_appdata_path_win32():
