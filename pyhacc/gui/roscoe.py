@@ -1,4 +1,5 @@
 import xml.dom.minidom as xml
+from PySide6 import QtWidgets
 import client.qt as qt
 import apputils
 
@@ -41,7 +42,7 @@ class TwilioParams:
 
 
 def test_roscoe(session):
-    dlg = qt.FormEntryDialog("PyHacc Journal")
+    dlg = qt.FormEntryDialog("PyHacc Roscoe Test")
 
     dlg.add_form_row("Body", "Message", "basic")
     dlg.add_form_row(
@@ -64,3 +65,44 @@ def test_roscoe(session):
     dlg.applychanges = apply
 
     dlg.exec_()
+
+
+class PendingRoscoe(QtWidgets.QWidget):
+    TITLE = "Pending Roscoe"
+    ID = "roscoe-pending"
+    URL = "api/roscoe/unprocessed"
+
+    def __init__(self, parent, state):
+        super(PendingRoscoe, self).__init__(parent)
+
+        self.setWindowTitle(self.TITLE)
+        self.setObjectName(self.ID)
+        self.backgrounder = apputils.Backgrounder(self)
+        self.client = state.session.std_client()
+
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+
+        self.grid = apputils.widgets.TableView()
+        self.grid.setSortingEnabled(True)
+        self.grid.verticalHeader().hide()
+        self.gridmgr = qt.GridManager(self.grid, self)
+        self.layout.addWidget(self.grid)
+
+        self.geo = apputils.WindowGeometry(
+            self, position=False, size=False, grids=[self.grid]
+        )
+
+        self.initial_load()
+
+    def load_mainlist(self):
+        content = yield apputils.AnimateWait(self)
+        self.table = content.main_table()
+
+        with self.geo.grid_reset(self.grid):
+            self.gridmgr.set_client_table(self.table)
+
+    def initial_load(self):
+        kwargs = {}
+
+        self.backgrounder(self.load_mainlist, self.client.get, self.URL, **kwargs)

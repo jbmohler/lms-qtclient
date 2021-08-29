@@ -1,13 +1,13 @@
 from .widgets import *
 
-from .roscoe import *
 
 from . import accounts
-from . import journals
 from . import accounttypes
-from . import transactions
-from . import monthly
+from . import journals
 from . import tranreports
+from . import roscoe
+from . import monthly
+from . import transactions
 from . import calendar
 from . import reconcile
 
@@ -55,6 +55,15 @@ class AccountingExtensions:
         elif url.path() == "reporting/monthly-status":
             win = monthly.Exporter(state)
             win.show()
+        elif url.path() == "roscoe/client-test":
+            roscoe.test_roscoe(state.session)
+        elif url.path() == "roscoe/dock":
+            existing = parent.foreground_tab(roscoe.PendingRoscoe.ID)
+            if existing:
+                # existing.focus_search()
+                return True
+            view = roscoe.PendingRoscoe(parent, state)
+            parent.adopt_tab(view, view.ID, view.TITLE, addto="dock")
         else:
             return False
         return True
@@ -78,6 +87,14 @@ class AccountingExtensions:
                 ),
             ),
             ("SeparatorMenuItem", ()),
+            (
+                "ClientURLMenuItem",
+                (
+                    "Roscoe &Pending Dock",
+                    "pyhacc:roscoe/dock",
+                    "get_api_roscoe_unprocessed",
+                ),
+            ),
             (
                 "ClientURLMenuItem",
                 ("Test &Roscoe", "pyhacc:roscoe/client-test", "post_api_roscoe"),

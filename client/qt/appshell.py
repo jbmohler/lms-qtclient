@@ -302,8 +302,10 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
                 return None, widget
         return None, None
 
-    def adopt_tab(self, widget, shell_id, tab_title, static=False):
-        self.addWorkspaceWindow(widget, title=tab_title, settingsKey=shell_id)
+    def adopt_tab(self, widget, shell_id, tab_title, static=False, addto=None):
+        self.addWorkspaceWindow(
+            widget, title=tab_title, settingsKey=shell_id, addto=addto
+        )
         return
 
         # TODO need a static?
