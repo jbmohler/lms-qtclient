@@ -211,8 +211,16 @@ class TabbedWorkspaceMixin(object):
         if settingsKey is None and hasattr(widget, "settingsKey"):
             settingsKey = widget.settingsKey
         widget._docker_meta = WindowMeta(title, factory, settingsKey, fixedpos=fixedpos)
-        if addto == "dock":
-            self._addDocked(widget)
+        if addto and addto.startswith("dock"):
+            if addto == "dock":
+                addto = "dock:left"
+            widget_area = {
+                "left": QtCore.Qt.LeftDockWidgetArea,
+                "right": QtCore.Qt.RightDockWidgetArea,
+                "top": QtCore.Qt.TopDockWidgetArea,
+                "bottom": QtCore.Qt.BottomDockWidgetArea,
+            }[addto[5:]]
+            self._addDocked(widget, widget_area)
         else:
             self._addToTab(widget)
 
@@ -222,9 +230,11 @@ class TabbedWorkspaceMixin(object):
         w.show()
         w.setFocus()
 
-    def _addDocked(self, w):
+    def _addDocked(self, w, widget_area=None):
         self.docked.append(w)
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, Docker(self, w))
+        if widget_area == None:
+            widget_area = QtCore.Qt.LeftDockWidgetArea
+        self.addDockWidget(widget_area, Docker(self, w))
 
     def windows(self, include=None):
         """

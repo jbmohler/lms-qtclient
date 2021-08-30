@@ -63,7 +63,7 @@ class AccountingExtensions:
                 # existing.focus_search()
                 return True
             view = roscoe.PendingRoscoe(parent, state)
-            parent.adopt_tab(view, view.ID, view.TITLE, addto="dock")
+            parent.adopt_tab(view, view.ID, view.TITLE, addto="dock:bottom")
         else:
             return False
         return True
