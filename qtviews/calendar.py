@@ -9,7 +9,7 @@
 import datetime
 import fuzzyparsers
 from PySide6 import QtCore, QtGui, QtWidgets
-from apputils import ObjectQtModel, Column
+import apputils
 from apputils.widgets import TableView
 
 day_names = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" ")
@@ -144,13 +144,14 @@ class CalendarDelegate(QtWidgets.QStyledItemDelegate):
 
     def sizeHint(self, option, index):
         entries = index.internalPointer().entryList(index)
-        return QtCore.QSize(80, (len(entries) + 1) * event_height + 1)
+        return QtCore.QSize(
+            apputils.get_char_width() * 20, (len(entries) + 1) * event_height + 1
+        )
 
 
 def test_calendar_entries():
-    colors = "white, black, red, darkRed, green, darkGreen, blue, darkBlue, cyan, darkCyan, magenta, darkMagenta, yellow, darkYellow, gray, darkGray, lightGray".split(
-        ", "
-    )
+    color_list = "white, black, red, darkRed, green, darkGreen, blue, darkBlue, cyan, darkCyan, magenta, darkMagenta, yellow, darkYellow, gray, darkGray, lightGray"
+    colors = color_list.split(", ")
 
     tests = []
     base = datetime.date(2012, 4, 15)
@@ -186,6 +187,7 @@ class CalendarView(TableView):
         super(CalendarView, self).__init__(parent)
         self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
         self.setItemDelegate(CalendarDelegate(self))
+        self.horizontalHeader().setDefaultSectionSize(apputils.get_char_width() * 15)
         self.firstDate = None
         self.numWeeks = None
 
@@ -224,9 +226,8 @@ class CalendarView(TableView):
 
             datarows.append(CalendarRow(day0, calWeek))
 
-        self.rows = ObjectQtModel(
-            columns=[Column(f"day{d}", day_names[d]) for d in range(7)]
-        )
+        days = [apputils.Column(f"day{d}", day_names[d]) for d in range(7)]
+        self.rows = apputils.ObjectQtModel(columns=days)
         self.setModel(self.rows)
         self.rows.set_rows(datarows)
         self.selModel = self.selectionModel()
