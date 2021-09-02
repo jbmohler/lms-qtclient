@@ -7,7 +7,6 @@
 ##############################################################################
 
 import datetime
-import fuzzyparsers
 from PySide6 import QtCore, QtGui, QtWidgets
 import apputils
 from apputils.widgets import TableView
@@ -184,7 +183,7 @@ class CalendarView(TableView):
     eventSelectionChanged = QtCore.Signal()
 
     def __init__(self, parent=None):
-        super(CalendarView, self).__init__(parent)
+        super(CalendarView, self).__init__(parent, column_choosing=False)
         self.setContextMenuPolicy(QtCore.Qt.DefaultContextMenu)
         self.setItemDelegate(CalendarDelegate(self))
         self.horizontalHeader().setDefaultSectionSize(apputils.get_char_width() * 15)
@@ -292,23 +291,29 @@ class CalendarTopNav(QtWidgets.QWidget):
 
         main = QtWidgets.QHBoxLayout(self)
         main.setContentsMargins(0, 0, 0, 0)
+        main.addStretch(1)
         self.earlier = [
             laywid(main, QtWidgets.QPushButton("<<<")),
             laywid(main, QtWidgets.QPushButton("<<")),
             laywid(main, QtWidgets.QPushButton("<")),
         ]
         self.earlier.reverse()
+        main.addStretch(2)
         self.month_label = laywid(main, QtWidgets.QLabel("&Month:"))
-        self.month = laywid(main, QtWidgets.QLineEdit())
+        self.month = laywid(main, QtWidgets.QComboBox())
+        self.year = laywid(main, QtWidgets.QSpinBox())
+        main.addStretch(2)
         self.later = [
             laywid(main, QtWidgets.QPushButton(">")),
             laywid(main, QtWidgets.QPushButton(">>")),
             laywid(main, QtWidgets.QPushButton(">>>")),
         ]
+        main.addStretch(1)
         for b in self.earlier + self.later:
             b.setMaximumWidth(40)
         self.month_label.setBuddy(self.month)
-        self.month.returnPressed.connect(self.input_reset)
+        self.month.currentIndexChanged.connect(self.input_reset)
+        self.year.valueChanged.connect(self.input_reset)
         self.setFocusProxy(self.month)
         self.setMaximumHeight(self.month.sizeHint().height())
 
@@ -320,9 +325,27 @@ class CalendarTopNav(QtWidgets.QWidget):
             self.earlier[i].clicked.connect(_earlier)
             self.later[i].clicked.connect(_later)
 
-    def input_reset(self):
+        self._set_no_recurse = 0
+        self.year.setMinimum(1990)
+        self.year.setMaximum(2100)
+        for i in range(12):
+            dt = datetime.date(2020, i + 1, 1)
+            self.month.addItem(f"{dt:%B}", dt.month)
+
+        self.set_month(datetime.date.today())
+
+    def set_month(self, dt):
+        self._set_no_recurse += 1
+        self.month.setCurrentIndex(dt.month - 1)
+        self.year.setValue(dt.year)
+        self._set_no_recurse -= 1
+
+    def input_reset(self, *args):
+        if self._set_no_recurse:
+            return
+
         try:
-            x = fuzzyparsers.parse_date(self.month.text())
+            x = datetime.date(self.year.value(), self.month.currentIndex() + 1, 1)
             self.absoluteMove.emit(x)
         except Exception as e:
             pass

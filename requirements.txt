@@ -4,6 +4,6 @@ xlsxwriter
 python-jose
 PySide6
 curtsies
-tzlocal
+tzlocal==2.1 # https://github.com/O365/python-o365/issues/591
 pyreadline; sys_platform == 'win32'
 pywin32; sys_platform == 'win32'

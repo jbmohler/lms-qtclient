@@ -140,12 +140,16 @@ class TransactionCalendar(QtWidgets.QWidget):
             self.load_abs(self.current_date + datetime.timedelta(days=delta))
 
     def load_abs(self, date):
-        self.current_date = date
+        initdate = date
+        if initdate.weekday() != 6:
+            initdate = initdate - datetime.timedelta(days=(initdate.weekday() + 1))
+        self.current_date = initdate
         self.load_current()
 
     def load_current(self):
         date = self.current_date
         self.calendar.setDateRange(date, 6, dayHeight=4)
+        self.calnav.set_month(date + datetime.timedelta(days=14))
         self.backgrounder(
             self.load_tranlist,
             self.client.get,
