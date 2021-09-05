@@ -23,6 +23,7 @@ def about_box(parent, header):
         "Python",
         QtCore.__name__.split(".")[0],
         "jose",
+        "markupsafe",
         "requests",
         "xlsxwriter",
     ]

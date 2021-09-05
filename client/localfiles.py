@@ -32,7 +32,7 @@ class LocalDirectory:
             yield os.path.join(self.dirname, f"{base}-{i}.{extension}")
 
     def user_output_filename(self, title, extension):
-        fn_title = re.sub("[/\\&:]", "_", title)
+        fn_title = re.sub("[/\\&:<>'\"]", "_", title)
         base = f"{fn_title}-{datetime.datetime.now().isoformat().replace(':', '-')}"
 
         for candidate in self._candidates(base, extension):

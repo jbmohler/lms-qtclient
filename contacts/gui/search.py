@@ -1,6 +1,7 @@
 import datetime
 import functools
 import urllib.parse
+import markupsafe
 import fuzzyparsers
 from PySide6 import QtCore, QtWidgets
 import client.qt as qt
@@ -71,29 +72,49 @@ class PasswordGenerator(QtWidgets.QDialog):
 
 class BitMixin:
     def html_view(self, printable=False):
-        htmlbit = f"<p>{self.html_chunk(printable)}</p>"
+        brtag = markupsafe.Markup("<br />")
+
+        htmlbit = markupsafe.Markup("<p>{chunk}</p>").format(
+            chunk=self.html_chunk(printable)
+        )
         if printable:
             bt = self.bit_type[0].upper()
-            line1 = f"<tr><td><b>{bt}</b></td><td style='border-top: 1pt solid #686868;'>{htmlbit}</td></tr>"
+            line1 = markupsafe.Markup(
+                "<tr><td><b>{bt}</b></td><td style='border-top: 1pt solid #686868;'>{htmlbit}</td></tr>"
+            ).format(bt=bt, htmlbit=htmlbit)
             if self.memo not in ["", None]:
-                memo = self.memo.replace("\n", "<br />")
-                line2 = f"<tr><td></td><td style='margin-left: 40px; background: #E8E8E8;'>{memo}</td></tr>"
-                return "\n".join([line1, line2])
+                memo = markupsafe.escape(self.memo).replace("\n", brtag)
+                line2 = markupsafe.Markup(
+                    "<tr><td></td><td style='margin-left: 40px; background: #E8E8E8;'>{memo}</td></tr>"
+                ).format(memo=memo)
+                return markupsafe.escape("\n").join([line1, line2])
             else:
                 return line1
         else:
-            edurl = f"local:bit/edit?id={self.id}&type={self.bit_type}"
-            dturl = f"local:bit/delete?id={self.id}&type={self.bit_type}"
+            edurl = markupsafe.Markup(
+                "local:bit/edit?id={ss.id}&type={ss.bit_type}"
+            ).format(ss=self)
+            dturl = markupsafe.Markup(
+                "local:bit/delete?id={ss.id}&type={ss.bit_type}"
+            ).format(ss=self)
             commands = [
-                f'<a href="{edurl}"><img src="qrc:/contacts/default-edit.png"></a>',
-                f'<a href="{dturl}"><img src="qrc:/contacts/bit-delete.png"></a>',
+                markupsafe.Markup(
+                    '<a href="{edurl}"><img src="qrc:/contacts/default-edit.png"></a>'
+                ).format(edurl=edurl),
+                markupsafe.Markup(
+                    '<a href="{dturl}"><img src="qrc:/contacts/bit-delete.png"></a>'
+                ).format(dturl=dturl),
             ]
-            return f"<tr><td>{commands[0]}{commands[1]}</td><td>{htmlbit}</td></tr>"
+            return markupsafe.Markup(
+                "<tr><td>{commands[0]}{commands[1]}</td><td>{htmlbit}</td></tr>"
+            ).format(commands=commands, htmlbit=htmlbit)
 
     def html_chunk(self, printable):
         es = lambda x: x if x is not None else ""
         ns = lambda x: x if x != "" else None
         bd = self.bit_data
+        brtag = markupsafe.Markup("<br />")
+
         if self.bit_type == "street_addresses":
             addr3 = [es(bd["city"]), es(bd["state"]), es(bd["zip"])]
 
@@ -103,13 +124,13 @@ class BitMixin:
                 " ".join(addr3),
                 ns(bd["country"]),
             ]
-            x = "<br />".join([x for x in addresses if x != None])
+            x = brtag.join([markupsafe.escape(x) for x in addresses if x != None])
         elif self.bit_type == "urls":
             lines = []
             xurl = (
-                '<a href="{0}">{0}</a>'.format(bd["url"])
+                markupsafe.Markup('<a href="{0}">{0}</a>').format(bd["url"])
                 if bd["url"] not in ["", None]
-                else " -- "
+                else markupsafe.Markup(" -- ")
             )
             lines.append(("URL:", xurl))
             if bd["username"] not in ["", None] or bd["password"] not in ["", None]:
@@ -121,31 +142,44 @@ class BitMixin:
                 if ns(bd["password"]) is None:
                     hlink = "(empty)"
                 elif printable:
-                    hlink = f'<code>{bd["password"]}</code>'
+                    hlink = markupsafe.Markup("<code>{pword}</code>").format(
+                        pword=bd["password"]
+                    )
                 else:
                     qpass = urllib.parse.quote(bd["password"])
                     localurl = f"local:bit/copy-password?password={qpass}"
-                    hlink = f'<a href="{localurl}">Copy Password</a>'
+                    hlink = markupsafe.Markup(
+                        '<a href="{localurl}">Copy Password</a>'
+                    ).format(localurl=localurl)
                 lines.append(("Password:", hlink))
                 pwnext = bd["pw_next_reset_dt"]
                 if pwnext and fuzzyparsers.parse_date(pwnext) < datetime.date.today():
                     lines.append(
-                        ("", "<span style='color: #CD5C5C'>Change Password</span>")
+                        (
+                            markupsafe.Markup(""),
+                            markupsafe.Markup(
+                                "<span style='color: #CD5C5C'>Change Password</span>"
+                            ),
+                        )
                     )
-            x = "<br />".join(["{} {}".format(*x) for x in lines])
+            x = brtag.join([markupsafe.Markup("{} {}").format(*x) for x in lines])
         elif self.bit_type == "phone_numbers":
-            x = bd["number"]
+            x = markupsafe.escape(bd["number"])
         elif self.bit_type == "email_addresses":
-            x = bd["email"]
+            x = markupsafe.escape(bd["email"])
         else:
-            x = str(self.bit_data)
+            raise NotImplementedError(
+                f"An unknown bit_type {self.bit_type} could not be formatted as html"
+            )
         if self.name not in ["", None]:
-            x = f"<b>{self.name}: </b>" + x
+            x = markupsafe.Markup("<b>{name}: </b>{prior}").format(
+                name=self.name, prior=x
+            )
         # note: when deliverying print-ready, we take the memo outside
         if self.memo in ["", None] or printable:
             return x
         else:
-            return f"{x}\n(memo)"
+            return markupsafe.Markup("{x}\n(memo)").format(x=x)
 
     def delete_message(self):
         msg = "Are you sure that you want to delete this contact data?"
@@ -631,25 +665,40 @@ class ContactView(QtWidgets.QWidget):
         self.clear()
 
     def cmd_printable(self):
+        brtag = markupsafe.Markup("<br />")
+
         chunks = []
-        chunks.append(f"<h1>{self.persona.entity_name}</h1>")
+        chunks.append(
+            markupsafe.Markup("<h1>{name}</h1>").format(name=self.persona.entity_name)
+        )
         if self.persona.memo != None:
-            chunks.append(self.persona.memo.replace("\n", "<br />"))
+            chunks.append(markupsafe.escape(self.persona.memo).replace("\n", brtag))
 
         tablerows = []
         for b in self.bits.rows:
             # chunks.append(b.bit_type)
             tablerows.append(b.html_view(printable=True))
-        chunks.append('<table cellpadding="4">' + "\n".join(tablerows) + "</table>")
+        chunks.append(
+            markupsafe.Markup('<table cellpadding="4">{}</table>').format(
+                markupsafe.escape("\n").join(tablerows)
+            )
+        )
 
-        joined = "".join(["\n".join(["<p>", c, "</p>", ""]) for c in chunks])
-        html = f"""
+        body_tpl = """
 <html>
 <body>
-{joined}
+{}
 </body>
 </html>
 """
+
+        chunk_tpl = "<p>\n{c}\n</p>\n\n"
+
+        html = markupsafe.Markup(body_tpl).format(
+            markupsafe.Markup("").join(
+                [markupsafe.Markup(chunk_tpl).format(c=c) for c in chunks]
+            )
+        )
 
         fname = self.exports_dir.user_output_filename(
             f"persona-{self.persona.entity_name}", "html"
@@ -765,26 +814,40 @@ class ContactView(QtWidgets.QWidget):
         self.persona = content.named_table("persona", mixin=PersonaMixin).rows[0]
         self.bits = content.named_table("bits", mixin=BitMixin)
 
+        brtag = markupsafe.Markup("<br />")
+
         chunks = []
-        chunks.append(f"<h1>{self.persona.entity_name}</h1>")
+        chunks.append(
+            markupsafe.Markup("<h1>{name}</h1>").format(name=self.persona.entity_name)
+        )
         if self.persona.memo != None:
-            chunks.append(self.persona.memo.replace("\n", "<br />"))
+            chunks.append(markupsafe.escape(self.persona.memo).replace("\n", brtag))
 
         tablerows = []
         for b in self.bits.rows:
             # chunks.append(b.bit_type)
             tablerows.append(b.html_view())
-        chunks.append('<table cellpadding="4">' + "\n".join(tablerows) + "</table>")
+        chunks.append(
+            markupsafe.Markup('<table cellpadding="4">{}</table>').format(
+                markupsafe.escape("\n").join(tablerows)
+            )
+        )
 
-        self.view.setHtml(
-            """
+        body_tpl = """
 <html>
 <body>
 {}
 </body>
 </html>
-""".format(
-                "".join(["\n".join(["<p>", c, "</p>", ""]) for c in chunks])
+"""
+
+        chunk_tpl = "<p>\n{c}\n</p>\n\n"
+
+        self.view.setHtml(
+            markupsafe.Markup(body_tpl).format(
+                markupsafe.Markup("").join(
+                    [markupsafe.Markup(chunk_tpl).format(c=c) for c in chunks]
+                )
             )
         )
 
