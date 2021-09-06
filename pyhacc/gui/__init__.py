@@ -106,15 +106,6 @@ class AccountingExtensions:
             (
                 "ClientURLMenuItem",
                 (
-                    "New &Transaction",
-                    "pyhacc:transactions/new",
-                    "get_api_transaction_new",
-                    "Ctrl+N",
-                ),
-            ),
-            (
-                "ClientURLMenuItem",
-                (
                     "&Recent Transactions",
                     "pyhacc:transactions/recent",
                     "get_api_transactions_list",

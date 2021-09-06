@@ -180,17 +180,30 @@ class GridManager(QtCore.QObject):
         self.ctxmenu.current_row_update.connect(self.current_row_update.emit)
 
     def add_action(
-        self, act, is_active=None, triggered=None, default=False, role_group=None
+        self,
+        act,
+        is_active=None,
+        triggered=None,
+        default=False,
+        role_group=None,
+        shortcut=None,
+        shortcut_parent=None,
     ):
         assert role_group in (None, "add_remove", "doc_actions", "lookup")
         if role_group == None:
             role_group = "doc_actions"
 
         if isinstance(act, str):
-            act = QtGui.QAction(act, self.grid)
+            parent = self.grid if not shortcut_parent else shortcut_parent
+            act = QtGui.QAction(act, parent)
         act.is_active = is_active
         act._role_group = role_group
         act._default = default
+        if shortcut:
+            act.setShortcut(shortcut)
+            if shortcut_parent:
+                act.setShortcutContext(QtCore.Qt.WidgetWithChildrenShortcut)
+                shortcut_parent.addAction(act)
         self._core_actions.append(act)
 
         act.triggered.connect(lambda: self.call_core_func(triggered))

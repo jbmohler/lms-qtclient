@@ -225,11 +225,16 @@ class AccountCommandSidebar(QtCore.QObject):
                 "&Edit Account",
                 triggered=self.cmd_edit_account,
                 role_group="add_remove",
+                default=True,
+                shortcut="Ctrl+E",
+                shortcut_parent=gridmgr.parent(),
             )
             self.gridmgr.add_action(
                 "&New Account",
                 triggered=self.cmd_add_account,
                 role_group="add_remove",
+                shortcut="Ctrl+N",
+                shortcut_parent=gridmgr.parent(),
             )
             self.gridmgr.add_action(
                 "&Delete Account",

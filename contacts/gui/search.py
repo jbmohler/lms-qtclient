@@ -870,11 +870,15 @@ class PersonaCommandSidebar(QtCore.QObject):
                 "&Edit Entity",
                 triggered=self.cmd_edit_persona,
                 role_group="add_remove",
+                shortcut="Ctrl+E",
+                shortcut_parent=gridmgr.parent(),
             )
             self.gridmgr.add_action(
                 "&New Entity",
-                triggered=self.cmd_add_persona,
+                triggered=self.cmd_new_persona,
                 role_group="add_remove",
+                shortcut="Ctrl+N",
+                shortcut_parent=gridmgr.parent(),
             )
             self.gridmgr.add_action(
                 "&Delete Entity",
@@ -885,7 +889,7 @@ class PersonaCommandSidebar(QtCore.QObject):
     def window(self):
         return self.gridmgr.grid.window()
 
-    def cmd_add_persona(self):
+    def cmd_new_persona(self):
         dlg = EditPersona(self.window())
         dlg.load_new(self.client)
 

@@ -315,16 +315,22 @@ class TransactionCommandSidebar(QtCore.QObject):
                 triggered=self.cmd_edit_trans,
                 role_group="add_remove",
                 default=True,
+                shortcut="Ctrl+E",
+                shortcut_parent=gridmgr.parent(),
             )
             self.gridmgr.add_action(
                 "&Copy Transaction",
                 triggered=self.cmd_copy_trans,
                 role_group="add_remove",
+                shortcut="Ctrl+Shift+E",
+                shortcut_parent=gridmgr.parent(),
             )
             self.gridmgr.add_action(
                 "&New Transaction",
                 triggered=self.cmd_add_trans,
                 role_group="add_remove",
+                shortcut="Ctrl+N",
+                shortcut_parent=gridmgr.parent(),
             )
             self.gridmgr.add_action(
                 "&Delete Transaction",

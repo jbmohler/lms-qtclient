@@ -1,5 +1,3 @@
-import functools
-import urllib.parse
 from PySide6 import QtCore, QtWidgets
 import client.qt as qt
 import cliutils
@@ -104,7 +102,8 @@ class EditDataBit(QtWidgets.QDialog):
 class DataBitView(QtWidgets.QWidget):
     TITLE = "DataBit"
     ID = "databit-view"
-    URL_DATABIT = "api/databits/bit/{}"
+    SRC_INSTANCE_URL = "api/databits/bit/{}"
+    refresh = QtCore.Signal()
 
     def __init__(self, parent, session):
         super(DataBitView, self).__init__(parent)
@@ -113,6 +112,8 @@ class DataBitView(QtWidgets.QWidget):
         self.setObjectName(self.ID)
         self.backgrounder = apputils.Backgrounder(self)
         self.client = session.std_client()
+
+        self.added = False
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -123,7 +124,7 @@ class DataBitView(QtWidgets.QWidget):
         ).clicked.connect(self.cmd_new_databit)
         self.btn_edit = self.buttons.addButton(
             "Edit", self.buttons.ActionRole
-        ).clicked.connect(self.cmd_edit_databit)
+        ).clicked.connect(self.cmd_edit_databit_current)
 
         self.layout.addWidget(self.buttons)
 
@@ -134,20 +135,6 @@ class DataBitView(QtWidgets.QWidget):
         self.layout.addWidget(self.view)
 
         self.clear()
-
-    def cmd_new_databit(self, bittype):
-        dlg = EditDataBit(self)
-        dlg.load_new(self.client)
-
-        if dlg.Accepted == dlg.exec_():
-            self.reload()
-
-    def cmd_edit_databit(self, bittype):
-        dlg = EditDataBit(self)
-        dlg.load(self.client, self.bit)
-
-        if dlg.Accepted == dlg.exec_():
-            self.reload()
 
     def action_triggered(self, url):
         if url.scheme() == "local":
@@ -175,7 +162,7 @@ class DataBitView(QtWidgets.QWidget):
 
     def reload(self):
         self.backgrounder(
-            self.load_view, self.client.get, self.URL_DATABIT, self.loadrow.id
+            self.load_view, self.client.get, self.SRC_INSTANCE_URL, self.loadrow.id
         )
 
     def load_view(self):
@@ -192,6 +179,66 @@ class DataBitView(QtWidgets.QWidget):
 </html>
 """
         )
+
+    def init_grid_menu(self, gridmgr):
+        self.gridmgr = gridmgr
+
+        if not self.added:
+            self.added = True
+            self.gridmgr.add_action(
+                "&Edit Databit",
+                triggered=self.cmd_edit_databit,
+                role_group="add_remove",
+                default=True,
+                shortcut="Ctrl+E",
+                shortcut_parent=gridmgr.parent(),
+            )
+            self.gridmgr.add_action(
+                "&New Databit",
+                triggered=self.cmd_new_databit,
+                role_group="add_remove",
+                shortcut="Ctrl+N",
+                shortcut_parent=gridmgr.parent(),
+            )
+            self.gridmgr.add_action(
+                "&Delete Databit",
+                triggered=self.cmd_delete_databit,
+                role_group="add_remove",
+            )
+
+    def window(self):
+        return self.gridmgr.grid.window()
+
+    def cmd_new_databit(self):
+        dlg = EditDataBit(self)
+        dlg.load_new(self.client)
+
+        if dlg.Accepted == dlg.exec_():
+            self.reload()
+            self.refresh.emit()
+
+    def cmd_edit_databit_current(self):
+        self.cmd_edit_databit(self.bit)
+
+    def cmd_edit_databit(self, row):
+        dlg = EditDataBit(self)
+        dlg.load(self.client, row)
+
+        if dlg.Accepted == dlg.exec_():
+            self.reload()
+            self.refresh.emit()
+
+    def cmd_delete_databit(self, row):
+        if "Yes" == apputils.message(
+            self.window(),
+            f'Are you sure that you wish to delete the databit "{row.caption}"?',
+            buttons=["Yes", "No"],
+        ):
+            try:
+                self.client.delete(self.SRC_INSTANCE_URL, row.id)
+                self.refresh.emit()
+            except:
+                qt.exception_message(self.window(), "The databit could not be deleted.")
 
 
 class DataBitsList(QtWidgets.QWidget):
@@ -223,6 +270,8 @@ class DataBitsList(QtWidgets.QWidget):
         self.sidebar = DataBitView(self, session)
         self.sublay.addWidget(self.sidebar)
         self.layout.addWidget(self.sublay)
+        if self.sidebar != None and hasattr(self.sidebar, "init_grid_menu"):
+            self.sidebar.init_grid_menu(self.gridmgr)
 
         self.client = session.std_client()
 
