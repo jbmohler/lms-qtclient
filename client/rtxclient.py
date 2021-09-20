@@ -66,6 +66,7 @@ class RtxSession(requests.Session):
         self.headers["X-Yenot-Timezone"] = tzlocal.get_localzone().zone
 
         self.rtx_sid = None
+        self.access_token = None
         self._recent_reports = []
 
         self.settings_map = {}

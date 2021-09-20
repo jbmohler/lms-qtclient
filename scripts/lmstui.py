@@ -1,3 +1,5 @@
+import sys
+
 from picotui.context import Context
 from picotui.screen import Screen
 from picotui.widgets import *
@@ -5,6 +7,47 @@ from picotui.defs import *
 
 import client as climod
 import localconfig
+
+
+def server_login(appstate):
+    def attempt_login(src):
+        try:
+            appstate.session.set_base_url(e_server.get())
+            appstate.session.authenticate(e_username.get(), e_password.get())
+
+            appstate.session.save_device_token()
+
+        finally:
+            pass
+
+    def abort(src):
+        pass
+
+    d = Dialog(7, 6, 60, 8)
+
+    # Can add a raw string to dialog, will be converted to WLabel
+    d.add(1, 1, "Server:")
+    e_server = WTextEntry(40, "")
+    d.add(11, 1, e_server)
+
+    d.add(1, 2, "Username:")
+    e_username = WTextEntry(40, "")
+    d.add(11, 2, e_username)
+
+    d.add(1, 3, "Password:")
+    e_password = WTextEntry(40, "")
+    d.add(11, 3, e_password)
+
+    b = WButton(9, "Login")
+    d.add(20, 5, b)
+    b.on("click", attempt_login)
+
+    b = WButton(9, "Cancel")
+    d.add(30, 5, b)
+    b.finish_dialog = 7
+
+    d.loop()
+
 
 def contact_view(appstate):
     d = Dialog(7, 6, 73, 19)
@@ -24,8 +67,8 @@ def contact_view(appstate):
 
     d.loop()
 
-class ParameterizedList(WListBox):
 
+class ParameterizedList(WListBox):
     def signal(self, sig, **kwargs):
         if sig in self.signals:
             self.signals[sig](self, **kwargs)
@@ -42,6 +85,7 @@ class ParameterizedList(WListBox):
         if super().handle_mouse(x, y) == True:
             # (Processed) mouse click finishes selection
             return ACTION_OK
+
 
 def contacts_lookup(appstate):
     def run_search(src):
@@ -81,7 +125,6 @@ def contacts_lookup(appstate):
 
         contact_view(appstate, item.object.id)
 
-
     w_results = ParameterizedList(40, 26, [])
     d.add(1, 3, w_results)
     b.on("select", prompt_lookup)
@@ -103,5 +146,11 @@ if __name__ == "__main__":
 
         appstate = AppState()
         appstate.session = climod.auto_session()
+
+        if not appstate.session.access_token:
+            server_login(appstate)
+
+        if not appstate.session.access_token:
+            sys.exit()
 
         contacts_lookup(appstate)
