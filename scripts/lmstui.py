@@ -127,12 +127,64 @@ def contacts_lookup(appstate):
 
     w_results = ParameterizedList(40, 26, [])
     d.add(1, 3, w_results)
-    b.on("select", prompt_lookup)
+    w_results.on("activate", prompt_lookup)
+
+    d.loop()
+
+
+def transaction_lookup(appstate):
+    def run_search(src):
+        nonlocal e_search, w_results
+
+        text = e_search.get()
+
+        client = appstate.session.std_client()
+
+        payload = client.get("api/transactions/list", fragment=text)
+
+        table = payload.main_table()
+
+        class RowItem:
+            def __init__(self, obj):
+                self.obj = obj
+
+            @property
+            def render(self):
+                return f"{self.obj.payee} -- {self.obj.memo}"
+
+        w_results.set_items([RowItem(row) for row in table.rows])
+        w_results.redraw()
+        d.change_focus(w_results)
+
+    d = Dialog(5, 5, 75, 20)
+
+    # Can add a raw string to dialog, will be converted to WLabel
+    d.add(1, 1, "Search:")
+    e_search = WTextEntry(40, "")
+    e_search.on("sfasf", run_search)
+    d.add(11, 1, e_search)
+
+    b = WButton(9, "Search")
+    d.add(53, 1, b)
+    b.on("click", run_search)
+
+    def prompt_lookup(src, item):
+        nonlocal w_results, appstate
+
+        transaction_view(appstate, item.object.id)
+
+    w_results = ParameterizedList(40, 26, [])
+    d.add(1, 3, w_results)
+    w_results.on("activate", prompt_lookup)
 
     d.loop()
 
 
 if __name__ == "__main__":
+    view = sys.argv[1] if len(sys.argv) >= 2 else None
+    if view is None:
+        view = "contacts"
+
     with Context():
 
         Screen.attr_color(C_WHITE, C_BLUE)
@@ -153,4 +205,7 @@ if __name__ == "__main__":
         if not appstate.session.access_token:
             sys.exit()
 
-        contacts_lookup(appstate)
+        if view == "contacts":
+            contacts_lookup(appstate)
+        elif view == "trans":
+            transaction_lookup(appstate)
