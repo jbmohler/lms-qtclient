@@ -89,6 +89,8 @@ class PendingRoscoe(QtWidgets.QWidget):
         self.gridmgr = qt.GridManager(self.grid, self)
         self.layout.addWidget(self.grid)
 
+        self.gridmgr.add_action("&Clear Queue...", triggered=self.cmd_clear_queue)
+
         self.geo = apputils.WindowGeometry(
             self, position=False, size=False, grids=[self.grid]
         )
@@ -106,3 +108,13 @@ class PendingRoscoe(QtWidgets.QWidget):
         kwargs = {}
 
         self.backgrounder(self.load_mainlist, self.client.get, self.URL, **kwargs)
+
+    def cmd_clear_queue(self):
+        if "Yes" == apputils.message(
+            self.window(),
+            "This will clear the list.  Are you sure you wish to continue?",
+            buttons=["Yes", "No"],
+        ):
+            with apputils.animator(self) as p:
+                p.background(self.client.put, "api/roscoe/mark-processed")
+            self.initial_load()
