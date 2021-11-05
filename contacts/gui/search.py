@@ -273,6 +273,9 @@ class BitUrlView(BasicBitView):
         sb.construct("pw_next_reset_dt", "date")
         sb.construct("memo", "multiline")
 
+        sb.widgets["url"].setMinimumWidth(40 * apputils.get_char_width())
+        sb.widgets["password"].setMinimumWidth(25 * apputils.get_char_width())
+
         form = QtWidgets.QFormLayout()
         form.addRow("Name", sb.widgets["name"])
         form.addRow(None, sb.widgets["is_primary"])
@@ -450,6 +453,13 @@ class EditPersona(QtWidgets.QDialog):
         sb.construct("memo", "multiline")
         sb.construct("birthday", "date")
         sb.construct("organization", "basic")
+
+        sb.widgets["title"].setMinimumWidth(10 * apputils.get_char_width())
+        sb.widgets["f_name"].setMinimumWidth(30 * apputils.get_char_width())
+        sb.widgets["l_name#individual"].setMinimumWidth(30 * apputils.get_char_width())
+        sb.widgets["l_name#company"].setMinimumWidth(40 * apputils.get_char_width())
+
+        sb.widgets["memo"].setMinimumWidth(30 * apputils.get_char_width())
 
         self.tabs = QtWidgets.QTabWidget()
 

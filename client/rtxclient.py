@@ -528,5 +528,10 @@ def update_auth_config(**kwargs):
 
 def auto_session(arg_url=None):
     session = RtxSession()
-    read_yenotpass(session)
+    try:
+        read_yenotpass(session)
+    except RtxServerError:
+        # we cannot authenticate, that's fine and just like if there was no
+        # stored auth at all
+        pass
     return session
