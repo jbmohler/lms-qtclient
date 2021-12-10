@@ -105,8 +105,11 @@ class UserListSidebar(QtWidgets.QWidget):
         if not self.added:
             self.added = True
             self.gridmgr.add_action("&Add User", triggered=self.cmd_add_user)
-            self.gridmgr.add_action("&Set Roles", triggered=self.cmd_set_roles)
             self.gridmgr.add_action("&Edit User", triggered=self.cmd_edit_user)
+            self.gridmgr.add_action(
+                "Change Password", triggered=self.cmd_change_password
+            )
+            self.gridmgr.add_action("&Set Roles", triggered=self.cmd_set_roles)
             self.gridmgr.add_action("&Delete User", triggered=self.cmd_delete_user)
 
     def highlight(self, row):
@@ -175,7 +178,48 @@ class UserListSidebar(QtWidgets.QWidget):
             self.refresh.emit()
 
     def cmd_change_password(self, row):
-        utils.to_be_implemented("change password dialog")
+        table = rtlib.simple_table(["old_pw", "new_pw", "ver_pw"])
+        with table.adding_row() as r:
+            pass
+
+        w = QtWidgets.QDialog(self.window())
+        w.setWindowTitle("Change Password")
+
+        def save():
+            row = table.rows[0]
+
+            if row.new_pw != row.ver_pw:
+                apputils.information(w, "Password and confirm password do not match.")
+                return False
+
+            try:
+                self.client.post(
+                    "api/user/me/change-password",
+                    data={"oldpass": row.old_pw, "newpass": row.new_pw},
+                )
+                w.accept()
+            except Exception as e:
+                qt.exception_message(self.window(), "The password change failed.")
+
+        w.bind = bindings.Binder(w)
+        layout = QtWidgets.QVBoxLayout(w)
+        form = QtWidgets.QFormLayout()
+        form.addRow("&Old", w.bind.construct("old_pw", "basic"))
+        form.addRow("&New", w.bind.construct("new_pw", "basic"))
+        form.addRow("&Verify", w.bind.construct("ver_pw", "basic"))
+        for x in ["old_pw", "new_pw", "ver_pw"]:
+            w.bind.widgets[x].setEchoMode(QtWidgets.QLineEdit.Password)
+
+        QDB = QtWidgets.QDialogButtonBox
+        buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
+        layout.addLayout(form)
+        layout.addWidget(buttons)
+        buttons.accepted.connect(save)
+        buttons.rejected.connect(w.reject)
+
+        w.bind.bind(table.rows[0])
+
+        w.exec_()
 
     def cmd_set_roles(self, rows):
         users = [o.id for o in rows]

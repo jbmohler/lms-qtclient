@@ -37,7 +37,7 @@ Method:  {1}""".format(
 
 
 def raise_exception_ex(request, method):
-    if request.status_code == 403:
+    if request.status_code in (400, 403):
         t = request.text
         is_json = len(t) > 0 and t[0] == "[" and t[-1] == "]"
         if is_json:
@@ -65,7 +65,7 @@ class RtxSession(requests.Session):
             self.server_url = None
         self.headers["X-Yenot-Timezone"] = tzlocal.get_localzone().zone
 
-        self.rtx_sid = None
+        self.access_token_expiration = None
         self.access_token = None
         self._recent_reports = []
 
@@ -75,7 +75,13 @@ class RtxSession(requests.Session):
         return self.server_url is not None
 
     def authenticated(self):
-        return self.rtx_sid is not None
+        return self.access_token is not None
+
+    @property
+    def yenot_sid(self):
+        token = self.cookies["YenotToken"]
+        claims = jose.jwt.get_unverified_claims(token)
+        return claims["yenot-session-id"]
 
     def set_base_url(self, server_url):
         self.server_url = server_url
@@ -148,20 +154,18 @@ class RtxSession(requests.Session):
             raise RtxServerError(
                 f"The login server {self.server_url} was slow responding."
             )
-        if r.status_code not in (200, 210):
-            raise RtxServerError(
-                f"Login response failed from server {self.server_url}.\n\n{exception_string(r, 'POST')}"
-            )
-        elif r.status_code == 210:
-            raise RtxError("Invalid user name or password.  Check your caps lock.")
+        if r.status_code != 200:
+            if r.status_code in (400, 403):
+                raise RtxError("Invalid user name or password.  Check your caps lock.")
+            else:
+                raise raise_exception_ex(r, "POST")
 
         payload = json.loads(r.text)
 
-        # success
-        self.rtx_sid = payload["session"]
-        self.access_token = payload["access_token"]
-        self.headers["Authorization"] = f"Bearer {self.access_token}"
-        return self.rtx_sid
+        # success, but we are not really authenticated so we do not set
+        # access_token or access_token_expiration; counting on a follow-up in
+        # authenticate_pin2
+        return True
 
     def authenticate_pin2(self, pin2):
         p = {"pin2": pin2}
@@ -173,20 +177,19 @@ class RtxSession(requests.Session):
             raise RtxServerError(
                 f"The login server {self.server_url} was slow responding."
             )
-        if r.status_code not in (200, 210):
-            raise RtxServerError(
-                f"Login response failed from server {self.server_url}.\n\n{exception_string(r, 'POST')}"
-            )
-        elif r.status_code == 210:
-            raise RtxError("Invalid user name or password.  Check your caps lock.")
+        if r.status_code != 200:
+            if r.status_code in (400, 403):
+                raise RtxError("Invalid user name or password.  Check your caps lock.")
+            else:
+                raise raise_exception_ex(r, "POST")
 
         payload = json.loads(r.text)
 
+        self.rtx_userid = payload["userid"]
         self.rtx_username = payload["username"]
         self._capabilities = rtlib.ClientTable(*payload["capabilities"])
-        self.rtx_sid = payload["session"]
-        self.access_token = payload["access_token"]
-        self.headers["Authorization"] = f"Bearer {self.access_token}"
+        self.access_token = True
+        self.access_token_expiration = time.time() + 60 * 60
         return True
 
     def authenticate(self, username, password=None, device_token=None):
@@ -213,26 +216,42 @@ class RtxSession(requests.Session):
         payload = json.loads(r.text)
 
         # success
-        self._capabilities = rtlib.ClientTable(*payload["capabilities"])
-        self.rtx_sid = payload["session"]
         self.rtx_userid = payload["userid"]
         self.rtx_username = payload["username"]
-        self.access_token = payload["access_token"]
-        self.headers["Authorization"] = f"Bearer {self.access_token}"
+        self._capabilities = rtlib.ClientTable(*payload["capabilities"])
+        self.access_token = True
+        self.access_token_expiration = time.time() + 60 * 60
         return True
 
     def refresh_token(self):
-        claims = jose.jwt.get_unverified_claims(self.access_token)
-        if claims["exp"] <= time.time() - 3:
-            # this is with-in 3 seconds of expiration
-            read_yenotpass(self)
+        if not self.access_token_expiration:
+            return
 
-    def close(self):
-        if self.rtx_sid != None:
+        # All the action is in the cookie exchange
+        if time.time() + 10 * 60 >= self.access_token_expiration:
+            r = self.get(self.prefix("api/session/refresh"))
+            if r.status_code in (401, 403):
+                # If the refresh token cannot be refreshed try simply starting
+                # a new session with the device token.  One reason this could
+                # happen is if a transient network failure prevents receiving
+                # the response from a prior refresh call and the token is
+                # rotated out.
+                read_yenotpass(self)
+            elif r.status_code != 200:
+                raise raise_exception_ex(r, "GET")
+
+    def logout(self):
+        if self.access_token:
             r = self.put(self.prefix("api/session/logout"))
             if r.status_code != 200:
                 raise raise_exception_ex(r, "PUT")
-                raise RtxServerError("")
+
+            # manually clear this
+            self.access_token = None
+            self.access_token_expiration = None
+
+    def close(self):
+        self.logout()
 
         super(RtxSession, self).close()
 
