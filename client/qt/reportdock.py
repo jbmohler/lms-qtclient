@@ -86,15 +86,10 @@ class ReportsDock(QtWidgets.QWidget):
         self.action_add_fave.triggered.connect(self.add_favorite)
         self.ctxmenu = viewmenus.ContextMenu(self.grid, self)
         self.ctxmenu.contextActionsUpdate.connect(self.update_contextmenu)
+        self.ctxmenu.current_row_update.connect(self.update_selection)
 
         # 4) Launch
         self.geo = apputils.WindowGeometry(self, grids=[self.grid])
-
-        self.refresh_timer = QtCore.QTimer(self)
-        # every two hours
-        self.refresh_timer.setInterval(1000 * 60 * 60 * 2)
-        self.refresh_timer.timeout.connect(self.reload_reports)
-        self.refresh_timer.start()
 
         self.reload_reports()
 
@@ -139,8 +134,7 @@ class ReportsDock(QtWidgets.QWidget):
                 self.grid.setModel(self.model2)
                 self.grid.expandAll()
 
-            self.selmodel = self.grid.selectionModel()
-            self.selmodel.currentRowChanged.connect(self.update_selection)
+            self.ctxmenu.update_model()
         except requests.exceptions.ConnectionError:
             # avoid a message on a refresh that fails
             pass
@@ -175,8 +169,11 @@ class ReportsDock(QtWidgets.QWidget):
                 self.window(), "There was an error saving the favorite."
             )
 
-    def update_selection(self, current, previous):
-        row = current.data(models.ObjectRole)
+    def update_selection(self):
+        if not self.ctxmenu.active_index:
+            return
+
+        row = self.ctxmenu.active_index.data(models.ObjectRole)
         if isinstance(row, RoleReportHeader):
             # ignore if on header
             return

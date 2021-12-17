@@ -1,3 +1,4 @@
+import types
 from PySide6 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
@@ -87,16 +88,33 @@ class UserListSidebar(QtWidgets.QWidget):
         # self.html.linkClicked.connect(gridmgr.show_link)
         self.layout.addWidget(self.html)
 
+        self.tabs = QtWidgets.QTabWidget()
+
         # Roles
+        self.roles_grid = widgets.TableView()
+        self.roles_grid.setSortingEnabled(True)
+        self.roles_gridmgr = qt.GridManager(self.roles_grid, self)
+        self.tabs.addTab(self.roles_grid, "Roles")
 
         # Device Tokens
         self.devtok_grid = widgets.TableView()
         self.devtok_grid.setSortingEnabled(True)
         self.devtok_gridmgr = qt.GridManager(self.devtok_grid, self)
-        self.layout.addWidget(self.devtok_grid)
+        self.tabs.addTab(self.devtok_grid, "Device Tokens")
+
+        # Sessions
+        self.sessions_grid = widgets.TableView()
+        self.sessions_grid.setSortingEnabled(True)
+        self.sessions_gridmgr = qt.GridManager(self.sessions_grid, self)
+        self.tabs.addTab(self.sessions_grid, "Sessions")
+
+        self.layout.addWidget(self.tabs)
 
         self.geo = apputils.WindowGeometry(
-            self, size=False, position=False, grids=[self.devtok_grid]
+            self,
+            size=False,
+            position=False,
+            grids=[self.roles_grid, self.devtok_grid, self.sessions_grid],
         )
 
     def init_grid_menu(self, gridmgr):
@@ -128,26 +146,31 @@ class UserListSidebar(QtWidgets.QWidget):
         try:
             content = yield apputils.AnimateWait(self)
 
+            self.data = types.SimpleNamespace()
+
+            # TODO: hang this on data too
             self.user = content.named_table("user")
             self.userrow = self.user.rows[0]
-
-            self.roles = content.named_table("roles")
 
             self.html.setHtml(
                 f"""
 <b>Username: </b>{self.userrow.username}<br />
 <b>Full Name: </b>{self.userrow.full_name}<br />
 <b>Description: </b>{self.userrow.descr}<br />
-
-<hline>
-
-{self.roles.as_html()}
 """
             )
 
+            with self.geo.grid_reset(self.roles_grid):
+                self.data.roles = content.named_table("roles")
+                self.roles_gridmgr.set_client_table(self.data.roles)
+
             with self.geo.grid_reset(self.devtok_grid):
-                self.devtokens = content.named_table("devicetokens")
-                self.devtok_gridmgr.set_client_table(self.devtokens)
+                self.data.devicetokens = content.named_table("devicetokens")
+                self.devtok_gridmgr.set_client_table(self.data.devicetokens)
+
+            with self.geo.grid_reset(self.sessions_grid):
+                self.data.sessions = content.named_table("sessions")
+                self.sessions_gridmgr.set_client_table(self.data.sessions)
         except:
             qt.exception_message(self.window(), "Error loading users")
             return

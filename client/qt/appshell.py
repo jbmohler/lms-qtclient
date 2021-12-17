@@ -68,6 +68,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.setObjectName(self.ID)
         winlist.register(self, self.ID)
 
+        self.report_manager = None
         self.pending_urls = []
         self.menu_actions = []
         self.statics = []
@@ -237,18 +238,34 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
     def handle_url(self, url):
         plugpoint.show_link_parented(self, QtCore.QUrl(url))
 
+    def ensure_refreshed(self):
+        self.session.session_refresh()
+        self.post_login()
+
     def post_login(self):
         self.setup_menu_bar()
 
         s = self.session
-        self.server_connection.setText(
-            f"<a href=\"{s.prefix('')}\">{s.server_url}</a> {s.rtx_username}"
-        )
+        conn_info = f"<a href=\"{s.prefix('')}\">{s.server_url}</a> {s.rtx_username}"
+        self.server_connection.setText(conn_info)
 
         for url in self.pending_urls:
             self.handle_url(url)
+        # clear this so that post_login is idempotent
+        self.pending_urls = []
+
+        # refresh the session & reports every 45 minutes
+        # - new menu based on updated permissions
+        # - update report list based on permissions
+        ms = 52 * 60 * 1000
+        self.refresh_timer = QtCore.QTimer.singleShot(ms, self.ensure_refreshed)
 
     def setup_menu_bar(self):
+        # This function is intended to be idempotent so that new permissions
+        # are reflected on token refresh.
+        self.menuBar().clear()
+        self.menu_actions = []
+
         self.construct_file_menu(self.menuBar())
 
         ctors = {
@@ -263,27 +280,23 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.construct_window_menu(self.menuBar())
         self.construct_help_menu(self.menuBar())
 
-        # self.report_dock. (reportdock.ReportsDock(self.session, self.exports_dir))
-        # act = self.report_dock.toggleViewAction()
-        # act.setText('&Report List')
-        # self.menu_window.insertAction(self.menu_window_sep, act)
+        if self.report_manager is None:
+            self.report_manager = reports.ReportsManager(
+                self.session, self.exports_dir, self
+            )
 
-        self.report_manager = reports.ReportsManager(
-            self.session, self.exports_dir, self
-        )
+            self.report_dock = reportdock.ReportsDock(self.session, self.exports_dir)
+            self.report_dock.main_window = self
+            self.report_dock.hide()
 
-        self.report_dock = reportdock.ReportsDock(self.session, self.exports_dir)
-        self.report_dock.main_window = self
-        self.report_dock.hide()
-
-        self.addWorkspaceWindow(
-            self.report_dock,
-            self.report_dock.TITLE,
-            settingsKey=self.report_dock.ID,
-            addto="dock",
-        )
-
-        # self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.report_dock)
+            self.addWorkspaceWindow(
+                self.report_dock,
+                self.report_dock.TITLE,
+                settingsKey=self.report_dock.ID,
+                addto="dock",
+            )
+        else:
+            self.report_dock.reload_reports()
 
         return True
 

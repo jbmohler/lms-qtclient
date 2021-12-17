@@ -144,6 +144,17 @@ class RtxSession(requests.Session):
                 return True
         return False
 
+    def cache_auth_payload(self, r):
+        assert r.status_code == 200, "this function assumes a successful response"
+
+        payload = json.loads(r.text)
+
+        self.rtx_userid = payload["userid"]
+        self.rtx_username = payload["username"]
+        self._capabilities = rtlib.ClientTable(*payload["capabilities"])
+        self.access_token = True
+        self.access_token_expiration = time.time() + 60 * 60
+
     def authenticate_pin1(self, username, pin):
         p = {"username": username, "pin": pin}
         try:
@@ -159,8 +170,6 @@ class RtxSession(requests.Session):
                 raise RtxError("Invalid user name or password.  Check your caps lock.")
             else:
                 raise raise_exception_ex(r, "POST")
-
-        payload = json.loads(r.text)
 
         # success, but we are not really authenticated so we do not set
         # access_token or access_token_expiration; counting on a follow-up in
@@ -183,13 +192,7 @@ class RtxSession(requests.Session):
             else:
                 raise raise_exception_ex(r, "POST")
 
-        payload = json.loads(r.text)
-
-        self.rtx_userid = payload["userid"]
-        self.rtx_username = payload["username"]
-        self._capabilities = rtlib.ClientTable(*payload["capabilities"])
-        self.access_token = True
-        self.access_token_expiration = time.time() + 60 * 60
+        self.cache_auth_payload(r)
         return True
 
     def authenticate(self, username, password=None, device_token=None):
@@ -213,17 +216,10 @@ class RtxSession(requests.Session):
         elif r.status_code == 210:
             raise RtxError("Invalid user name or password.  Check your caps lock.")
 
-        payload = json.loads(r.text)
-
-        # success
-        self.rtx_userid = payload["userid"]
-        self.rtx_username = payload["username"]
-        self._capabilities = rtlib.ClientTable(*payload["capabilities"])
-        self.access_token = True
-        self.access_token_expiration = time.time() + 60 * 60
+        self.cache_auth_payload(r)
         return True
 
-    def refresh_token(self):
+    def session_refresh(self):
         if not self.access_token_expiration:
             return
 
@@ -239,6 +235,8 @@ class RtxSession(requests.Session):
                 read_yenotpass(self)
             elif r.status_code != 200:
                 raise raise_exception_ex(r, "GET")
+            else:
+                self.cache_auth_payload(r)
 
     def logout(self):
         if self.access_token:
@@ -379,7 +377,7 @@ class RtxClient:
         if "cancel_token" in kwargs:
             headers["X-Yenot-CancelToken"] = kwargs["cancel_token"]
             del kwargs["cancel_token"]
-        s.refresh_token()
+        s.session_refresh()
         r = s.get(s.prefix(tail), params=kwargs, headers=headers, allow_redirects=True)
         # This is special rtx queued long job handling logic
         while r.status_code in [202, 303]:  # accepted, redirect
@@ -405,7 +403,7 @@ class RtxClient:
         else:
             data = None
         s = self.session
-        s.refresh_token()
+        s.session_refresh()
         r = s.post(
             s.prefix(tail), params=kwargs, data=data, files=files, allow_redirects=True
         )
@@ -433,7 +431,7 @@ class RtxClient:
         else:
             data = None
         s = self.session
-        s.refresh_token()
+        s.session_refresh()
         r = s.put(
             s.prefix(tail), params=kwargs, data=data, files=files, allow_redirects=True
         )
@@ -457,7 +455,7 @@ class RtxClient:
         else:
             files = None
         s = self.session
-        s.refresh_token()
+        s.session_refresh()
         r = s.delete(s.prefix(tail), params=kwargs, files=files, allow_redirects=True)
         # This is special rtx queued long job handling logic
         while r.status_code in [202, 303]:  # accepted, redirect
@@ -519,9 +517,6 @@ def read_yenotpass(session):
     if "login" in config.sections():
         login = config["login"]
         session.server_url = login.get("server_url")
-
-        if "username" in login and "password" in login:
-            session.authenticate(login["username"], login["password"])
 
         if "username" in login and "device_token" in login:
             session.authenticate(login["username"], device_token=login["device_token"])
