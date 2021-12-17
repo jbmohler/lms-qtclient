@@ -53,7 +53,7 @@ class AccountingExtensions:
             view = calendar.TransactionCalendar(parent, state)
             parent.adopt_tab(view, view.ID, view.TITLE)
         elif url.path() == "reporting/monthly-status":
-            win = monthly.Exporter(state)
+            win = monthly.Exporter(state, parent)
             win.show()
         elif url.path() == "roscoe/client-test":
             roscoe.test_roscoe(state.session)
