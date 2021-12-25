@@ -65,7 +65,12 @@ def is_server_running():
 
 def request_document(document):
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.connect(get_signal_filename())
+    for _ in range(2):
+        try:
+            s.connect(get_signal_filename())
+            break
+        except ConnectionRefusedError:
+            os.remove(get_signal_filename())
     obj = {"type": "open", "url": document}
 
     s.send(json.dumps(obj).encode("utf8"))
