@@ -8,20 +8,21 @@ def password_key_rotation(session):
 
     bits = mycli.get("api/personas/all-bits", bit_type="urls")
 
-    for rec in bits.named_table("contacts").rows:
-        passbit = mycli.get(
+    def get_password(rec):
+        passbit1 = mycli.get(
             "api/persona/{}/bit/{}", rec.persona_id, rec.id, bit_type="urls"
         )
 
-        bittable = passbit.named_table("bit")
+        return passbit1.named_table("bit").rows[0].password
 
-        mycli.put(
-            "api/persona/{}/bit/{}",
-            rec.persona_id,
-            rec.id,
-            bit_type="urls",
-            files={"bit": bittable.as_http_post_file(inclusions=["password"])},
-        )
+    for rec in bits.named_table("contacts").rows:
+        pass1 = get_password(rec)
+
+        mycli.put("api/persona/{}/bit/{}/rotate", rec.persona_id, rec.id)
+
+        pass2 = get_password(rec)
+
+        assert pass1 == pass2, "Key rotation failed"
 
 
 if __name__ == "__main__":
