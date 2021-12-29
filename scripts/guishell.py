@@ -24,7 +24,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     localconfig.set_identity()
-    session = climod.auto_session()
+    session = climod.auto_session(args.server_url)
 
     launch = True
     if platform.system() != "Windows":
