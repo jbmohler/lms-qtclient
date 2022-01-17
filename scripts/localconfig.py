@@ -6,11 +6,16 @@ APPLICATION_SLUG = "lmsDataSuite"
 APPLICATION_NAME = "lms Data Suite"
 
 
-def set_identity():
+def set_identity(profile=None):
     import client.identity as identity
 
+    if not profile:
+        appslug = APPLICATION_SLUG
+    else:
+        appslug = f"{APPLICATION_SLUG}-{profile}"
+
     identity.update_identity(
-        vendor_slug=VENDOR_SLUG, app_slug=APPLICATION_SLUG, app_name=APPLICATION_NAME
+        vendor_slug=VENDOR_SLUG, app_slug=appslug, app_name=APPLICATION_NAME
     )
 
 

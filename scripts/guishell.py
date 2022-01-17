@@ -19,11 +19,12 @@ if __name__ == "__main__":
         dest="server_url",
         help="base URL on webapp server (e.g. https://rtx.rtlib.com/app)",
     )
+    parser.add_argument("--profile", "-p", help="profile name")
     parser.add_argument("--document", "-d", help="document to show immediately")
 
     args = parser.parse_args()
 
-    localconfig.set_identity()
+    localconfig.set_identity(args.profile)
     session = climod.auto_session(args.server_url)
 
     launch = True
