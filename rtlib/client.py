@@ -92,9 +92,9 @@ class ClientTable:
     with directly implementing it in that way.
     """
 
-    def __init__(self, columns, rows, mixin=None, to_localtime=True):
+    def __init__(self, columns, rows, mixin=None, cls_members=None, to_localtime=True):
         self.to_localtime = to_localtime
-        f = self.row_factory(columns, mixin=mixin)
+        f = self.row_factory(columns, mixin=mixin, cls_members=cls_members)
         self.rows = [f(x) for x in rows]
 
         # initialize pkey for deletion
@@ -128,9 +128,9 @@ class ClientTable:
     def converter(self, row_field_list):
         return reportcore.as_python(row_field_list, to_localtime=self.to_localtime)
 
-    def row_factory(self, row_field_list, mixin):
+    def row_factory(self, row_field_list, mixin, cls_members=None):
         self.DataRow = reportcore.fixedrecord(
-            "DataRow", [r[0] for r in row_field_list], mixin=mixin
+            "DataRow", [r[0] for r in row_field_list], mixin=mixin, cls_members=cls_members
         )
         to_python = self.converter(row_field_list)
 

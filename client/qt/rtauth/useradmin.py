@@ -5,12 +5,12 @@ import apputils
 import apputils.models as models
 import apputils.viewmenus as viewmenus
 import apputils.widgets as widgets
-from client.qt import bindings
 from client.qt import reporttab
 import client.qt as qt
 from .useradmin_userroles import UserRoleMapperTargetsByUser
 from .useradmin_userroles_selected_roles import UserRoleMapperTargetsByRole
 from .useradmin_roleactivities import RoleActivityMapperTargets
+from . import userdlgs
 
 
 class ReportTabEx(reporttab.ReportTab):
@@ -100,6 +100,7 @@ class UserListSidebar(QtWidgets.QWidget):
         self.devtok_grid = widgets.TableView()
         self.devtok_grid.setSortingEnabled(True)
         self.devtok_gridmgr = qt.GridManager(self.devtok_grid, self)
+        self.devtok_gridmgr.add_action("&Revoke Token", triggered=self.cmd_revoke_token)
         self.tabs.addTab(self.devtok_grid, "Device Tokens")
 
         # Sessions
@@ -123,7 +124,13 @@ class UserListSidebar(QtWidgets.QWidget):
         if not self.added:
             self.added = True
             self.gridmgr.add_action("&Add User", triggered=self.cmd_add_user)
-            self.gridmgr.add_action("&Edit User", triggered=self.cmd_edit_user)
+            self.gridmgr.add_action(
+                "&Edit User",
+                triggered=self.cmd_edit_user,
+                default=True,
+                shortcut="Ctrl+E",
+                shortcut_parent=gridmgr.parent(),
+            )
             self.gridmgr.add_action(
                 "Change Password", triggered=self.cmd_change_password
             )
@@ -179,25 +186,11 @@ class UserListSidebar(QtWidgets.QWidget):
         return lambda: f(self.userrow)
 
     def cmd_add_user(self):
-        user = rtlib.ClientTable(
-            [
-                ("full_name", None),
-                ("username", None),
-                ("password", None),
-                ("password2", None),
-                ("descr", None),
-            ],
-            [],
-        )
-        with user.adding_row() as r2:
-            pass
-        if edit_user_dlg(self, user, editrec=False):
+        if userdlgs.edit_user_dlg(self, "new"):
             self.refresh.emit()
 
     def cmd_edit_user(self, row):
-        content = self.client.get(self.SRC_INSTANCE_URL, row.id)
-        user = content.main_table()
-        if edit_user_dlg(self, user, editrec=True):
+        if userdlgs.edit_user_dlg(self, row.id):
             self.refresh.emit()
 
     def cmd_change_password(self, row):
@@ -221,10 +214,10 @@ class UserListSidebar(QtWidgets.QWidget):
                     data={"oldpass": row.old_pw, "newpass": row.new_pw},
                 )
                 w.accept()
-            except Exception as e:
+            except Exception:
                 qt.exception_message(self.window(), "The password change failed.")
 
-        w.bind = bindings.Binder(w)
+        w.bind = qt.Binder(w)
         layout = QtWidgets.QVBoxLayout(w)
         form = QtWidgets.QFormLayout()
         form.addRow("&Old", w.bind.construct("old_pw", "basic"))
@@ -265,6 +258,20 @@ class UserListSidebar(QtWidgets.QWidget):
                 self.refresh.emit()
             except:
                 qt.exception_message(self.window(), "The user could not be deleted.")
+
+    def cmd_revoke_token(self, row):
+        if "Yes" == apputils.message(
+            self.window(),
+            f"This will force a new password login on {row.device_name} for {self.userrow.username}.  Are you sure you wish to continue?",
+            buttons=["Yes", "No"],
+        ):
+            try:
+                self.client.delete(
+                    "api/user/{}/device-token/{}", self.userrow.id, row.id
+                )
+                self.refresh.emit()
+            except:
+                qt.exception_message(self.window(), "The device token revoke failed.")
 
 
 class UserList(QtWidgets.QWidget):
@@ -481,7 +488,7 @@ class RoleList(QtWidgets.QWidget):
         w = QtWidgets.QDialog(self.window())
         w.setWindowTitle("Edit Role")
 
-        w.bind = bindings.Binder(w)
+        w.bind = qt.Binder(w)
 
         layout = QtWidgets.QVBoxLayout(w)
         form = QtWidgets.QFormLayout()
@@ -761,7 +768,7 @@ def edit_activity_dlg(parentwin, table):
     w = QtWidgets.QDialog(parentwin.window())
     w.setWindowTitle("Edit Activity")
 
-    w.bind = bindings.Binder(w)
+    w.bind = qt.Binder(w)
     layout = QtWidgets.QVBoxLayout(w)
     form = QtWidgets.QFormLayout()
     form.addRow("&Activity Name:", w.bind.construct("act_name", "basic"))
@@ -778,62 +785,6 @@ def edit_activity_dlg(parentwin, table):
             w.accept()
         except:
             qt.exception_message(w, "There was an error adding the activity.")
-
-    QDB = QtWidgets.QDialogButtonBox
-    buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
-    layout.addLayout(form)
-    layout.addWidget(buttons)
-    buttons.accepted.connect(save)
-    buttons.rejected.connect(w.reject)
-
-    w.bind.bind(table.rows[0])
-
-    return w.Accepted == w.exec_()
-
-
-def edit_user_dlg(parentwin, table, editrec):
-    w = QtWidgets.QDialog(parentwin.window())
-    w.setWindowTitle("Edit User Properties" if editrec else "Add New User")
-
-    w.bind = bindings.Binder(w)
-    layout = QtWidgets.QVBoxLayout(w)
-    form = QtWidgets.QFormLayout()
-    form.addRow("&Full Name", w.bind.construct("full_name", "basic"))
-    form.addRow("&User Name", w.bind.construct("username", "basic"))
-    if not editrec:
-        form.addRow("&Password", w.bind.construct("password", "basic"))
-        form.addRow("&Password (confirm)", w.bind.construct("password2", "basic"))
-        w.bind.widgets["password"].setEchoMode(QtWidgets.QLineEdit.Password)
-        w.bind.widgets["password2"].setEchoMode(QtWidgets.QLineEdit.Password)
-    else:
-        form.addRow("", w.bind.construct("inactive", "boolean", label="Inactive"))
-    form.addRow("&Description", w.bind.construct("descr", "multiline"))
-
-    def save():
-        row = table.rows[0]
-        if not editrec:
-            if row.password != row.password2:
-                apputils.information(w, "Password and confirm password do not match.")
-                return False
-
-        if editrec:
-            files = {
-                "user": table.as_http_post_file(
-                    inclusions=["username", "full_name", "inactive", "descr"]
-                )
-            }
-        else:
-            files = {"user": table.as_http_post_file(exclusions=["password2"])}
-        try:
-            if editrec:
-                parentwin.client.put(
-                    parentwin.SRC_INSTANCE_URL, table.rows[0].id, files=files
-                )
-            else:
-                parentwin.client.post("api/user", files=files)
-            w.accept()
-        except:
-            qt.exception_message(w, "There was an error adding the user.")
 
     QDB = QtWidgets.QDialogButtonBox
     buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)

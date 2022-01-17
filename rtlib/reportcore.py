@@ -41,7 +41,7 @@ class SlottedRow:
         return f"{self.__class__.__name__}({', '.join(values)})"
 
 
-def fixedrecord(name, members, mixin=None):
+def fixedrecord(name, members, mixin=None, cls_members=None):
     """
     This is a namedtuple only better.
     """
@@ -56,7 +56,8 @@ def fixedrecord(name, members, mixin=None):
             f"refused identifiers ({', '.join(junk)}):  fixedrecord identifiers must be valid Python variable identifier"
         )
 
-    Kls1 = type(name, (SlottedRow,), {"__slots__": members})
+    cls_members = cls_members if cls_members else {}
+    Kls1 = type(name, (SlottedRow,), {"__slots__": members, **cls_members})
     if mixin == None:
         return Kls1
     elif isinstance(mixin, (list, tuple)):

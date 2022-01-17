@@ -268,6 +268,39 @@ class BackgrounderNamedJobManager:
         return self.bg.named_jobs[index]
 
 
+class BackgrounderBulk:
+    def __init__(self, bg, func):
+        self.bg = bg
+        self.count = 0
+        self.func = func
+        self.results = {}
+
+    def __call__(self, name, func, *args, **kwargs):
+        self.count += 1
+
+        def closure():
+            result = yield
+            self.save_result(name, result)
+
+        self.bg(closure, func, *args, **kwargs)
+
+    def save_result(self, name, result):
+        self.results[name] = result
+
+        self.finalize()
+
+    def finalize(self):
+        if self.closed and len(self.results) == self.count:
+            self.func(**self.results)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.closed = True
+        self.finalize()
+
+
 class Backgrounder(QtCore.QObject):
     def __init__(self, parent, cadence=15, threads=4):
         super(Backgrounder, self).__init__(parent)
@@ -297,6 +330,9 @@ class Backgrounder(QtCore.QObject):
         if not self.timer.isActive():
             self.timer.start()
         return myfuture
+
+    def bulk(self, func):
+        return BackgrounderBulk(self, func)
 
     @property
     def named(self):

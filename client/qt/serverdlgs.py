@@ -117,7 +117,7 @@ class RtxLoginDialog(QtWidgets.QDialog):
         self.setWindowTitle(app.applicationName())
 
         self.rtx_server_edit = QtWidgets.QLineEdit()
-        self.rtx_server_edit.setMinimumWidth(apputils.get_char_width()*40)
+        self.rtx_server_edit.setMinimumWidth(apputils.get_char_width() * 40)
         self.rtx_user_edit = QtWidgets.QLineEdit()
         self.rtx_password_edit = QtWidgets.QLineEdit()
         self.rtx_password_edit.setEchoMode(QtWidgets.QLineEdit.Password)

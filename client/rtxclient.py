@@ -493,12 +493,12 @@ class StdPayload:
             if self._pay[tname] != None and len(self._pay[tname]) == 2:
                 yield tname, self.named_table(tname)
 
-    def named_table(self, name, mixin=None):
-        return rtlib.ClientTable(*self._pay[name], mixin=mixin)
+    def named_table(self, name, mixin=None, cls_members=None):
+        return rtlib.ClientTable(*self._pay[name], mixin=mixin, cls_members=cls_members)
 
-    def main_table(self, mixin=None):
+    def main_table(self, mixin=None, cls_members=None):
         mn = self._pay["__main_table__"]
-        return self.named_table(mn, mixin)
+        return self.named_table(mn, mixin, cls_members=cls_members)
 
     def named_columns(self, name):
         return self._pay[name][0]
