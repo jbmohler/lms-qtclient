@@ -173,7 +173,7 @@ class TransactionEditor(qt.ObjectDialog):
         self.tab.addTab(self.splitme, "&Transactions")
 
         # second tab:  receipt memo
-        self.tab.addTab(sb.widgets["receipt"], "&Receipt")
+        self.tab.addTab(sb.widgets["receipt"], "Re&ceipt")
 
         self.tran_status_label = QtWidgets.QLabel()
 
