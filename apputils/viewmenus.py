@@ -575,7 +575,7 @@ class ContextMenu(QtCore.QObject):
     def update_model(self):
         # The selectionModel appears to be stable across setting the master
         # model.  This is perhaps different than earlier PySide/PyQt revisions.
-        if not self._selmodel:
+        if not self._selmodel or self._view.selectionModel() != self._selmodel:
             self._selmodel = self._view.selectionModel()
             self._selmodel.currentRowChanged.connect(self.update_active)
             self._selmodel.selectionChanged.connect(self.selection_changed)
