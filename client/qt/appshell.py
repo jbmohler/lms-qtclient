@@ -153,6 +153,9 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
             lambda: plugpoint.show_link_parented(self, self.session.prefix(""))
         )
 
+        self.action_userprofile = QtGui.QAction("&User Profile", self)
+        self.action_userprofile.triggered.connect(self.cmd_edit_userprofile)
+
         self.action_exports = QtGui.QAction("View &Export Directory", self)
         self.action_exports.triggered.connect(lambda: self.exports_dir.show_browser())
 
@@ -160,6 +163,8 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.menu_file.addAction("&Reports").triggered.connect(self.show_reports)
         self.menu_file.addAction(self.action_exports)
         self.menu_file.addAction(self.action_weblogin)
+        self.menu_file.addSeparator()
+        self.menu_file.addAction(self.action_userprofile)
         self.menu_file.addSeparator()
         self.menu_file.addAction(self.action_exit)
         self.menu_file.addAction(self.action_exit_all)
@@ -299,6 +304,9 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
             self.report_dock.reload_reports()
 
         return True
+
+    def cmd_edit_userprofile(self):
+        self.handle_url("rtauth:user/login/edit")
 
     def show_reports(self):
         self.report_dock.show()

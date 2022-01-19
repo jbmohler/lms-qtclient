@@ -45,8 +45,9 @@ class UserAddressDialog(QtWidgets.QDialog):
         buttons.rejected.connect(self.reject)
 
     def loadrec(self, userid, addrid):
+        # NOTE: userid may be "me"
         self.userid = userid
-        # NOTE: addrid may be new
+        # NOTE: addrid may be "new"
         self.addrid = addrid
 
         with self.backgrounder.bulk(self.load_main) as bulk:
@@ -171,13 +172,13 @@ class AddressMixin:
         return brtag.join(lines)
 
 
-class UserDialog(QtWidgets.QDialog):
+class UserMixin(QtWidgets.QDialog):
     TITLE = "Edit User Details"
     ID = "dlg-edit-persona"
     SRC_INSTANCE_URL = "api/user/{}"
 
     def __init__(self, parent, session):
-        super(UserDialog, self).__init__(parent)
+        super(UserMixin, self).__init__(parent)
 
         self.setWindowTitle(self.TITLE)
         self.backgrounder = apputils.Backgrounder(self)
@@ -212,14 +213,6 @@ class UserDialog(QtWidgets.QDialog):
 
         self.left.addLayout(form)
 
-        # Roles Grid below the form #
-        self.roles_grid = widgets.TableView()
-        self.roles_grid.verticalHeader().hide()
-        self.roles_grid.header().setStretchLastSection(True)
-        self.roles_grid.setSortingEnabled(True)
-        self.roles_gridmgr = qt.GridManager(self.roles_grid, self)
-        self.left.addWidget(self.roles_grid)
-
         # User Addresses on the Right #
         self.address_html = QtWidgets.QTextBrowser()
         self.address_html.setStyleSheet("QTextEdit { font-size: 14px }")
@@ -229,22 +222,14 @@ class UserDialog(QtWidgets.QDialog):
         self.address_html.anchorClicked.connect(self.address_url_handler)
 
         QDB = QtWidgets.QDialogButtonBox
-        buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
-        if self.client.session.authorized("put_api_user_send_invite"):
-            buttons.addButton("Reset/Invite...", QDB.ActionRole).clicked.connect(
-                self.cmd_resetinvite_user
-            )
-        self.main.addWidget(buttons)
-        buttons.accepted.connect(self.cmd_accept)
-        buttons.rejected.connect(self.reject)
+        self.buttons = QDB(QDB.Ok | QDB.Cancel, QtCore.Qt.Horizontal)
+        self.main.addWidget(self.buttons)
+        self.buttons.accepted.connect(self.cmd_accept)
+        self.buttons.rejected.connect(self.reject)
 
     def toggle_changeset_password(self, checked):
         self.bind.widgets["password"].setEnabled(checked)
         self.bind.widgets["password2"].setEnabled(checked)
-
-    def cmd_resetinvite_user(self):
-        with apputils.animator(self) as p:
-            p.background(self.client.put, "api/user/{}/send-invite")
 
     def address_url_handler(self, url):
         if url.scheme() == "local":
@@ -283,8 +268,10 @@ class UserDialog(QtWidgets.QDialog):
                 )
 
     def cmd_edit_address(self, row, new=False):
+        urlslug = self.userid if self.userid == "me" else self.users.rows[0].id
+
         w = UserAddressDialog(self, self.client.session)
-        w.loadrec(self.editrec.id, row.id if not new else "new")
+        w.loadrec(urlslug, row.id if not new else "new")
         if w.Accepted == w.exec_():
             self.reload()
 
@@ -293,17 +280,19 @@ class UserDialog(QtWidgets.QDialog):
             self.cmd_edit_address(None, new=True)
 
     def reload(self):
-        self.loadrec(self.editrec.id)
+        urlslug = self.userid if self.userid == "me" else self.users.rows[0].id
+        self.loadrec(urlslug)
 
     def loadrec(self, userid):
-        # NOTE: self.userid may be "new"
+        # NOTE: self.userid may be "new" or "me"
         self.userid = userid
 
         with self.backgrounder.bulk(self.load_main) as bulk:
-            bulk("roles_content", self.client.get, "api/roles/list")
             bulk("user_content", self.client.get, self.SRC_INSTANCE_URL, userid)
+            if self.userid != "me":
+                bulk("roles_content", self.client.get, "api/roles/list")
 
-    def load_main(self, roles_content, user_content):
+    def load_main(self, user_content, roles_content=None):
         self.chk_changeset_password.setChecked(False)
         self.toggle_changeset_password(False)
 
@@ -317,17 +306,22 @@ class UserDialog(QtWidgets.QDialog):
         # Bind main form
         self.bind.bind(self.editrec, self.users.columns)
 
-        # Load role grid
-        self.roles = roles_content.main_table(
-            mixin=EntityTaggerMixin, cls_members={"ambient_user": self.editrec}
-        )
+        if self.userid == "me":
+            self.bind.widgets["username"].setReadOnly(True)
+            self.bind.widgets["inactive"].setReadOnly(True)
 
-        columns = [apputils.field("role_name", "Role", check_attr="is_tagged")]
+        if self.userid != "me":
+            # Load role grid
+            self.roles = roles_content.main_table(
+                mixin=EntityTaggerMixin, cls_members={"ambient_user": self.editrec}
+            )
 
-        self.roles_model = apputils.ObjectQtModel(columns)
+            columns = [apputils.field("role_name", "Role", check_attr="is_tagged")]
 
-        self.roles_grid.setModel(self.roles_model)
-        self.roles_model.set_rows(self.roles.rows)
+            self.roles_model = apputils.ObjectQtModel(columns)
+
+            self.roles_grid.setModel(self.roles_model)
+            self.roles_model.set_rows(self.roles.rows)
 
         # Load addresses
         address_chunks = "".join([a.html_view() for a in self.addresses.rows])
@@ -345,29 +339,66 @@ class UserDialog(QtWidgets.QDialog):
 
     def save(self):
         row = self.users.rows[0]
+        urlslug = self.userid if self.userid == "me" else self.users.rows[0].id
+
         excl = ["roles"]
+        extensions = []
+        if urlslug == "me":
+            excl += ["username", "inactive"]
+        else:
+            extensions = ["roles_add", "roles_del"]
         if self.chk_changeset_password.isChecked():
             if row.password != row.password2:
                 apputils.information(
                     self, "Password and confirm password do not match."
                 )
                 return False
+
         else:
             excl.append("password")
 
         files = {
             "user": self.users.as_http_post_file(
-                exclusions=["password2", *excl], extensions=["roles_add", "roles_del"]
+                exclusions=["password2", *excl], extensions=extensions
             )
         }
         try:
-            self.client.put(self.SRC_INSTANCE_URL, self.users.rows[0].id, files=files)
+            self.client.put(self.SRC_INSTANCE_URL, urlslug, files=files)
             return True
         except:
             qt.exception_message(self, "There was an error adding/updating the user.")
 
 
-def edit_user_dlg(parentwin, userid):
-    w = UserDialog(parentwin.window(), parentwin.client.session)
+class UserDialog(UserMixin):
+    def __init__(self, parent, session):
+        super(UserDialog, self).__init__(parent, session)
+
+        # Roles Grid below the form #
+        self.roles_grid = widgets.TableView()
+        self.roles_grid.verticalHeader().hide()
+        self.roles_grid.header().setStretchLastSection(True)
+        self.roles_grid.setSortingEnabled(True)
+        self.roles_gridmgr = qt.GridManager(self.roles_grid, self)
+        self.left.addWidget(self.roles_grid)
+
+        if self.client.session.authorized("put_api_user_send_invite"):
+            self.buttons.addButton("Reset/Invite...", QDB.ActionRole).clicked.connect(
+                self.cmd_resetinvite_user
+            )
+
+    def cmd_resetinvite_user(self):
+        with apputils.animator(self) as p:
+            p.background(self.client.put, "api/user/{}/send-invite")
+
+
+class UserProfileEdit(UserMixin):
+    pass
+
+
+def edit_user_dlg(parentwin, session, userid):
+    if userid == "me":
+        w = UserProfileEdit(parentwin.window(), session)
+    else:
+        w = UserDialog(parentwin.window(), session)
     w.loadrec(userid)
     return w.Accepted == w.exec_()

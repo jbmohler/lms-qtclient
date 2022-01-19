@@ -186,11 +186,11 @@ class UserListSidebar(QtWidgets.QWidget):
         return lambda: f(self.userrow)
 
     def cmd_add_user(self):
-        if userdlgs.edit_user_dlg(self, "new"):
+        if userdlgs.edit_user_dlg(self, self.client.session, "new"):
             self.refresh.emit()
 
     def cmd_edit_user(self, row):
-        if userdlgs.edit_user_dlg(self, row.id):
+        if userdlgs.edit_user_dlg(self, self.client.session, row.id):
             self.refresh.emit()
 
     def cmd_change_password(self, row):

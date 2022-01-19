@@ -1,4 +1,5 @@
 from . import useradmin
+from . import userdlgs
 from . import useradmin_setactivities as activities
 
 
@@ -15,6 +16,8 @@ class RtAuthPlugs:
 
             view = widclass(parent, state)
             parent.adopt_tab(view, widclass.ID, widclass.TITLE)
+        elif url.path() == "user/login/edit":
+            userdlgs.edit_user_dlg(parent, state.session, "me")
         elif url.path() == "activities/register":
             w = activities.ManageActivities(
                 state.session, state.exports_dir, parent=parent, unregistered=True
