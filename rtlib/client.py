@@ -130,7 +130,10 @@ class ClientTable:
 
     def row_factory(self, row_field_list, mixin, cls_members=None):
         self.DataRow = reportcore.fixedrecord(
-            "DataRow", [r[0] for r in row_field_list], mixin=mixin, cls_members=cls_members
+            "DataRow",
+            [r[0] for r in row_field_list],
+            mixin=mixin,
+            cls_members=cls_members,
         )
         to_python = self.converter(row_field_list)
 

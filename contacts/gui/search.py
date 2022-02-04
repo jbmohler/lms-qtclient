@@ -570,7 +570,9 @@ class EditPersona(QtWidgets.QDialog):
 
         # TODO cache this
         tags = self.client.get("api/tags/list")
-        self.tagstable = tags.main_table(mixin=EntityTaggerMixin, cls_members={'ambient_persona': self.editrow})
+        self.tagstable = tags.main_table(
+            mixin=EntityTaggerMixin, cls_members={"ambient_persona": self.editrow}
+        )
 
         self.tagmap = {tag.id: tag for tag in self.tagstable.rows}
 
