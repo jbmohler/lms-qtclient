@@ -91,11 +91,9 @@ class RtxSession(requests.Session):
 
     def save_device_token(self):
         client = self.std_client()
+        device = f"{socket.gethostname()} (Desktop client)"
         content = client.post(
-            "api/user/{}/device-token/new",
-            self.rtx_userid,
-            device_name=f"{socket.gethostname()} (Desktop client)",
-            expdays=int(365.25 * 6),
+            "api/user/me/device-token/new", device_name=device, expdays=int(365.25 * 6)
         )
         saved_token = content.main_table().rows[0].token
 
