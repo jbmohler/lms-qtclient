@@ -17,6 +17,10 @@ class RtxError(Exception):
     pass
 
 
+class RtxUnauthorized(RtxError):
+    pass
+
+
 class RtxRequestCancellation(RtxError):
     pass
 
@@ -65,6 +69,7 @@ class RtxSession(httpx.Client):
             self.server_url = None
         self.headers["X-Yenot-Timezone"] = tzlocal.get_localzone().zone
 
+        self.pending_2fa = False
         self.access_token_expiration = None
         self.access_token = None
         self._recent_reports = []
@@ -143,16 +148,24 @@ class RtxSession(httpx.Client):
                 return True
         return False
 
-    def cache_auth_payload(self, r):
+    def cache_auth_payload(self, r, is_2fa_context=False):
         assert r.status_code == 200, "this function assumes a successful response"
 
         payload = json.loads(r.text)
 
-        self.rtx_userid = payload["userid"]
-        self.rtx_username = payload["username"]
-        self._capabilities = rtlib.ClientTable(*payload["capabilities"])
-        self.access_token = True
-        self.access_token_expiration = time.time() + 60 * 60
+        if payload.get("2fa-prompt", False):
+            if not is_2fa_context:
+                raise NotImplementedError(
+                    "This is not a context where 2fa is expected; verify call stack"
+                )
+
+            self.pending_2fa = True
+        else:
+            self.rtx_userid = payload["userid"]
+            self.rtx_username = payload["username"]
+            self._capabilities = rtlib.ClientTable(*payload["capabilities"])
+            self.access_token = True
+            self.access_token_expiration = time.time() + 60 * 60
 
     def authenticate_pin1(self, username, pin):
         p = {"username": username, "pin": pin}
@@ -166,7 +179,9 @@ class RtxSession(httpx.Client):
             )
         if r.status_code != 200:
             if r.status_code in (400, 403):
-                raise RtxError("Invalid user name or password.  Check your caps lock.")
+                raise RtxUnauthorized(
+                    "Invalid user name or password.  Check your caps lock."
+                )
             else:
                 raise raise_exception_ex(r, "POST")
 
@@ -187,7 +202,9 @@ class RtxSession(httpx.Client):
             )
         if r.status_code != 200:
             if r.status_code in (400, 403):
-                raise RtxError("Invalid user name or password.  Check your caps lock.")
+                raise RtxUnauthorized(
+                    "Invalid user name or password.  Check your caps lock."
+                )
             else:
                 raise raise_exception_ex(r, "POST")
 
@@ -208,14 +225,16 @@ class RtxSession(httpx.Client):
             raise RtxServerError(
                 f"The login server {self.server_url} was slow responding."
             )
-        if r.status_code not in (200, 210):
+        if r.status_code == 403:
+            raise RtxUnauthorized(
+                "Invalid user name or password.  Check your caps lock."
+            )
+        elif r.status_code >= 300:
             raise RtxServerError(
                 f"Login response failed from server {self.server_url}.\n\n{exception_string(r, 'POST')}"
             )
-        elif r.status_code == 210:
-            raise RtxError("Invalid user name or password.  Check your caps lock.")
 
-        self.cache_auth_payload(r)
+        self.cache_auth_payload(r, is_2fa_context=True)
         return True
 
     def session_refresh(self):
@@ -551,7 +570,7 @@ def auto_session(arg_url=None):
         # the point for now.
         try:
             read_yenotpass(session)
-        except RtxServerError:
+        except RtxError:
             # we cannot authenticate, that's fine and just like if there was no
             # stored auth at all
             pass

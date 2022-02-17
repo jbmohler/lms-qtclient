@@ -33,8 +33,22 @@ class UserAddressDialog(QtWidgets.QDialog):
         form.addRow(
             self.bind.construct("is_2fa_target", "boolean", label="&Use for 2FA device")
         )
+
+        self.verified_stack = QtWidgets.QStackedWidget()
         self.label_verified = QtWidgets.QLabel()
-        form.addRow(self.label_verified)
+        self.verifycode_frame = QtWidgets.QWidget()
+        self.verifycode_layout = QtWidgets.QHBoxLayout(self.verifycode_frame)
+        self.verifycode_edit = QtWidgets.QLineEdit()
+        self.verifycode_btn = QtWidgets.QPushButton("&Verify")
+        self.verifycode_layout.addWidget(self.verifycode_edit)
+        self.verifycode_layout.addWidget(self.verifycode_btn)
+        self.verifycode_btn.clicked.connect(self.cmd_verify)
+
+        self.verified_stack.addWidget(self.label_verified)
+        self.verified_stack.addWidget(self.verifycode_frame)
+        form.addRow(self.verified_stack)
+
+        self.bind.widgets["address"].setMinimumWidth(40 * apputils.get_char_width())
 
         self.body.addLayout(form)
 
@@ -58,7 +72,31 @@ class UserAddressDialog(QtWidgets.QDialog):
         self.addresses = self.data.main_table()
         self.editrec = self.addresses.rows[0]
 
+        if self.editrec.is_verified:
+            self.verified_stack.setCurrentWidget(self.label_verified)
+        else:
+            self.verified_stack.setCurrentWidget(self.verifycode_frame)
         self.bind.bind(self.editrec, self.addresses.columns)
+
+    def cmd_verify(self):
+        pin = self.verifycode_edit.text()
+        with apputils.animator(self) as p:
+            p.background(
+                self.client.put,
+                "api/user/{}/address/{}/verify",
+                self.userid,
+                self.addrid,
+                confirmation=pin,
+            )
+
+        with self.backgrounder.bulk(self.load_main) as bulk:
+            bulk(
+                "addr_content",
+                self.client.get,
+                self.SRC_INSTANCE_URL,
+                self.userid,
+                self.addrid,
+            )
 
     def cmd_accept(self):
         if self.save():
@@ -382,13 +420,14 @@ class UserDialog(UserMixin):
         self.left.addWidget(self.roles_grid)
 
         if self.client.session.authorized("put_api_user_send_invite"):
+            QDB = QtWidgets.QDialogButtonBox
             self.buttons.addButton("Reset/Invite...", QDB.ActionRole).clicked.connect(
                 self.cmd_resetinvite_user
             )
 
     def cmd_resetinvite_user(self):
         with apputils.animator(self) as p:
-            p.background(self.client.put, "api/user/{}/send-invite")
+            p.background(self.client.put, "api/user/{}/send-invite", self.userid)
 
 
 class UserProfileEdit(UserMixin):

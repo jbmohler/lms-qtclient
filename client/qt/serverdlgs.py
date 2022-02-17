@@ -116,11 +116,14 @@ class RtxLoginDialog(QtWidgets.QDialog):
         app = QtCore.QCoreApplication.instance()
         self.setWindowTitle(app.applicationName())
 
+        self.mode = "login"
+
         self.rtx_server_edit = QtWidgets.QLineEdit()
         self.rtx_server_edit.setMinimumWidth(apputils.get_char_width() * 40)
         self.rtx_user_edit = QtWidgets.QLineEdit()
         self.rtx_password_edit = QtWidgets.QLineEdit()
         self.rtx_password_edit.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.rtx_pin2fa_edit = QtWidgets.QLineEdit()
         self.rtx_save_device_token = QtWidgets.QCheckBox(
             "&Remember this login on this device"
         )
@@ -137,14 +140,27 @@ class RtxLoginDialog(QtWidgets.QDialog):
                 self.accept_offline
             )
 
-        self.main_form = QtWidgets.QFormLayout()
+        self.stack = QtWidgets.QStackedWidget()
+
+        self.login = QtWidgets.QWidget()
+
+        self.main_form = QtWidgets.QFormLayout(self.login)
 
         self.main_form.addRow("&Server:", self.rtx_server_edit)
         self.main_form.addRow("User &Name:", self.rtx_user_edit)
         self.main_form.addRow("&Password:", self.rtx_password_edit)
         self.main_form.addRow(self.rtx_save_device_token)
 
-        self.main.addLayout(self.main_form)
+        self.stack.addWidget(self.login)
+
+        self.confirm = QtWidgets.QWidget()
+
+        self.confirm_form = QtWidgets.QFormLayout(self.confirm)
+        self.confirm_form.addRow("&2FA Confirmation:", self.rtx_pin2fa_edit)
+
+        self.stack.addWidget(self.confirm)
+
+        self.main.addWidget(self.stack)
         self.main.addWidget(self.buttons)
 
         settings = QtCore.QSettings()
@@ -177,20 +193,68 @@ class RtxLoginDialog(QtWidgets.QDialog):
         try:
             self.session.set_base_url(self.rtx_server_edit.text())
             self.session.authenticate(username, password)
-
-            devtoken = self.rtx_save_device_token.isChecked()
-            if devtoken:
-                self.session.save_device_token()
-
-            self.rtx_user = username.upper()
         except:
             qt.exception_message(self, "Error logging in.")
             self.rtx_password_edit.selectAll()
             return
 
-        settings = QtCore.QSettings()
-        settings.beginGroup(self.settings_group)
-        settings.setValue("rtx_server_url", self.session.server_url)
-        settings.setValue("rtx_user", username)
+        if self.session.pending_2fa:
+            self.mode = "2fa"
+            self.stack.setCurrentIndex(1)
 
-        return super(RtxLoginDialog, self).accept()
+        if not self.session.pending_2fa:
+            devtoken = self.rtx_save_device_token.isChecked()
+            if devtoken:
+                self.session.save_device_token()
+
+            self.rtx_user = username.upper()
+
+        if not self.session.pending_2fa:
+            settings = QtCore.QSettings()
+            settings.beginGroup(self.settings_group)
+            settings.setValue("rtx_server_url", self.session.server_url)
+            settings.setValue("rtx_user", username)
+
+            return super(RtxLoginDialog, self).accept()
+
+
+class TwoFactorPrompt(QtWidgets.QDialog):
+    ID = "rtx-2fa-dialog"
+    TITLE = "Yenot 2-FA Confirm"
+
+    def __init__(self, parent, session, settings_group=None, allow_offline=False):
+        super(TwoFactorPrompt, self).__init__(parent)
+
+        self.setObjectName(self.ID)
+        self.setWindowTitle(self.TITLE)
+
+        self.session = session
+
+        self.settings_group = settings_group
+        self.allow_offline = allow_offline
+        app = QtCore.QCoreApplication.instance()
+        self.setWindowTitle(app.applicationName())
+
+        self.rtx_pin_edit = QtWidgets.QLineEdit()
+
+        self.main = QtWidgets.QVBoxLayout(self)
+
+        self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
+
+        QDB = QtWidgets.QDialogButtonBox
+        self.buttons.addButton(QDB.Ok).clicked.connect(self.accept)
+        self.buttons.addButton(QDB.Cancel).clicked.connect(self.reject)
+        if self.allow_offline:
+            self.buttons.addButton("&Offline", QDB.ApplyRole).clicked.connect(
+                self.accept_offline
+            )
+
+        self.main_form = QtWidgets.QFormLayout()
+
+        self.main_form.addRow("&Confirmation P:", self.rtx_server_edit)
+        self.main_form.addRow("User &Name:", self.rtx_user_edit)
+        self.main_form.addRow("&Password:", self.rtx_password_edit)
+        self.main_form.addRow(self.rtx_save_device_token)
+
+        self.main.addLayout(self.main_form)
+        self.main.addWidget(self.buttons)
