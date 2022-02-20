@@ -7,7 +7,7 @@ import datetime
 import socket
 import urllib.parse
 import jose.jwt
-import requests
+import httpx
 import tzlocal
 import rtlib
 from . import identity
@@ -56,7 +56,7 @@ class STATIC:
         raise RuntimeError("check server")
 
 
-class RtxSession(requests.Session):
+class RtxSession(httpx.Client):
     def __init__(self, server_url=None):
         super(RtxSession, self).__init__()
         if server_url:
@@ -87,7 +87,8 @@ class RtxSession(requests.Session):
         self.server_url = server_url
         if self.server_url and not self.server_url.endswith("/"):
             self.server_url += "/"
-        self.mount(self.server_url, requests.adapters.HTTPAdapter(max_retries=3))
+        # TODO figure out retries in httpx
+        # self.mount(self.server_url, requests.adapters.HTTPAdapter(max_retries=3))
 
     def save_device_token(self):
         client = self.std_client()
@@ -157,9 +158,9 @@ class RtxSession(requests.Session):
         p = {"username": username, "pin": pin}
         try:
             r = self.post(self.prefix("api/session-by-pin"), data=p)
-        except requests.ConnectionError:
+        except httpx.ConnectError:
             raise RtxServerError(f"The login server {self.server_url} was unavailable.")
-        except requests.Timeout:
+        except httpx.TimeoutException:
             raise RtxServerError(
                 f"The login server {self.server_url} was slow responding."
             )
@@ -178,9 +179,9 @@ class RtxSession(requests.Session):
         p = {"pin2": pin2}
         try:
             r = self.post(self.prefix("api/session/promote-2fa"), data=p)
-        except requests.ConnectionError:
+        except httpx.ConnectionError:
             raise RtxServerError(f"The login server {self.server_url} was unavailable.")
-        except requests.Timeout:
+        except httpx.TimeoutException:
             raise RtxServerError(
                 f"The login server {self.server_url} was slow responding."
             )
@@ -201,9 +202,9 @@ class RtxSession(requests.Session):
             p["device_token"] = device_token
         try:
             r = self.post(self.prefix("api/session"), data=p)
-        except requests.ConnectionError:
+        except httpx.ConnectError:
             raise RtxServerError(f"The login server {self.server_url} was unavailable.")
-        except requests.Timeout:
+        except httpx.TimeoutException:
             raise RtxServerError(
                 f"The login server {self.server_url} was slow responding."
             )
@@ -249,7 +250,14 @@ class RtxSession(requests.Session):
     def close(self):
         self.logout()
 
-        super(RtxSession, self).close()
+        try:
+            super(RtxSession, self).close()
+        except RuntimeError as e:
+            # TODO:  I'm not too happy with this exception case but the error
+            # on close just doesn't seem helpful.
+            # The connection pool was closed while 1 HTTP requests/responses were still in-flight.
+            if not str(e).startswith("The connection pool was closed while "):
+                raise
 
     def report_python_traceback_event(self, ltype, descr, data):
         # Save the last logs along with a timestamp so that error reporting is
@@ -345,7 +353,7 @@ class RtxClient:
     "appropriate" has not been clearly defined nor implemented).
 
     The star of this class is get which sends a REST request to the specified
-    rtx server via the Python requests library.  It notifies the user of errors
+    rtx server via the Python httpx library.  It notifies the user of errors
     by message box or exception as appropriate and configured by a callback
     (?).  If no error occurs the response is parsed by json.loads and returned
     with-out further parsing.  Note that you should expect requests to
@@ -376,7 +384,7 @@ class RtxClient:
             headers["X-Yenot-CancelToken"] = kwargs["cancel_token"]
             del kwargs["cancel_token"]
         s.session_refresh()
-        r = s.get(s.prefix(tail), params=kwargs, headers=headers, allow_redirects=True)
+        r = s.get(s.prefix(tail), params=kwargs, headers=headers, follow_redirects=True)
         # This is special rtx queued long job handling logic
         while r.status_code in [202, 303]:  # accepted, redirect
             queued = r.headers["Location"]
@@ -385,7 +393,7 @@ class RtxClient:
                 if sleeptime > 2.0:
                     sleeptime /= 1.5
                 time.sleep(sleeptime)
-            r = s.get(queued, allow_redirects=True)
+            r = s.get(queued, follow_redirects=True)
         if r.status_code != 200:
             raise raise_exception_ex(r, "GET")
         return self.result_factory(r.text)
@@ -403,7 +411,7 @@ class RtxClient:
         s = self.session
         s.session_refresh()
         r = s.post(
-            s.prefix(tail), params=kwargs, data=data, files=files, allow_redirects=True
+            s.prefix(tail), params=kwargs, data=data, files=files, follow_redirects=True
         )
         # This is special rtx queued long job handling logic
         while r.status_code in [202, 303]:  # accepted, redirect
@@ -413,7 +421,7 @@ class RtxClient:
                 if sleeptime > 2.0:
                     sleeptime /= 1.5
                 time.sleep(sleeptime)
-            r = s.get(queued, allow_redirects=True)
+            r = s.get(queued, follow_redirects=True)
         if r.status_code != 200:
             raise raise_exception_ex(r, "POST")
         return self.result_factory(r.text)
@@ -431,7 +439,7 @@ class RtxClient:
         s = self.session
         s.session_refresh()
         r = s.put(
-            s.prefix(tail), params=kwargs, data=data, files=files, allow_redirects=True
+            s.prefix(tail), params=kwargs, data=data, files=files, follow_redirects=True
         )
         # This is special rtx queued long job handling logic
         while r.status_code in [202, 303]:  # accepted, redirect
@@ -441,20 +449,18 @@ class RtxClient:
                 if sleeptime > 2.0:
                     sleeptime /= 1.5
                 time.sleep(sleeptime)
-            r = s.get(queued, allow_redirects=True)
+            r = s.get(queued, follow_redirects=True)
         if r.status_code != 200:
             raise raise_exception_ex(r, "PUT")
         return self.result_factory(r.text)
 
     def delete(self, tail, *args, **kwargs):
+        # delete does not accept a body per many sources (including httpx)
+
         tail = tail.format(*args)
-        if "files" in kwargs:
-            files = kwargs.pop("files")
-        else:
-            files = None
         s = self.session
         s.session_refresh()
-        r = s.delete(s.prefix(tail), params=kwargs, files=files, allow_redirects=True)
+        r = s.delete(s.prefix(tail), params=kwargs, follow_redirects=True)
         # This is special rtx queued long job handling logic
         while r.status_code in [202, 303]:  # accepted, redirect
             queued = r.headers["Location"]
@@ -463,7 +469,7 @@ class RtxClient:
                 if sleeptime > 2.0:
                     sleeptime /= 1.5
                 time.sleep(sleeptime)
-            r = s.get(queued, allow_redirects=True)
+            r = s.get(queued, follow_redirects=True)
         if r.status_code != 200:
             raise raise_exception_ex(r, "DELETE")
         return self.result_factory(r.text)

@@ -1,4 +1,4 @@
-requests
+httpx
 fuzzyparsers
 xlsxwriter
 python-jose

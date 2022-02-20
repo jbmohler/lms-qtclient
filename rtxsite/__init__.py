@@ -23,7 +23,7 @@ if not getattr(sys, "rtx_packaged_app", False) or not getattr(sys, "frozen", Fal
 
 def add_rtxlib_site(zipname, timeout=None):
     global server
-    import requests
+    import httpx
 
     p = xplatsite.local_appdata_path()
     dirname = os.path.join(p, "RTXinc", "Rtx Suite", "Client")
@@ -36,8 +36,8 @@ def add_rtxlib_site(zipname, timeout=None):
         kwargs["timeout"] = timeout
     r = None
     try:
-        r = requests.get(server + "/install/" + zipname, **kwargs)
-    except requests.exceptions.Timeout as e:
+        r = httpx.get(server + "/install/" + zipname, **kwargs)
+    except httpx.TimeoutException as e:
         if not os.path.exists(zipfile):
             xplatsite.info_message(
                 f"The server {server} could not be contacted.  This program must be connected to the RTX network."

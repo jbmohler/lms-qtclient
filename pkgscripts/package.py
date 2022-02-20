@@ -5,7 +5,7 @@ import shutil
 import zipfile
 import hashlib
 import cx_Freeze as cxf
-import requests
+import httpx
 import PySide6
 
 # We need to include this import since we don't install wpsgsrc to Python
@@ -105,7 +105,7 @@ def main():
         "pydoc_data",
         "pygments",
         "pytz",
-        "requests",
+        "httpx",
         "setuptools",
         "urllib",
         "urllib3",
@@ -197,9 +197,7 @@ def main():
         print(x)
         os.unlink(x)
 
-    shutil.copyfile(
-        requests.certs.where(), os.path.join(outroot, "binary", "cacert.pem")
-    )
+    shutil.copyfile(httpx.certs.where(), os.path.join(outroot, "binary", "cacert.pem"))
     shutil.copytree(
         os.path.join(PySide6.__path__[0], "openssl"),
         os.path.join(outroot, "binary", "lib", "openssl"),

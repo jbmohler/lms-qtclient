@@ -1,5 +1,5 @@
 import smtplib
-import requests
+import httpx
 import rtxsite
 
 
@@ -7,7 +7,7 @@ def hit(name):
     url = getattr(rtxsite.config["alerts"], name)
     if url == "nope":
         return
-    requests.get(url)
+    httpx.get(url)
 
 
 def email(target, status, msg):

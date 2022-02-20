@@ -1,5 +1,5 @@
 import itertools
-import requests
+import httpx
 from PySide6 import QtCore, QtGui, QtWidgets
 import rtlib
 import apputils
@@ -135,7 +135,7 @@ class ReportsDock(QtWidgets.QWidget):
                 self.grid.expandAll()
 
             self.ctxmenu.update_model()
-        except requests.exceptions.ConnectionError:
+        except httpx.NetworkError:
             # avoid a message on a refresh that fails
             pass
         except:

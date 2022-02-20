@@ -24,7 +24,7 @@ def about_box(parent, header):
         QtCore.__name__.split(".")[0],
         "jose",
         "markupsafe",
-        "requests",
+        "httpx",
         "xlsxwriter",
     ]
     vers = "<br />".join([module_ver(m) for m in modules])
