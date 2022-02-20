@@ -378,7 +378,7 @@ class Importer(QtWidgets.QDialog):
                 self.header_edit.setChecked(True)
 
             text = mime.text()
-            if len(text) > 2 ** 25:
+            if len(text) > 2**25:
                 messages.information(self, "Text from clipboard exceeds maximum size.")
             else:
                 self.raw_text = text
