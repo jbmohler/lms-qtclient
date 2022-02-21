@@ -114,7 +114,7 @@ class JointBackgrounder:
 
 
 class AnimateWait(QtWidgets.QWidget):
-    def __init__(self, obscured):
+    def __init__(self, obscured, immediate=False):
         super(AnimateWait, self).__init__(obscured)
 
         # resize to match parent
@@ -133,7 +133,10 @@ class AnimateWait(QtWidgets.QWidget):
         self.clock = 0
 
         self.term_closed = False
-        QtCore.QTimer.singleShot(250, self.show_first)
+        if immediate:
+            self.show_first()
+        else:
+            QtCore.QTimer.singleShot(250, self.show_first)
 
         self.arcstart = 90 * 16
 

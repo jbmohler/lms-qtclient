@@ -275,7 +275,7 @@ def edit_transaction(session, tranid="new", copy=False):
 
     def finish_load():
         nonlocal dlg, core
-        payload = yield apputils.AnimateWait(dlg)
+        payload = yield apputils.AnimateWait(dlg, immediate=True)
         core = TransactionCore.from_endpoint(dlg, payload)
         dlg.bind(core)
 
