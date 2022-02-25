@@ -62,7 +62,10 @@ class STATIC:
 
 class RtxSession(httpx.Client):
     def __init__(self, server_url=None):
-        super(RtxSession, self).__init__()
+        # httpx default time-out of 5 seconds is not sufficient for long
+        # polling or longish reports.
+        timeout = httpx.Timeout(5.0, read=120.0)
+        super(RtxSession, self).__init__(timeout=timeout)
         if server_url:
             self.set_base_url(server_url)
         else:
