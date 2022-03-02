@@ -307,6 +307,8 @@ class EditableGridManager(GridManager):
 
         self.ctxmenu = viewmenus.ContextMenu(self.grid, parent)
         self.ctxmenu.contextActionsUpdate.connect(self.context_actions_update)
+        self.ctxmenu.current_row_update.connect(self.context_actions_update)
+        self.ctxmenu.current_row_update.connect(self.current_row_update.emit)
 
     @property
     def importer(self):

@@ -317,7 +317,7 @@ class PromptList:
 def type_included(type_):
     if type_ == None:
         return True
-    elif type_ in ["__meta__", "text_color"]:
+    elif type_ in ["__meta__", "text_color", "matrix"]:
         return False
     elif "." in type_ and type_.split(".", 1)[1] in ("autoid", "surrogate"):
         return False
@@ -376,6 +376,19 @@ def parse_date(s):
     return datetime.date(int(s[:4]), int(s[5:7]), int(s[8:10]))
 
 
+def parse_matrix(v):
+    """
+    Matrix columns are a list of surrogate key ids referencing another table
+    which has a many-to-many link with this table.
+
+    We construct an object here which can interact with this and return the
+    correct values to the server to maintain the matrix link.
+    """
+    from . import server
+
+    return server.MatrixLink.loaded(v)
+
+
 def parse_month_end(value):
     date = parse_date(value)
 
@@ -415,6 +428,8 @@ def as_python(columns, to_localtime=True):
     def column_converter(attr, meta):
         if meta == None or meta.get("type", None) == None:
             return identity
+        elif meta["type"] == "matrix":
+            return parse_matrix
         elif meta["type"] == "boolean":
             return lambda v: False if v == None else v
         elif meta["type"] == "binary":

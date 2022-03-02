@@ -1,4 +1,3 @@
-import datetime
 from PySide6 import QtCore, QtGui, QtWidgets
 import client.qt as qt
 import apputils
@@ -60,6 +59,25 @@ class SplitsTable(mxc.ModelRow):
         self.sum = null0(self._debit) - null0(self._credit)
 
 
+class SplitTagBinder:
+    split = None
+
+    def __init__(self, tag):
+        self._tag = tag
+
+    @property
+    def checked(self):
+        return self.split.tags.linked(self._tag.id)
+
+    @checked.setter
+    def checked(self, v):
+        self.split.tags.toggle_linked(self._tag.id, v)
+
+    @property
+    def tag_name(self):
+        return self._tag.tag_name
+
+
 class TransactionCore:
     def __init__(self):
         pass
@@ -72,6 +90,7 @@ class TransactionCore:
         self.tranrow = self.trantable.rows[0]
         self.splittable = content.named_table("splits", mixin=SplitsTable)
         self.splittable.DataRow.controller = controller
+        self.tags = content.named_table("tags")
         return self
 
     def cmd_balance(self, split):
@@ -165,11 +184,16 @@ class TransactionEditor(qt.ObjectDialog):
 
         self.trans_grid = widgets.EditableTableView()
         self.trans_gridmgr = qt.EditableGridManager(self.trans_grid, self)
+        self.trans_gridmgr.current_row_update.connect(self.bind_tag_grid)
+
+        self.tags_grid = widgets.EditableTableView()
+        self.tags_grid.header().setStretchLastSection(True)
+        self.tags_gridmgr = qt.EditableGridManager(self.tags_grid, self)
 
         # first tab: transactions
         self.splitme = QtWidgets.QSplitter()
         self.splitme.addWidget(self.trans_grid)
-        # self.splitme.addWidget(self.tags_table)
+        self.splitme.addWidget(self.tags_grid)
         self.tab.addTab(self.splitme, "&Transactions")
 
         # second tab:  receipt memo
@@ -209,6 +233,24 @@ class TransactionEditor(qt.ObjectDialog):
         self.geo = apputils.WindowGeometry(
             self, position=False, tabs=[self.tab], splitters=[self.splitme]
         )
+
+    def bind_tag_grid(self):
+        splitrow = self.trans_gridmgr.selected_row()
+        if splitrow is None or splitrow.tags is None:
+            self.tags_grid.setModel(None)
+            return
+
+        self.TSBinder = type("TSBinder", (SplitTagBinder,), {"split": splitrow})
+
+        columns = [apputils.field("tag_name", "Tag", check_attr="checked")]
+        rows = [self.TSBinder(t) for t in self.data.tags.rows]
+
+        self.tags_model = apputils.ObjectQtModel(columns)
+
+        with self.geo.grid_reset(self.tags_grid):
+            self.tags_grid.setModel(self.tags_model)
+            self.tags_model.set_rows(rows)
+            self.tags_gridmgr._post_model_action()
 
     def bind(self, trancore):
         self.data = trancore
@@ -259,6 +301,7 @@ class TransactionEditor(qt.ObjectDialog):
                 with self.tracker.loading(reset=False):
                     newflip = self.data.splittable.flipper_row()
                 model.promote_flipper(row, flipper=newflip)
+                row.tags = rtlib.parse_matrix(None)
                 self.data.splittable.rows.append(row)
             for attr in fields:
                 model.append_change_value(row, attr)
