@@ -117,7 +117,7 @@ class AccountingExtensions:
                 (
                     "&Calendar Transactions",
                     "pyhacc:transactions/calendar",
-                    "api_transactions_recent_header",
+                    "get_api_transactions_list",
                 ),
             ),
             ("SeparatorMenuItem", ()),

@@ -18,24 +18,21 @@ class ChangeListener:
         self.chain_index = 0
         self.chain_key = uuid.uuid1().hex
 
-        kwargs = {
-            "key": self.chain_key,
-            "channel": self.channel,
-        }
-        results = self.client.put("api/sql/changequeue", **kwargs)
+        # This URL design with the embedded channel is not baked
+        # into Yenot; it is an LMS convention
+        self.url = f"api/{channel}/poll-changes"
+
+        kwargs = {"key": self.chain_key}
+        results = self.client.put(self.url, **kwargs)
         self.chain_index = results.keys["index"]
 
         self.chained_listen()
 
     def chained_listen(self):
-        kwargs = {
-            "key": self.chain_key,
-            "channel": self.channel,
-            "index": self.chain_index,
-        }
+        kwargs = {"key": self.chain_key, "index": self.chain_index}
         # TODO: cancel should work on self.client.get, but it does not.
         self.backgrounder.named[self.chain_key](
-            self.chained_reload, self.client, "api/sql/changequeue", **kwargs
+            self.chained_reload, self.client, self.url, **kwargs
         )
 
     def chained_reload(self):
@@ -49,8 +46,11 @@ class ChangeListener:
 
                 self.loadfunc()
         except client.RtxError:
+            # TODO: improve error logging and/or decline retries
+            # after too many errors
             delay = 1000.0 * 1.5
         except Exception:
+            # TODO: over-broad!??!
             delay = 1000.0 * 1.5
         else:
             delay = 0.0
