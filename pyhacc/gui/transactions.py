@@ -1,5 +1,6 @@
 from PySide6 import QtCore, QtGui, QtWidgets
 import client.qt as qt
+import rtlib
 import apputils
 import apputils.widgets as widgets
 from . import widgets as pywid
