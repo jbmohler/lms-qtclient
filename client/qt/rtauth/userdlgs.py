@@ -116,51 +116,16 @@ class UserAddressDialog(QtWidgets.QDialog):
             )
 
 
-class EntityTaggerMixin:
-    def _rtlib_init_(self):
-        self.subtags = []
+class UserTagMatrixMixin:
+    ambient_user = None
 
     @property
     def is_tagged(self):
-        return self.id in self.ambient_user.active_tag_list()
+        return self.ambient_user.roles.linked(self.id)
 
     @is_tagged.setter
     def is_tagged(self, v):
-        if v:
-            self.ambient_user.add_tag(self)
-        else:
-            self.ambient_user.remove_tag(self)
-
-
-class EntityEditMixin:
-    def _rtlib_init_(self):
-        self.roles_add = []
-        self.roles_del = []
-
-    def active_tag_list(self):
-        orig_tags = [] if self.roles == None else self.roles
-
-        return set(orig_tags).difference(self.roles_del).union(self.roles_add)
-
-    def add_tag(self, tag):
-        orig_tags = [] if self.roles == None else self.roles
-
-        try:
-            self.roles_del.remove(tag.id)
-        except ValueError:
-            pass
-        if tag.id not in orig_tags:
-            self.roles_add.append(tag.id)
-
-    def remove_tag(self, tag):
-        orig_tags = [] if self.roles == None else self.roles
-
-        try:
-            self.roles_add.remove(tag.id)
-        except ValueError:
-            pass
-        if tag.id in orig_tags:
-            self.roles_del.append(tag.id)
+        self.ambient_user.roles.toggle_linked(self.id, v)
 
 
 class AddressMixin:
@@ -327,16 +292,14 @@ class UserMixin(QtWidgets.QDialog):
 
         with self.backgrounder.bulk(self.load_main) as bulk:
             bulk("user_content", self.client.get, self.SRC_INSTANCE_URL, userid)
-            if self.userid != "me":
-                bulk("roles_content", self.client.get, "api/roles/list")
 
-    def load_main(self, user_content, roles_content=None):
+    def load_main(self, user_content):
         self.chk_changeset_password.setChecked(False)
         self.toggle_changeset_password(False)
 
         self.data = user_content
         self.addresses = self.data.named_table("addresses", mixin=AddressMixin)
-        self.users = self.data.main_table(mixin=EntityEditMixin)
+        self.users = self.data.main_table()
         self.editrec = self.users.rows[0]
 
         self.editrec.password2 = None
@@ -350,8 +313,10 @@ class UserMixin(QtWidgets.QDialog):
 
         if self.userid != "me":
             # Load role grid
-            self.roles = roles_content.main_table(
-                mixin=EntityTaggerMixin, cls_members={"ambient_user": self.editrec}
+            self.roles = self.data.named_table(
+                "roles:universe",
+                mixin=UserTagMatrixMixin,
+                cls_members={"ambient_user": self.editrec},
             )
 
             columns = [apputils.field("role_name", "Role", check_attr="is_tagged")]
@@ -379,12 +344,9 @@ class UserMixin(QtWidgets.QDialog):
         row = self.users.rows[0]
         urlslug = self.userid if self.userid == "me" else self.users.rows[0].id
 
-        excl = ["roles"]
-        extensions = []
+        excl = ["password2"]
         if urlslug == "me":
-            excl += ["username", "inactive"]
-        else:
-            extensions = ["roles_add", "roles_del"]
+            excl += ["username", "inactive", "roles"]
         if self.chk_changeset_password.isChecked():
             if row.password != row.password2:
                 apputils.information(
@@ -395,11 +357,7 @@ class UserMixin(QtWidgets.QDialog):
         else:
             excl.append("password")
 
-        files = {
-            "user": self.users.as_http_post_file(
-                exclusions=["password2", *excl], extensions=extensions
-            )
-        }
+        files = {"user": self.users.as_http_post_file(exclusions=excl)}
         try:
             self.client.put(self.SRC_INSTANCE_URL, urlslug, files=files)
             return True
