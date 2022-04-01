@@ -8,34 +8,20 @@ from client.qt import gridmgr
 from client.qt import winlist
 
 
-class UserRoleMapperRowMixin:
+class UserMixin:
     tracker = None
-
-    def get_by_roleaid(self, user_aid):
-        # implemented 'sub-scripted' attribute
-        return user_aid in self.role_list
-
-    def set_by_roleaid(self, user_aid, value):
-        # implemented 'sub-scripted' attribute
-        if value and user_aid not in self.role_list:
-            self.role_list.append(user_aid)
-        elif not value and user_aid in self.role_list:
-            self.role_list.remove(user_aid)
-
-    def __setattr__(self, attr, value):
-        self.tracker.set_dirty(self, attr)
-        super(UserRoleMapperRowMixin, self).__setattr__(attr, value)
 
 
 class RoleIndexer(object):
-    def __init__(self, user_aid):
-        self.user_aid = user_aid
+    def __init__(self, role_id):
+        self.role_id = role_id
 
     def __get__(self, obj, objtype):
-        return obj.get_by_roleaid(self.user_aid)
+        return obj.roles.linked(self.role_id)
 
     def __set__(self, obj, value):
-        obj.set_by_roleaid(self.user_aid, value)
+        obj.tracker.set_dirty(obj, "roles")
+        obj.roles.toggle_linked(self.role_id, value)
 
 
 class UserRoleMapperLineTracker(valqt.DocumentTracker):
@@ -107,21 +93,14 @@ class UserRoleMapperTargetsByRole(QtWidgets.QMainWindow):
         try:
             content = yield
 
-            fred = {"tracker": self.tracker}
+            clsvars = {"tracker": self.tracker}
             for u in self.role_universe:
-                fred[f"role_{u}"] = RoleIndexer(u)
-            self.MyUserRoleMapperRowMixin = type(
-                "MyUserRoleMapperRowMixin", (UserRoleMapperRowMixin,), fred
-            )
+                clsvars[f"role_{u}"] = RoleIndexer(u)
 
             with self.tracker.loading():
-                self.records = content.main_table(mixin=self.MyUserRoleMapperRowMixin)
-                self.roles = content.named_table("rolenames")
+                self.records = content.main_table(mixin=UserMixin, cls_members=clsvars)
+                self.roles = content.named_table("roles:universe")
                 self.roles.rows.sort(key=lambda x: x.role_name)
-
-                for row in self.records.rows:
-                    if row.role_list == None:
-                        row.role_list = []
 
             columns = [c for c in self.records.columns if c.attr in ["username"]]
             for u in self.roles.rows:
@@ -156,7 +135,7 @@ class UserRoleMapperTargetsByRole(QtWidgets.QMainWindow):
         try:
             tosend = self.records.duplicate(rows=list(self.tracker.modified))
             data = {"roles": ",".join(self.role_universe)}
-            files = {"userroles": tosend.as_http_post_file(exclusions=["username"])}
+            files = {"users": tosend.as_http_post_file()}
 
             self.client.put(self.SRC_URL, data=data, files=files)
         except Exception:
