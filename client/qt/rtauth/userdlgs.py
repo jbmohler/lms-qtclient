@@ -216,6 +216,25 @@ class UserMixin(QtWidgets.QDialog):
 
         self.left.addLayout(form)
 
+        self.tabs = QtWidgets.QTabWidget()
+
+        # Device Tokens
+        self.devtok_grid = widgets.TableView()
+        self.devtok_grid.setSortingEnabled(True)
+        self.devtok_gridmgr = qt.GridManager(self.devtok_grid, self)
+        self.devtok_gridmgr.add_action("&Revoke Token", triggered=self.cmd_revoke_token)
+        self.tabs.addTab(self.devtok_grid, "Device Tokens")
+
+        # Sessions
+        self.sessions_grid = widgets.TableView()
+        self.sessions_grid.setSortingEnabled(True)
+        self.sessions_gridmgr = qt.GridManager(self.sessions_grid, self)
+        self.tabs.addTab(self.sessions_grid, "Sessions")
+
+        # Roles get added in the inherited
+
+        self.left.addWidget(self.tabs)
+
         # User Addresses on the Right #
         self.address_html = QtWidgets.QTextBrowser()
         self.address_html.setStyleSheet("QTextEdit { font-size: 14px }")
@@ -229,6 +248,10 @@ class UserMixin(QtWidgets.QDialog):
         self.main.addWidget(self.buttons)
         self.buttons.accepted.connect(self.cmd_accept)
         self.buttons.rejected.connect(self.reject)
+
+        self.geo = apputils.WindowGeometry(
+            self, grids=[self.devtok_grid, self.sessions_grid]
+        )
 
     def toggle_changeset_password(self, checked):
         self.bind.widgets["password"].setEnabled(checked)
@@ -282,6 +305,18 @@ class UserMixin(QtWidgets.QDialog):
         if self.save():
             self.cmd_edit_address(None, new=True)
 
+    def cmd_revoke_token(self, row):
+        if "Yes" == apputils.message(
+            self.window(),
+            f"This will force a new password login on {row.device_name} for {self.editrec.username}.  Are you sure you wish to continue?",
+            buttons=["Yes", "No"],
+        ):
+            try:
+                self.client.delete("api/user/me/device-token/{}", row.id)
+                self.reload()
+            except:
+                qt.exception_message(self.window(), "The device token revoke failed.")
+
     def reload(self):
         urlslug = self.userid if self.userid == "me" else self.users.rows[0].id
         self.loadrec(urlslug)
@@ -310,6 +345,14 @@ class UserMixin(QtWidgets.QDialog):
         if self.userid == "me":
             self.bind.widgets["username"].setReadOnly(True)
             self.bind.widgets["inactive"].setReadOnly(True)
+
+        with self.geo.grid_reset(self.devtok_grid):
+            self.data.devicetokens = self.data.named_table("devicetokens")
+            self.devtok_gridmgr.set_client_table(self.data.devicetokens)
+
+        with self.geo.grid_reset(self.sessions_grid):
+            self.data.sessions = self.data.named_table("sessions")
+            self.sessions_gridmgr.set_client_table(self.data.sessions)
 
         if self.userid != "me":
             # Load role grid
@@ -369,13 +412,14 @@ class UserDialog(UserMixin):
     def __init__(self, parent, session):
         super(UserDialog, self).__init__(parent, session)
 
-        # Roles Grid below the form #
+        # Roles Grid
         self.roles_grid = widgets.TableView()
         self.roles_grid.verticalHeader().hide()
         self.roles_grid.header().setStretchLastSection(True)
         self.roles_grid.setSortingEnabled(True)
         self.roles_gridmgr = qt.GridManager(self.roles_grid, self)
-        self.left.addWidget(self.roles_grid)
+
+        self.tabs.addTab(self.roles_grid, "Roles")
 
         if self.client.session.authorized("put_api_user_send_invite"):
             QDB = QtWidgets.QDialogButtonBox
