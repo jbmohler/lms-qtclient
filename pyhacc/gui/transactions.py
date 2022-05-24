@@ -309,8 +309,8 @@ class TransactionEditor(qt.ObjectDialog):
             model.object_changed(row)
 
 
-def edit_transaction(session, tranid="new", copy=False):
-    dlg = TransactionEditor()
+def edit_transaction(parent, session, tranid="new", copy=False):
+    dlg = TransactionEditor(parent)
 
     client = session.std_client()
     dlg.client = client
@@ -386,15 +386,18 @@ class TransactionCommandSidebar(QtCore.QObject):
         return self.gridmgr.grid.window()
 
     def cmd_add_trans(self):
-        if edit_transaction(self.client.session):
+        if edit_transaction(self.window(), self.client.session):
             self.refresh.emit()
 
     def cmd_edit_trans(self, row):
-        if edit_transaction(self.client.session, row.tid):
+        if edit_transaction(self.window(), self.client.session, row.tid):
             self.refresh.emit()
 
     def cmd_copy_trans(self, row):
-        if edit_transaction(self.client.session, row.tid, copy=True):
+        if not row:
+            # no transaction selected to copy
+            return
+        if edit_transaction(self.window(), self.client.session, row.tid, copy=True):
             self.refresh.emit()
 
     def cmd_delete_trans(self, row):
