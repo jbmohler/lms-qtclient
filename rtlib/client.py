@@ -221,7 +221,7 @@ class ClientTable:
             and getter == None
         ):
             attrs = self.DataRow.__slots__
-            slimrows = [r._as_tuple() for r in self.rows]
+            slimrows = [r._as_dict() for r in self.rows]
         else:
             if inclusions != None:
                 attrs = list(inclusions)
@@ -235,7 +235,7 @@ class ClientTable:
             getter = getter if getter != None else getattr
             slimrows = []
             for r in self.rows:
-                slim = [getter(r, a) for a in attrs]
+                slim = {a: getter(r, a) for a in attrs}
                 slimrows.append(slim)
 
         keys = {}
@@ -246,7 +246,7 @@ class ClientTable:
                 )
             pfunc = lambda row: [getattr(row, p1) for p1 in self.pkey]
             keys["deleted"] = [pfunc(row) for row in self.deleted_rows]
-        return (keys, attrs, slimrows)
+        return {**keys, "columns": attrs, "data": slimrows}
 
     def as_http_post_file(self, *args, **kwargs):
         tab3 = self.as_writable(*args, **kwargs)

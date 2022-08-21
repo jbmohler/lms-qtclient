@@ -270,18 +270,20 @@ class PromptList:
         # wish to mutate -- work on a copy
         column_list = copy.deepcopy(column_list)
 
-        values = [
-            (None if x[1] == None else x[1].pop("default", None)) for x in column_list
-        ]
+        def meta_pop(meta, key, default_value):
+            if meta == None:
+                return None
+            else:
+                return meta.pop(key, default_value)
+
+        values = {attr: meta_pop(meta, "default", None) for attr, meta in column_list}
         optional_attrs = [
-            x[0]
-            for x in column_list
-            if (False if x[1] == None else x[1].pop("optional", False))
+            attr for attr, meta in column_list if meta_pop(meta, "optional", False)
         ]
         relevance_groups = {
-            x[0]: x[1].pop("relevance")
-            for x in column_list
-            if (x[1] != None and "relevance" in x[1])
+            attr: meta.pop("relevance")
+            for attr, meta in column_list
+            if (meta != None and "relevance" in meta)
         }
         func = as_python(column_list)
 
@@ -427,8 +429,8 @@ def str_column_coerce(column, value):
 
 
 def as_python(columns, to_localtime=True):
-    def row_coerce(converters, _tuple):
-        return tuple(t(v) for t, v in zip(converters, _tuple))
+    def row_coerce(converters, _data):
+        return tuple(func(_data[key]) for key, func in converters)
 
     identity = lambda v: v
 
@@ -461,13 +463,13 @@ def as_python(columns, to_localtime=True):
         else:
             return identity
 
-    converters = [column_converter(*x) for x in columns]
+    converters = [(x[0], column_converter(*x)) for x in columns]
     return functools.partial(row_coerce, converters)
 
 
 def as_client(columns, to_localtime=True):
-    def row_coerce(converters, _tuple):
-        return tuple(t(v) for t, v in zip(converters, _tuple))
+    def row_coerce(converters, _data):
+        return tuple(func(_data[key]) for key, func in converters)
 
     identity = lambda v: v
 
@@ -491,5 +493,5 @@ def as_client(columns, to_localtime=True):
         else:
             return identity
 
-    converters = [column_converter(*x) for x in columns]
+    converters = [(x[0], column_converter(*x)) for x in columns]
     return functools.partial(row_coerce, converters)

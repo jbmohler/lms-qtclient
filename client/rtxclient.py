@@ -166,7 +166,8 @@ class RtxSession(httpx.Client):
         else:
             self.rtx_userid = payload["userid"]
             self.rtx_username = payload["username"]
-            self._capabilities = rtlib.ClientTable(*payload["capabilities"])
+            t = payload["capabilities"]
+            self._capabilities = rtlib.ClientTable(t["columns"], t["data"])
             self.access_token = True
             self.access_token_expiration = time.time() + 60 * 60
 
@@ -520,14 +521,17 @@ class StdPayload:
                 yield tname, self.named_table(tname)
 
     def named_table(self, name, mixin=None, cls_members=None):
-        return rtlib.ClientTable(*self._pay[name], mixin=mixin, cls_members=cls_members)
+        t = self._pay[name]
+        return rtlib.ClientTable(
+            t["columns"], t["data"], mixin=mixin, cls_members=cls_members
+        )
 
     def main_table(self, mixin=None, cls_members=None):
         mn = self._pay["__main_table__"]
         return self.named_table(mn, mixin, cls_members=cls_members)
 
     def named_columns(self, name):
-        return self._pay[name][0]
+        return self._pay[name]["columns"]
 
     def main_columns(self):
         mn = self._pay["__main_table__"]
