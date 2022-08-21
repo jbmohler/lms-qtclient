@@ -112,7 +112,7 @@ def add_business_days(base, n):
 
 
 def parse_iso_time(tstr):
-    # see also convert_datetime
+    # see also parse_datetime
     if tstr.find(".") >= 0:
         return datetime.datetime.strptime(tstr, "%Y-%m-%dT%H:%M:%S.%f")
     else:

@@ -343,7 +343,7 @@ def parse_columns_full(column_list):
     return [api_to_model(*x) for x in column_list]
 
 
-def convert_datetime(v):
+def parse_datetime(v):
     if v == None:
         return v
     try:
@@ -355,9 +355,6 @@ def convert_datetime(v):
     except ValueError:
         pass
     raise ValueError(f"could not parse {v} as datetime")
-
-
-parse_datetime = convert_datetime
 
 
 def parse_date(s):
@@ -402,18 +399,28 @@ def parse_month_end(value):
 def parse_bool(v):
     if isinstance(v, str):
         v = v.lower()
-    if v in [True, 1, "true", "yes"]:
+    if v in [True, 1, "1", "true", "yes"]:
         return True
-    if v in [False, 0, "false", "no"]:
+    if v in [False, 0, "0", "false", "no"]:
         return False
     raise ValueError(f"unacceptable bool import:  {v}")
+
+
+def parse_binary(v):
+    if v is None:
+        return v
+    if isinstance(v, dict) and "base64" in v:
+        return base64.b64decode(v["base64"].encode("ascii"))
+    if isinstance(v, str):
+        return base64.b64decode(v.encode("ascii"))
+    raise NotImplementedError(f"Binary data interpretation of {type(v)} is unknown")
 
 
 def str_column_coerce(column, value):
     if column.type_ == "date":
         return parse_date(value)
     if column.type_ == "datetime":
-        return convert_datetime(value)
+        return parse_datetime(value)
     if column.type_ == "boolean":
         return parse_bool(value)
     return value
@@ -433,7 +440,7 @@ def as_python(columns, to_localtime=True):
         elif meta["type"] == "boolean":
             return lambda v: False if v == None else v
         elif meta["type"] == "binary":
-            return lambda v: None if v == None else base64.b64decode(v.encode("ascii"))
+            return parse_binary
         elif meta["type"] == "date":
             return lambda v: parse_date(v) if v != None else None
         elif meta["type"] == "datetime":
@@ -444,13 +451,13 @@ def as_python(columns, to_localtime=True):
                     datetime.datetime.utcnow() - datetime.datetime.now()
                 ).total_seconds() / 3600
                 return (
-                    lambda v, offset=offset: convert_datetime(v)
+                    lambda v, offset=offset: parse_datetime(v)
                     - datetime.timedelta(hours=offset)
                     if v != None
                     else v
                 )
             else:
-                return convert_datetime
+                return parse_datetime
         else:
             return identity
 

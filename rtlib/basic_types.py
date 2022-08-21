@@ -38,7 +38,7 @@ class BasicTypePlugin:
                 ] = lambda value, decimals=decimals: formatters.fixedpoint_nan_formatter(
                     value, decimals
                 )
-                meta["coerce_edit"] = float
+                meta["coerce_edit"] = formatters.float_coerce
                 meta["alignment"] = "right"
                 meta["is_numeric"] = True
             if type_ == "percent":

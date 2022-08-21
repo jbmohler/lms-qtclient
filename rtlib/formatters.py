@@ -78,8 +78,16 @@ def fixedpoint_nan_formatter(value, decimals):
     return "{:,.{}f}".format(value, decimals)
 
 
-###### reverse formatting ... roughly coercing strings ##########
+# reverse formatting ... roughly coercing strings #
 def currency_coerce(value):
+    if value in ["", None]:
+        return None
+    if isinstance(value, str) and "," in value:
+        value = value.replace(",", "")
+    return float(value)
+
+
+def float_coerce(value):
     if value in ["", None]:
         return None
     if isinstance(value, str) and "," in value:
