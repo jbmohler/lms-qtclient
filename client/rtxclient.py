@@ -73,6 +73,7 @@ class RtxSession(httpx.Client):
         self.headers["X-Yenot-Timezone"] = tzlocal.get_localzone().zone
 
         self.pending_2fa = False
+        self.capabilities = None
         self.access_token_expiration = None
         self.access_token = None
         self._recent_reports = []
@@ -84,12 +85,6 @@ class RtxSession(httpx.Client):
 
     def authenticated(self):
         return self.access_token is not None
-
-    @property
-    def yenot_sid(self):
-        token = self.cookies["YenotToken"]
-        claims = jose.jwt.get_unverified_claims(token)
-        return claims["yenot-session-id"]
 
     def set_base_url(self, server_url):
         self.server_url = server_url
@@ -146,7 +141,10 @@ class RtxSession(httpx.Client):
             self.settings_map[k] = table
 
     def authorized(self, activity):
-        for row in self._capabilities.rows:
+        if not self.capabilities:
+            return False
+
+        for row in self.capabilities.rows:
             if row.act_name == activity:
                 return True
         return False
@@ -164,12 +162,12 @@ class RtxSession(httpx.Client):
 
             self.pending_2fa = True
         else:
-            self.rtx_userid = payload["userid"]
-            self.rtx_username = payload["username"]
-            t = payload["capabilities"]
-            self._capabilities = rtlib.ClientTable(t["columns"], t["data"])
+            payload = StdPayload(payload)
+            self.rtx_userid = payload.keys["userid"]
+            self.rtx_username = payload.keys["username"]
             self.access_token = True
-            self.access_token_expiration = time.time() + 60 * 60
+            self.access_token_expiration = payload.keys["access_expiration"]
+            self.capabilities = payload.named_table("capabilities")
 
     def authenticate_pin1(self, username, pin):
         p = {"username": username, "pin": pin}
