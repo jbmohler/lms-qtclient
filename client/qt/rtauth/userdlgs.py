@@ -428,8 +428,17 @@ class UserDialog(UserMixin):
             )
 
     def cmd_resetinvite_user(self):
-        with apputils.animator(self) as p:
-            p.background(self.client.put, "api/user/{}/send-invite", self.userid)
+        try:
+            with apputils.animator(self) as p:
+                payload = p.background(
+                    self.client.put, "api/user/{}/send-invite", self.userid
+                )
+            apputils.information(
+                self,
+                f"This user should have received an invitation with link at {payload.keys['destination']}.",
+            )
+        except:
+            qt.exception_message(self, "There was an error inviting the user.")
 
 
 class UserProfileEdit(UserMixin):
