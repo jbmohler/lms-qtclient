@@ -97,16 +97,28 @@ class BitMixin:
             dturl = markupsafe.Markup(
                 "local:bit/delete?id={ss.id}&type={ss.bit_type}"
             ).format(ss=self)
+            upurl = markupsafe.Markup(
+                "local:bit/move-up?id={ss.id}&type={ss.bit_type}"
+            ).format(ss=self)
+            dnurl = markupsafe.Markup(
+                "local:bit/move-down?id={ss.id}&type={ss.bit_type}"
+            ).format(ss=self)
             commands = [
                 markupsafe.Markup(
-                    '<a href="{edurl}"><img src="qrc:/contacts/default-edit.png"></a>'
-                ).format(edurl=edurl),
+                    '<a href="{url}"><img src="qrc:/contacts/default-edit.png"></a>'
+                ).format(url=edurl),
                 markupsafe.Markup(
-                    '<a href="{dturl}"><img src="qrc:/contacts/bit-delete.png"></a>'
-                ).format(dturl=dturl),
+                    '<a href="{url}"><img src="qrc:/contacts/bit-delete.png"></a>'
+                ).format(url=dturl),
+                markupsafe.Markup(
+                    '<a href="{url}"><img src="qrc:/contacts/up-arrow.png"></a>'
+                ).format(url=upurl),
+                markupsafe.Markup(
+                    '<a href="{url}"><img src="qrc:/contacts/down-arrow.png"></a>'
+                ).format(url=dnurl),
             ]
             return markupsafe.Markup(
-                "<tr><td>{commands[0]}{commands[1]}</td><td>{htmlbit}</td></tr>"
+                "<tr><td>{commands[0]}{commands[1]}{commands[2]}{commands[3]}</td><td>{htmlbit}</td></tr>"
             ).format(commands=commands, htmlbit=htmlbit)
 
     def html_chunk(self, printable):
@@ -789,6 +801,19 @@ class ContactView(QtWidgets.QWidget):
                     with apputils.animator(self):
                         self.client.delete(f"api/persona/{self.persona.id}/bit/{bb.id}")
                         self.reload()
+            if url.path() == "bit/move-up" or url.path() == "bit/move-down":
+                moving_up = url.path() == "bit/move-up"
+                body = None
+                for b1, b2 in zip(self.bits.rows[:-1], self.bits.rows[1:]):
+                    compare = b2.id if moving_up else b1.id
+                    if compare == values["id"]:
+                        body = {"bit_id1": b2.id, "bit_id2": b1.id}
+                        break
+                with apputils.animator(self):
+                    self.client.put(
+                        f"api/persona/{self.persona.id}/bits/reorder", data=body
+                    )
+                    self.reload()
         else:
             cliutils.xdg_open(url.toString())
 

@@ -7,5 +7,7 @@
         <file alias="default-edit.ico">application-form-edit.ico</file>
         <file alias="default-edit.png">application-form-edit.png</file>
         <file alias="bit-delete.png">edit-delete-6.png</file>
+        <file alias="up-arrow.png">arrow-up.png</file>
+        <file alias="down-arrow.png">arrow-down.png</file>
     </qresource>
 </RCC>
