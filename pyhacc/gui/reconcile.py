@@ -102,15 +102,15 @@ class ReconciliationWindow(QtWidgets.QDialog):
 
         self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
 
-        self.buttons.addButton("Save", self.buttons.AcceptRole).clicked.connect(
-            self.cmd_save
-        )
-        self.buttons.addButton("Reconcile", self.buttons.AcceptRole).clicked.connect(
-            self.cmd_reconcile
-        )
-        self.buttons.addButton("Close", self.buttons.RejectRole).clicked.connect(
-            self.reject
-        )
+        self.buttons.addButton(
+            "Save", QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole
+        ).clicked.connect(self.cmd_save)
+        self.buttons.addButton(
+            "Reconcile", QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole
+        ).clicked.connect(self.cmd_reconcile)
+        self.buttons.addButton(
+            "Close", QtWidgets.QDialogButtonBox.ButtonRole.RejectRole
+        ).clicked.connect(self.reject)
 
         self.lay1.addLayout(self.lay2)
         self.lay2.addLayout(self.form)

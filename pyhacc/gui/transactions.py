@@ -208,14 +208,14 @@ class TransactionEditor(qt.ObjectDialog):
         self.layout.addWidget(self.button_row())
 
         self.action_balance = QtGui.QAction("&Balance on Current Line", self)
-        self.action_balance.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_B)
+        self.action_balance.setShortcut(QtCore.Qt.CTRL | QtCore.Qt.Key_B)
         self.action_balance.triggered.connect(
             lambda: self.data.cmd_balance(self.trans_gridmgr.selected_row())
         )
         self.addAction(self.action_balance)
 
         self.action_reverse = QtGui.QAction("&Reverse Transaction", self)
-        self.action_reverse.setShortcut(QtCore.Qt.CTRL + QtCore.Qt.Key_R)
+        self.action_reverse.setShortcut(QtCore.Qt.CTRL | QtCore.Qt.Key_R)
         self.action_reverse.triggered.connect(lambda: self.data.cmd_reverse())
         self.addAction(self.action_reverse)
 
@@ -223,8 +223,10 @@ class TransactionEditor(qt.ObjectDialog):
         self.action_copyplain.triggered.connect(self.cmd_copyplain)
         self.addAction(self.action_copyplain)
 
-        btns = self.button_row()
-        btn_menu = btns.addButton("&More", btns.ActionRole)
+        buttons = self.button_row()
+        btn_menu = buttons.addButton(
+            "&More", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        )
         self.menu_more = QtWidgets.QMenu()
         self.menu_more.addAction(self.action_balance)
         self.menu_more.addAction(self.action_reverse)

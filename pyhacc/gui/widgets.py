@@ -100,7 +100,9 @@ class IdentifierEdit(base.KeyEdit):
         self.popup_list = QtWidgets.QTableView()
         self.popup_list.verticalHeader().hide()
         self.popup_list.verticalHeader().setDefaultSectionSize(18)
-        self.popup_list.setSelectionMode(self.popup_list.SingleSelection)
+        self.popup_list.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
+        )
         self.popup_list.setParent(self, QtCore.Qt.Popup)
         self.popup_list.setFocusPolicy(QtCore.Qt.NoFocus)
         self.popup_list.setFocusProxy(self)
@@ -255,7 +257,7 @@ class AccountEdit(IdentifierEdit):
         v = glaccounts.AccountSearch(app.session, app.exports_dir)
         dlg = SearchShell(self.window(), v)
         dlg.show()
-        if dlg.Accepted == dlg.exec_():
+        if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             if hasattr(self, "persister"):
                 self.persister(
                     dlg.inside.ctxmenu.active_index.data(models.ObjectRole).account

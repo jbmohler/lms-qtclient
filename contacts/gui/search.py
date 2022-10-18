@@ -217,8 +217,12 @@ class BasicBitView(QtWidgets.QDialog):
 
         self.buttons = QtWidgets.QDialogButtonBox()
 
-        self.buttons.addButton(self.buttons.Ok).clicked.connect(self.accept)
-        self.buttons.addButton(self.buttons.Cancel).clicked.connect(self.reject)
+        self.buttons.addButton(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok
+        ).clicked.connect(self.accept)
+        self.buttons.addButton(
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        ).clicked.connect(self.reject)
 
         self.add_buttons()
 
@@ -316,16 +320,16 @@ class BitUrlView(BasicBitView):
                 edit.setStyleSheet("QLineEdit { background: #CD5C5C }")
 
     def add_buttons(self):
-        self.buttons.addButton("Generate", self.buttons.ActionRole).clicked.connect(
-            self.gen_new_password
-        )
+        self.buttons.addButton(
+            "Generate", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        ).clicked.connect(self.gen_new_password)
 
     def gen_new_password(self):
         dlg = PasswordGenerator(self)
         dlg.client = self.client
         dlg.regen4()
 
-        if dlg.exec_() == dlg.Accepted:
+        if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             if self.editrow.password not in ["", None]:
                 m = "" if self.editrow.memo in ["", None] else self.editrow.memo
                 self.editrow.memo = f"Last password:  {self.editrow.password}\n{m}"
@@ -551,8 +555,12 @@ class EditPersona(QtWidgets.QDialog):
         self.tabs.addTab(self.tab_aux_info, "Extra")
 
         self.buttons = QtWidgets.QDialogButtonBox()
-        self.buttons.addButton(self.buttons.Ok).clicked.connect(self.accept)
-        self.buttons.addButton(self.buttons.Cancel).clicked.connect(self.reject)
+        self.buttons.addButton(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok
+        ).clicked.connect(self.accept)
+        self.buttons.addButton(
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        ).clicked.connect(self.reject)
 
         self.layout.addWidget(self.tabs)
         self.layout.addWidget(self.buttons)
@@ -647,7 +655,9 @@ class ContactView(QtWidgets.QWidget):
         self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
 
         # Entity Button with menu
-        self.btn_entity = self.buttons.addButton("Entity", self.buttons.ActionRole)
+        self.btn_entity = self.buttons.addButton(
+            "Entity", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        )
         self.entmenu = QtWidgets.QMenu()
         self.entmenu.addAction("New").triggered.connect(self.cmd_new_persona)
         self.entmenu.addSeparator()
@@ -657,7 +667,9 @@ class ContactView(QtWidgets.QWidget):
         self.btn_entity.setMenu(self.entmenu)
 
         # Bit Button with menu
-        self.btn_newbit = self.buttons.addButton("New Bit", self.buttons.ActionRole)
+        self.btn_newbit = self.buttons.addButton(
+            "New Bit", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        )
         self.bitmenu = QtWidgets.QMenu()
         self.bitmenu.addAction("URL/Login...").triggered.connect(
             functools.partial(self.cmd_newbit, "urls")
@@ -732,7 +744,7 @@ class ContactView(QtWidgets.QWidget):
         dlg = EditPersona(self)
         dlg.load_new(self.client)
 
-        if dlg.Accepted == dlg.exec_():
+        if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self.update_ambient.emit(dlg.editrow.id)
             # self.reload()
 
@@ -740,7 +752,7 @@ class ContactView(QtWidgets.QWidget):
         dlg = EditPersona(self)
         dlg.load(self.client, self.persona)
 
-        if dlg.Accepted == dlg.exec_():
+        if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self.update_ambient.emit(dlg.editrow.id)
             self.reload()
 
@@ -768,7 +780,7 @@ class ContactView(QtWidgets.QWidget):
         dlg = dlgclass[bittype](self)
         dlg.load_new(self.client, self.persona, bittype)
 
-        if dlg.Accepted == dlg.exec_():
+        if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self.reload()
 
     def action_triggered(self, url):
@@ -791,7 +803,7 @@ class ContactView(QtWidgets.QWidget):
                 dlg = dlgclass[values["type"]](self)
                 dlg.load(self.client, bb)
 
-                if dlg.Accepted == dlg.exec_():
+                if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
                     self.reload()
             if url.path() == "bit/delete":
                 bitmap = {(x.bit_type, x.id): x for x in self.bits.rows}
@@ -925,14 +937,14 @@ class PersonaCommandSidebar(QtCore.QObject):
         dlg = EditPersona(self.window())
         dlg.load_new(self.client)
 
-        if dlg.Accepted == dlg.exec_():
+        if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self.refresh.emit()
 
     def cmd_edit_persona(self, row):
         dlg = EditPersona(self.window())
         dlg.load(self.client, row)
 
-        if dlg.Accepted == dlg.exec_():
+        if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self.refresh.emit()
 
     def cmd_delete_persona(self, row):

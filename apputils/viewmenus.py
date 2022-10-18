@@ -171,13 +171,21 @@ class FindDialog(QtWidgets.QDialog):
         self.layout.addLayout(self.form)
 
         self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
-        self.btn_find = self.buttons.addButton("&Find", self.buttons.ActionRole)
+        self.btn_find = self.buttons.addButton(
+            "&Find", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        )
         self.btn_find.clicked.connect(self.find_now)
-        self.btn_filter = self.buttons.addButton("&Filter", self.buttons.ActionRole)
+        self.btn_filter = self.buttons.addButton(
+            "&Filter", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        )
         self.btn_filter.clicked.connect(self.filter_now)
-        self.btn_unfind = self.buttons.addButton("&Reset", self.buttons.ActionRole)
+        self.btn_unfind = self.buttons.addButton(
+            "&Reset", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        )
         self.btn_unfind.clicked.connect(self.unfilter)
-        self.btn_close = self.buttons.addButton("&Close", self.buttons.RejectRole)
+        self.btn_close = self.buttons.addButton(
+            "&Close", QtWidgets.QDialogButtonBox.ButtonRole.RejectRole
+        )
         self.btn_close.clicked.connect(lambda *args: self.close())
         self.layout.addWidget(self.buttons)
 
@@ -286,8 +294,12 @@ class Importer(QtWidgets.QDialog):
         self.layout.addLayout(self.set2)
 
         self.grid = widgets.TableView()
-        self.grid.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectColumns)
-        self.grid.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.grid.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectionBehavior.SelectColumns
+        )
+        self.grid.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
+        )
 
         self.layout.addWidget(self.grid, 3)
 

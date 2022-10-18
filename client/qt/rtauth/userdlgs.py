@@ -298,7 +298,7 @@ class UserMixin(QtWidgets.QDialog):
 
         w = UserAddressDialog(self, self.client.session)
         w.loadrec(urlslug, row.id if not new else "new")
-        if w.Accepted == w.exec_():
+        if w.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self.reload()
 
     def cmd_new_address(self):
@@ -422,10 +422,9 @@ class UserDialog(UserMixin):
         self.tabs.addTab(self.roles_grid, "Roles")
 
         if self.client.session.authorized("put_api_user_send_invite"):
-            QDB = QtWidgets.QDialogButtonBox
-            self.buttons.addButton("Reset/Invite...", QDB.ActionRole).clicked.connect(
-                self.cmd_resetinvite_user
-            )
+            self.buttons.addButton(
+                "Reset/Invite...", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+            ).clicked.connect(self.cmd_resetinvite_user)
 
     def cmd_resetinvite_user(self):
         try:
@@ -451,4 +450,4 @@ def edit_user_dlg(parentwin, session, userid):
     else:
         w = UserDialog(parentwin.window(), session)
     w.loadrec(userid)
-    return w.Accepted == w.exec_()
+    return w.exec_() == QtWidgets.QDialog.DialogCode.Accepted

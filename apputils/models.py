@@ -415,16 +415,21 @@ class ObjectQtModel(QtCore.QAbstractItemModel):
     def setData(self, index, value, role=QtCore.Qt.EditRole):
         if not index.isValid():
             return None
-        # elif role != QtCore.Qt.DisplayRole and role != QtCore.Qt.EditRole:
+
+        role = QtCore.Qt.ItemDataRole(role)
+
+        # if role != QtCore.Qt.DisplayRole and role != QtCore.Qt.EditRole:
         # return None
 
         c = self._column_at_index(index)
 
         attr = c.attr
         if c.check_attr and role == QtCore.Qt.CheckStateRole:
+            value = QtCore.Qt.CheckState(value)
             value = value == QtCore.Qt.Checked
             attr = c.check_attr
         elif c.checkbox and role == QtCore.Qt.CheckStateRole:
+            value = QtCore.Qt.CheckState(value)
             value = value == QtCore.Qt.Checked
 
         if role == QtCore.Qt.EditRole:

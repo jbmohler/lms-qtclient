@@ -213,8 +213,12 @@ class ReportPreview(QtWidgets.QWidget):
         self.grid.header().setStretchLastSection(False)
         self.grid.setUniformRowHeights(True)
         self.grid.setGridLines(True)
-        self.grid.setSelectionBehavior(self.grid.SelectItems)
-        self.grid.setSelectionMode(self.grid.ExtendedSelection)
+        self.grid.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectionBehavior.SelectItems
+        )
+        self.grid.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection
+        )
         self.grid.setSortingEnabled(True)
 
         self.gridmgr = gridmgr.GridManager(self.grid, self)
@@ -346,10 +350,10 @@ class ReportPreview(QtWidgets.QWidget):
         self.export_button = QtWidgets.QPushButton("&Export")
         self.export_button.clicked.connect(self.export_data)
         self.buttons.addButton(
-            self.preview_button, QtWidgets.QDialogButtonBox.ActionRole
+            self.preview_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
         )
         self.buttons.addButton(
-            self.export_button, QtWidgets.QDialogButtonBox.ActionRole
+            self.export_button, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
         )
 
         self.power_menu = QtWidgets.QMenu()
@@ -362,7 +366,9 @@ class ReportPreview(QtWidgets.QWidget):
             )
 
         self.button2 = QtWidgets.QDialogButtonBox(QtCore.Qt.Vertical)
-        self.button2.addButton(self.power_btn, self.button2.ActionRole)
+        self.button2.addButton(
+            self.power_btn, QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        )
         self.top_layout.addWidget(self.button2)
 
         self.export_button.setEnabled(False)

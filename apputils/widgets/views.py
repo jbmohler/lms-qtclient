@@ -52,7 +52,9 @@ class TreeView(QtWidgets.QTreeView, ViewBaseMixin):
         # than SelectItem and I prefer that painting style.  I do not
         # understand at a technical level why the QTableView and QTreeView
         # paint differently for SelectItems mode.
-        self.setSelectionBehavior(self.SelectRows)
+        self.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
+        )
 
         x = super(TreeView, self).paintEvent(event)
 

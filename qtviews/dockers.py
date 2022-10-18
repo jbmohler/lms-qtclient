@@ -380,7 +380,7 @@ class TabbedWorkspaceMixin(object):
         b.accepted.connect(x.accept)
         b.rejected.connect(x.reject)
         x.show()
-        if x.exec_() == QtWidgets.QDialog.Accepted:
+        if x.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             w._docker_meta.title = edit.text()
 
     def closeTab(self, index):

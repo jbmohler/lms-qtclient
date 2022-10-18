@@ -795,7 +795,7 @@ def edit_activity_dlg(parentwin, table):
 
     w.bind.bind(table.rows[0])
 
-    return w.Accepted == w.exec_()
+    return w.exec_() == QtWidgets.QDialog.DialogCode.Accepted
 
 
 class PidCancellerTab(ReportTabEx):

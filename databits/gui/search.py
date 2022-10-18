@@ -60,8 +60,12 @@ class EditDataBit(QtWidgets.QDialog):
         self.form.addRow("Password", sb.widgets["pword"])
 
         self.buttons = QtWidgets.QDialogButtonBox()
-        self.buttons.addButton(self.buttons.Ok).clicked.connect(self.accept)
-        self.buttons.addButton(self.buttons.Cancel).clicked.connect(self.reject)
+        self.buttons.addButton(
+            QtWidgets.QDialogButtonBox.StandardButton.Ok
+        ).clicked.connect(self.accept)
+        self.buttons.addButton(
+            QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        ).clicked.connect(self.reject)
 
         self.layout.addLayout(self.form)
         self.layout.addWidget(self.buttons)
@@ -120,10 +124,10 @@ class DataBitView(QtWidgets.QWidget):
 
         self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
         self.btn_new = self.buttons.addButton(
-            "New", self.buttons.ActionRole
+            "New", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
         ).clicked.connect(self.cmd_new_databit)
         self.btn_edit = self.buttons.addButton(
-            "Edit", self.buttons.ActionRole
+            "Edit", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
         ).clicked.connect(self.cmd_edit_databit_current)
 
         self.layout.addWidget(self.buttons)
@@ -213,7 +217,7 @@ class DataBitView(QtWidgets.QWidget):
         dlg = EditDataBit(self)
         dlg.load_new(self.client)
 
-        if dlg.Accepted == dlg.exec_():
+        if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self.reload()
             self.refresh.emit()
 
@@ -224,7 +228,7 @@ class DataBitView(QtWidgets.QWidget):
         dlg = EditDataBit(self)
         dlg.load(self.client, row)
 
-        if dlg.Accepted == dlg.exec_():
+        if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self.reload()
             self.refresh.emit()
 

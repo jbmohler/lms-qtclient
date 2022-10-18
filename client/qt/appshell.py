@@ -212,7 +212,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
             dlg = serverdlgs.RtxLoginDialog(
                 self, self.session, settings_group="Example"
             )
-            if dlg.exec_() == QtWidgets.QDialog.Accepted:
+            if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
                 pass
             else:
                 self.close()

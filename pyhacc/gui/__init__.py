@@ -39,7 +39,9 @@ class AccountingExtensions:
         elif url.path() == "transactions/new":
             transactions.edit_transaction(parent, state.session, "new")
         elif url.path() == "transactions":
-            transactions.edit_transaction(parent, state.session, url.parameters()["key"])
+            transactions.edit_transaction(
+                parent, state.session, url.parameters()["key"]
+            )
         elif url.path() == "transactions/recent":
             existing = parent.foreground_tab(calendar.TransactionRecent.ID)
             if existing:

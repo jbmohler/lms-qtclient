@@ -74,9 +74,13 @@ class ModelColumnChooser(QtWidgets.QDialog):
         self.layout.addLayout(self.body)
 
         self.grid = views.TableView(column_choosing=False)
-        self.grid.setSelectionBehavior(self.grid.SelectRows)
-        self.grid.setSelectionMode(self.grid.SingleSelection)
-        self.grid.setDragDropMode(self.grid.InternalMove)
+        self.grid.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.grid.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
+        )
+        self.grid.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.InternalMove)
         self.grid.setDragEnabled(True)
         self.grid.viewport().setAcceptDrops(True)
         self.grid.verticalHeader().setDefaultSectionSize(18)
