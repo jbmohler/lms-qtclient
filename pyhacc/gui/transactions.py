@@ -279,9 +279,6 @@ class TransactionEditor(qt.ObjectDialog):
     def cmd_copyplain(self):
         QtWidgets.QApplication.clipboard().setText(self.data.ascii_repr())
 
-    def writeback(self):
-        pass
-
     def preset_group(self, obj, kwargs):
         pass
 
