@@ -4,6 +4,19 @@ import subprocess
 import PySide6
 
 
+def save_icons():
+    import qtawesome
+    from PySide6 import QtCore, QtWidgets
+
+    app = QtWidgets.QApplication()
+
+    pixmap = qtawesome.icon("fa5.copy", color="blue").pixmap(32, 32)
+    pixmap.save("contacts/gui/clip-copy.png")
+
+
+save_icons()
+
+
 def get_qrc_compiler():
     base_name = "pyside6-rcc"
     if sys.platform.lower().startswith("win"):

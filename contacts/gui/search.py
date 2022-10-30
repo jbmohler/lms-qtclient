@@ -149,7 +149,12 @@ class BitMixin:
                 if ns(bd["username"]) is None:
                     un = "(empty)"
                 else:
-                    un = bd["username"]
+                    uncopy = markupsafe.Markup(
+                        "local:bit/copy-username?id={ss.id}&type={ss.bit_type}"
+                    ).format(ss=self)
+                    un = markupsafe.Markup(
+                        '{username} <a href="{url}"><img height="16" src="qrc:/contacts/clip-copy.png"></a>'
+                    ).format(username=bd["username"], url=uncopy)
                 lines.append(("Username:", un))
                 if ns(bd["password"]) is None:
                     hlink = "(empty)"
@@ -786,6 +791,12 @@ class ContactView(QtWidgets.QWidget):
     def action_triggered(self, url):
         if url.scheme() == "local":
             values = qt.url_params(url)
+            if url.path() == "bit/copy-username":
+                bitmap = {x.id: x for x in self.bits.rows}
+                bit = bitmap[values["id"]]
+
+                app = QtCore.QCoreApplication.instance()
+                app.clipboard().setText(bit.bit_data["username"])
             if url.path() == "bit/copy-password":
                 app = QtCore.QCoreApplication.instance()
                 app.clipboard().setText(values["password"])

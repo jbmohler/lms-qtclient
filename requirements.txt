@@ -3,6 +3,7 @@ fuzzyparsers
 xlsxwriter
 python-jose
 PySide6
+qtawesome
 curtsies
 markupsafe
 tzlocal==2.1 # https://github.com/O365/python-o365/issues/591
