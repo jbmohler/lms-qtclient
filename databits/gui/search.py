@@ -107,7 +107,8 @@ class DataBitView(QtWidgets.QWidget):
     TITLE = "DataBit"
     ID = "databit-view"
     SRC_INSTANCE_URL = "api/databits/bit/{}"
-    refresh = QtCore.Signal()
+
+    update_ambient = QtCore.Signal(str)
 
     def __init__(self, parent, session):
         super(DataBitView, self).__init__(parent)
@@ -218,8 +219,7 @@ class DataBitView(QtWidgets.QWidget):
         dlg.load_new(self.client)
 
         if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
-            self.reload()
-            self.refresh.emit()
+            self.update_ambient.emit(dlg.editrow.id)
 
     def cmd_edit_databit_current(self):
         self.cmd_edit_databit(self.bit)
@@ -230,7 +230,7 @@ class DataBitView(QtWidgets.QWidget):
 
         if dlg.exec_() == QtWidgets.QDialog.DialogCode.Accepted:
             self.reload()
-            self.refresh.emit()
+            self.update_ambient.emit(dlg.editrow.id)
 
     def cmd_delete_databit(self, row):
         if "Yes" == apputils.message(
@@ -240,7 +240,7 @@ class DataBitView(QtWidgets.QWidget):
         ):
             try:
                 self.client.delete(self.SRC_INSTANCE_URL, row.id)
-                self.refresh.emit()
+                self.update_ambient.emit(None)
             except:
                 qt.exception_message(self.window(), "The databit could not be deleted.")
 
@@ -272,6 +272,7 @@ class DataBitsList(QtWidgets.QWidget):
         self.sublay.addWidget(self.grid)
 
         self.sidebar = DataBitView(self, session)
+        self.sidebar.update_ambient.connect(self.reload_from_databit)
         self.sublay.addWidget(self.sidebar)
         self.layout.addWidget(self.sublay)
         if self.sidebar != None and hasattr(self.sidebar, "init_grid_menu"):
@@ -289,12 +290,21 @@ class DataBitsList(QtWidgets.QWidget):
         self.load_timer.timeout.connect(self.search_now)
         self.search_edit.applyValue.connect(self.load_timer.ui_start)
 
+    def reload_from_databit(self, bit_id):
+        self.last_edit = bit_id
+        self.base_refresh()
+
     def search_now(self):
+        self.last_edit = None
+        self.base_refresh()
+
+    def base_refresh(self):
         self.backgrounder(
             self.load_data,
             self.client.get,
             self.URL_SEARCH,
             frag=self.search_edit.value(),
+            included=self.last_edit
         )
 
     def load_data(self):
