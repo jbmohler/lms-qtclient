@@ -50,6 +50,16 @@ def get_plugin_menus():
             yield (menuname, items)
 
 
+def plugin_initialize(parent):
+    state = QtWidgets.QApplication.instance()
+
+    global RTX_EXTENSION_PLUGS
+    for plug in RTX_EXTENSION_PLUGS:
+        f = getattr(plug, "initialize", None)
+        if f:
+            f(state, parent)
+
+
 def url_params(url):
     values = urllib.parse.parse_qs(url.query())
     # dict(url.queryItems())

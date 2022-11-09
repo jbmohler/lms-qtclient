@@ -1,5 +1,5 @@
 import xml.dom.minidom as xml
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
 import client.qt as qt
 import apputils
 
@@ -118,3 +118,22 @@ class PendingRoscoe(QtWidgets.QWidget):
             with apputils.animator(self) as p:
                 p.background(self.client.put, "api/roscoe/mark-processed")
             self.initial_load()
+
+
+def setup_timer(session, parent):
+    def check_roscoe():
+        client = session.std_client()
+        payload = client.get(PendingRoscoe.URL)
+        table = payload.main_table()
+
+        if len(table.rows):
+            parent.handle_url("pyhacc:roscoe/dock")
+
+    # TODO setup a long poll rather than timer based
+    timer = QtCore.QTimer(parent)
+    timer.setInterval(60 * 1000)
+
+    timer.timeout.connect(check_roscoe)
+    timer.start()
+
+    return timer

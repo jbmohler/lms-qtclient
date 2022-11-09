@@ -254,6 +254,8 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         conn_info = f"<a href=\"{s.prefix('')}\">{s.server_url}</a> {s.rtx_username}"
         self.server_connection.setText(conn_info)
 
+        plugpoint.plugin_initialize(self)
+
         for url in self.pending_urls:
             self.handle_url(url)
         # clear this so that post_login is idempotent

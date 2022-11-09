@@ -13,6 +13,9 @@ from . import reconcile
 
 
 class AccountingExtensions:
+    def initialize(self, state, parent):
+        self.roscoe_timer = roscoe.setup_timer(state.session, parent)
+
     def show_link_parented(self, state, parent, url):
         if url.scheme() != "pyhacc":
             return False
