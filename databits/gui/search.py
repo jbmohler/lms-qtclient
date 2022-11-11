@@ -304,7 +304,7 @@ class DataBitsList(QtWidgets.QWidget):
             self.client.get,
             self.URL_SEARCH,
             frag=self.search_edit.value(),
-            included=self.last_edit
+            included=self.last_edit,
         )
 
     def load_data(self):
