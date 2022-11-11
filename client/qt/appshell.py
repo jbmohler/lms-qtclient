@@ -71,6 +71,7 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         self.report_manager = None
         self.pending_urls = []
         self.menu_actions = []
+        self.submenus = {}
         self.statics = []
 
         statstypes = [
@@ -133,7 +134,13 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         while isinstance(applicable[-1], SeparatorMenuItem):
             del applicable[-1]
 
-        menu = mbar.addMenu(menu_name)
+        mkey = menu_name.replace("&", "")
+        if mkey in self.submenus:
+            menu = self.submenus[mkey]
+            applicable.insert(0, SeparatorMenuItem())
+        else:
+            menu = mbar.addMenu(menu_name)
+            self.submenus[mkey] = menu
         for item in applicable:
             act = item.action(self)
             self.menu_actions.append(act)
@@ -272,8 +279,12 @@ class ShellWindow(QtWidgets.QMainWindow, qtviews.TabbedWorkspaceMixin):
         # are reflected on token refresh.
         self.menuBar().clear()
         self.menu_actions = []
+        self.submenus = {}
 
         self.construct_file_menu(self.menuBar())
+        self.submenus["File"] = self.menu_file
+        # self.submenus["Window"] = self.menu_window
+        # self.submenus["Help"] = self.menu_help
 
         ctors = {
             "ClientURLMenuItem": ClientURLMenuItem,

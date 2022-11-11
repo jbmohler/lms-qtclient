@@ -12,10 +12,46 @@ from . import calendar
 from . import reconcile
 
 
-class AccountingExtensions:
+class RoscoeExtensions:
     def initialize(self, state, parent):
         self.roscoe_timer = roscoe.setup_timer(state.session, parent)
 
+    def show_link_parented(self, state, parent, url):
+        if url.scheme() != "pyhacc":
+            return False
+
+        if url.path() == "roscoe/client-test":
+            roscoe.test_roscoe(state.session)
+        elif url.path() == "roscoe/dock":
+            existing = parent.foreground_tab(roscoe.PendingRoscoe.ID)
+            if existing:
+                # existing.focus_search()
+                return True
+            view = roscoe.PendingRoscoe(parent, state)
+            parent.adopt_tab(view, view.ID, view.TITLE, addto="dock:bottom")
+        else:
+            return False
+        return True
+
+    def get_menus(self):
+        account_menu_schematic = [
+            (
+                "ClientURLMenuItem",
+                (
+                    "Roscoe &Pending Dock",
+                    "pyhacc:roscoe/dock",
+                    "get_api_roscoe_unprocessed",
+                ),
+            ),
+            (
+                "ClientURLMenuItem",
+                ("Test &Roscoe", "pyhacc:roscoe/client-test", "post_api_roscoe"),
+            ),
+        ]
+        yield ("&Accounts", account_menu_schematic)
+
+
+class AccountingExtensions:
     def show_link_parented(self, state, parent, url):
         if url.scheme() != "pyhacc":
             return False
@@ -60,15 +96,6 @@ class AccountingExtensions:
         elif url.path() == "reporting/monthly-status":
             win = monthly.Exporter(state, parent)
             win.show()
-        elif url.path() == "roscoe/client-test":
-            roscoe.test_roscoe(state.session)
-        elif url.path() == "roscoe/dock":
-            existing = parent.foreground_tab(roscoe.PendingRoscoe.ID)
-            if existing:
-                # existing.focus_search()
-                return True
-            view = roscoe.PendingRoscoe(parent, state)
-            parent.adopt_tab(view, view.ID, view.TITLE, addto="dock:bottom")
         else:
             return False
         return True
@@ -90,19 +117,6 @@ class AccountingExtensions:
                     "pyhacc:accounttypes/new",
                     "get_api_accounttype_new",
                 ),
-            ),
-            ("SeparatorMenuItem", ()),
-            (
-                "ClientURLMenuItem",
-                (
-                    "Roscoe &Pending Dock",
-                    "pyhacc:roscoe/dock",
-                    "get_api_roscoe_unprocessed",
-                ),
-            ),
-            (
-                "ClientURLMenuItem",
-                ("Test &Roscoe", "pyhacc:roscoe/client-test", "post_api_roscoe"),
             ),
         ]
         yield ("&Accounts", account_menu_schematic)

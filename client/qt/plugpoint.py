@@ -10,18 +10,21 @@ def add_extension_plug(plug):
     RTX_EXTENSION_PLUGS.append(plug)
 
 
+def attr_extension_plug(attr):
+    global RTX_EXTENSION_PLUGS
+    for plug in RTX_EXTENSION_PLUGS:
+        f = getattr(plug, attr, None)
+        if f != None:
+            yield f
+
+
 def get_plugin_export(sbname, state=None):
     app = QtCore.QCoreApplication.instance()
     if state is None:
         state = app
 
-    global RTX_EXTENSION_PLUGS
-    for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, "report_formats", None)
-        if f != None:
-            sb = f(state, sbname)
-        else:
-            sb = None
+    for f in attr_extension_plug("report_formats"):
+        sb = f(state, sbname)
         if sb != None:
             return sb
 
@@ -31,33 +34,22 @@ def get_plugin_sidebar(sbname, state=None):
     if state is None:
         state = app
 
-    global RTX_EXTENSION_PLUGS
-    for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, "load_sidebar", None)
-        if f != None:
-            sb = f(state, sbname)
-        else:
-            sb = None
+    for f in attr_extension_plug("load_sidebar"):
+        sb = f(state, sbname)
         if sb != None:
             return sb
 
 
 def get_plugin_menus():
-    global RTX_EXTENSION_PLUGS
-    for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, "get_menus", None)
-        for menuname, items in f():
-            yield (menuname, items)
+    for f in attr_extension_plug("get_menus"):
+        yield from f()
 
 
 def plugin_initialize(parent):
     state = QtWidgets.QApplication.instance()
 
-    global RTX_EXTENSION_PLUGS
-    for plug in RTX_EXTENSION_PLUGS:
-        f = getattr(plug, "initialize", None)
-        if f:
-            f(state, parent)
+    for f in attr_extension_plug("initialize"):
+        f(state, parent)
 
 
 def url_params(url):

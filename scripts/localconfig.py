@@ -53,6 +53,7 @@ def qt_app_init(plugpoint):
     rtlib.add_type_definition_plugin(apputils.BasicWidgetsPlugin())
 
     plugpoint.add_extension_plug(pg.AccountingExtensions())
+    plugpoint.add_extension_plug(pg.RoscoeExtensions())
     plugpoint.add_extension_plug(cg.ContactExtensions())
     plugpoint.add_extension_plug(dbg.DataBitExtensions())
     plugpoint.add_extension_plug(rtauth.RtAuthPlugs())
