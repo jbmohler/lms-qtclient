@@ -224,7 +224,7 @@ class GridManager(QtCore.QObject):
         return [obj for _, obj in sorted(rowmap.items(), key=lambda x: x[0])]
 
     def call_core_func(self, f):
-        args = inspect.getargspec(f).args
+        args = inspect.getfullargspec(f).args
         kwargs = {}
         for a in args:
             v = None
