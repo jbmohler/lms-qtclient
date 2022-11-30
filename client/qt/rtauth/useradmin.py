@@ -63,7 +63,10 @@ class UserListSidebar(QtWidgets.QWidget):
         self.buttons = QtWidgets.QDialogButtonBox(QtCore.Qt.Horizontal)
 
         # User Button with menu
-        self.btn_user = self.buttons.addButton("User", self.buttons.ActionRole)
+
+        self.btn_user = self.buttons.addButton(
+            "User", QtWidgets.QDialogButtonBox.ButtonRole.ActionRole
+        )
         self.entmenu = QtWidgets.QMenu()
         self.entmenu.addAction("New").triggered.connect(self.cmd_add_user)
         self.entmenu.addSeparator()

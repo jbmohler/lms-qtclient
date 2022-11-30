@@ -14,7 +14,8 @@ from . import reconcile
 
 class RoscoeExtensions:
     def initialize(self, state, parent):
-        self.roscoe_timer = roscoe.setup_timer(state.session, parent)
+        if state.session.authorized("get_api_roscoe_unprocessed"):
+            self.roscoe_timer = roscoe.setup_timer(state.session, parent)
 
     def show_link_parented(self, state, parent, url):
         if url.scheme() != "pyhacc":
