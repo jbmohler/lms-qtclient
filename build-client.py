@@ -14,7 +14,16 @@ def save_icons():
     pixmap.save("contacts/gui/clip-copy.png")
 
 
-save_icons()
+try:
+    save_icons()
+except ImportError as e:
+    print(str(e))
+    if str(e).find("No module named") >= 0 and str(e).find("qtawesome") >= 0:
+        print(
+            "Skipping icon generation from fontawesome; install qtawesome if desired."
+        )
+    else:
+        raise
 
 
 def get_qrc_compiler():
@@ -28,7 +37,6 @@ def get_qrc_compiler():
 
 
 RCC = get_qrc_compiler()
-PY3 = sys.version > "3"
 
 ROOTED = [
     ("lmssystem/lmsicons.qrc", "lmsicons.py"),
@@ -45,7 +53,6 @@ for R in ROOTTUPLE:
     qrc_file = os.path.join(path, R[1])
     py_file = os.path.join(path, R[2])
     print(R)
-    print([RCC, qrc_file, "-o", py_file])
-    rccprocess = subprocess.Popen([RCC, qrc_file, "-o", py_file])
-    rccprocess.wait()
+    # print([RCC, qrc_file, "-o", py_file])
+    subprocess.run([RCC, qrc_file, "-o", py_file])
     # os.system(r'{RCC} {PATH}\{IN} -py3 -o {PATH}\{OUT}'.format(RCC=RCC, PATH=R[0], IN=R[1], OUT=R[2]))
