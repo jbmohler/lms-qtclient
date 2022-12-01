@@ -70,7 +70,7 @@ class RtxSession(httpx.Client):
             self.set_base_url(server_url)
         else:
             self.server_url = None
-        self.headers["X-Yenot-Timezone"] = tzlocal.get_localzone().zone
+        self.headers["X-Yenot-Timezone"] = str(tzlocal.get_localzone())
 
         self.pending_2fa = False
         self.capabilities = None
