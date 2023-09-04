@@ -50,8 +50,6 @@ class Exporter(QtWidgets.QDialog):
 
         self.geo = apputils.WindowGeometry(self, size=True, position=False)
 
-        self.refresh_data()
-
     def refresh_data(self):
         defdate = self.date_edit.value()
         monthbegin = datetime.date(defdate.year, defdate.month, 1)
@@ -97,6 +95,7 @@ class Exporter(QtWidgets.QDialog):
             self.end_count += 1
 
             if self.end_count >= 4:
+                self.export_files()
                 self.btn_export_all.setEnabled(True)
         except:
             apputils.exception_message(
@@ -116,6 +115,9 @@ class Exporter(QtWidgets.QDialog):
         yield from self.end_report("ytd-charitable-giving")
 
     def cmd_export_all(self):
+        self.refresh_data()
+
+    def export_files(self):
         # get subdir
         exportdir = client.LocalDirectory(tail="MonthlyStatus")
 
